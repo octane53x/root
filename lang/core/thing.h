@@ -1,9 +1,9 @@
-// thing.h
+// thing.hh
 
-//#include "incl.h"
-#include "base.h"
-#include "typ.h"
-#include "alloc.h"
+//#include "incl.hh"
+#include "base.hh"
+#include "typ.hh"
+#include "alloc.hh"
 
 struct thing {
 
