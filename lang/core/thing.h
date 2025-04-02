@@ -23,6 +23,25 @@ struct thing {
     return next_id++;
   }
 
+  bool is_type(const char* _t){
+    _str t = _str(_t);
+    if(t == type.to_str()) return true;
+    else if(t == "void" || type.to_str() == "void")
+      return false;
+    
+    std::queue<typ> q;
+    for(typ& u : type.parents)
+      q.push(u);
+    while(!q.empty()){
+      typ u = q.front();
+      if(u.to_str() == t) return true;
+      for(typ& v : u.parents)
+        q.push(v);
+      q.pop();
+    }
+    return false;
+  }
+
   thing* clone(){
     thing* r = (thing*)alloc(sizeof(thing));
     r->id = get_id();
