@@ -18,19 +18,100 @@ struct Earth {
   Earth(){}
 };
 
+struct Feature {
+  int health;
+  str name;
+  Feature(){}
+};
+
+struct Unit {
+  int health, speed;
+  str name;
+  Unit(){}
+}
+
+struct Tile {
+  int altitude;
+  str name;
+  Feature* feature;
+  vec<Unit> units;
+  Tile(){}
+};
+
 struct Planet {
   vec<vec<vec<Earth> > > earth;
+  vec<vec<Tile> > surface;
+  vec<Feature> features;
+  
   Planet(){}
+  
+  void fill_earth(){
+    
+  }
 };
 
 const int DIM = 100;
 
 const vec<str> MINERALS = {
+  "SOIL",
+  "SAND",
+  "STONE",
+  "GRANITE",
+  "MARBLE",
+  "LIMESTONE",
+  "SANDSTONE",
+  "COAL",
   "IRON",
   "COPPER",
+  "NICKEL",
+  "GYPSUM",
+  "TIN",
+  "ALUMINUM",
+  "PHOSPHORUS",
   "SILICON",
+  "SILVER",
+  "GOLD",
   "PLATINUM",
-  "TITANIUM"
+  "TITANIUM",
+  "ADAMANTIUM",
+  "URANIUM",
+  "NEPTUNIUM",
+  "PLUTONIUM"
+};
+
+const vec<str> GEMS = {
+  "AMETHYST", // A
+  "TOURMALINE", // B
+  "JASPER", // C
+  "DIAMOND", // D
+  "EMERALD", // E
+  "MALACHITE", // F
+  "JADE", // G
+  "AMAZONITE", // H
+  "ZIRCON", // I
+  "LAPIS LAZULI", // J
+  "OBSIDIAN", // K
+  "GASPEITE", // L
+  "HEMATITE", // M
+  "CHAROITE", // N
+  "AMBER", // O
+  "AQUAMARINE", // P
+  "TURQUOISE", // Q
+  "GARNET", // R
+  "SAPPHIRE", // S
+  "PEARL", // T
+  "AZURITE", // U
+  "RHODONITE", // V
+  "QUARTZ", // W
+  "ONYX", // X
+  "TANZANITE", // Y
+  "TOPAZ", // Z
+  "OPAL", // 0
+  "RUBY", // 1
+  "CARNELIAN", // 2
+  "AGATE", // 3
+  "PERIDOT", // 4
+  "CITRINE" // 5
 };
 
 int main(){
