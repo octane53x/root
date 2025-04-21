@@ -118,6 +118,13 @@ const int
   MIN_BLOCKS = 10,
   MAX_BLOCKS = 10000;
 
+template <typename T>
+bool contains(vec<T>& v, T t){
+  for(int i = 0; i < v.size(); ++i)
+    if(v[i] == t) return true;
+  return false;
+}
+
 void fill_earth(Planet& p){
   // Custom minerals
   for(int i = 0; i < MINE_WIDTH; ++i)
@@ -129,9 +136,21 @@ void fill_earth(Planet& p){
       }
 
   // Random minerals
-  M = rand() % (MAX_MINERALS - MIN_MINERALS) + MIN_MINERALS;
+  vec<str> used;
+  int M = rand() % (MAX_MINERALS - MIN_MINERALS) + MIN_MINERALS;
   for(int m = 0; m < M; ++m){
-    //! resume
+    
+    // Select mineral
+    int r;
+    bool done = false;
+    while(!done){
+      r = rand() % MINERALS.size();
+      if(!contains(used, MINERALS[r]))
+        done = true, used.pb(MINERALS[r]);
+    }
+    
+    // Place mineral
+    int B = //! resume
   }
 }
 
