@@ -42,20 +42,16 @@ struct Planet {
   vec<vec<vec<Earth> > > earth;
   vec<vec<Tile> > surface;
   vec<Feature> features;
-  
   Planet(){}
-  
-  void fill_earth(){
-    
-  }
 };
 
-const int DIM = 100;
-
+const int C_MINERALS = 3;
 const vec<str> MINERALS = {
+  // CUSTOM:
   "SOIL",
   "SAND",
   "STONE",
+  // RANDOM:
   "GRANITE",
   "MARBLE",
   "LIMESTONE",
@@ -114,21 +110,41 @@ const vec<str> GEMS = {
   "CITRINE" // 5
 };
 
+const int
+  MINE_WIDTH = 201,
+  MINE_DEPTH = 100,
+  MIN_MINERALS = 3,
+  MAX_MINERALS = 10,
+  MIN_BLOCKS = 10,
+  MAX_BLOCKS = 10000;
+
+void fill_earth(Planet& p){
+  // Custom minerals
+  for(int i = 0; i < MINE_WIDTH; ++i)
+    for(int j = 0; j < MINE_WIDTH; ++j)
+      for(int k = 0; k < MINE_DEPTH; ++k){
+        p.earth[i][j][k].minerals["SOIL"] = 100;
+        if(!(rand() % 4))
+          p.earth[i][j][k].minerals["STONE"] = rand() % 100 + 1;
+      }
+
+  // Random minerals
+  M = rand() % (MAX_MINERALS - MIN_MINERALS) + MIN_MINERALS;
+  for(int m = 0; m < M; ++m){
+    //! resume
+  }
+}
+
 int main(){
-  int i,j,k;
+  int i,j,k, n;
   Planet p;
   
-  for(i = 0; i < DIM; ++i){
-    p.earth.pb(vec<vec<Earth> >());
-    for(j = 0; j < DIM; ++j){
-      p.earth[i].pb(vec<Earth>());
-      for(k = 0; k < DIM; ++k)
-        p.earth[i][j].pb(Earth());
-    }
-  }
-
-  for(i = 0; i < MINERALS.size(); ++i)
-    p.earth[0][0][0].minerals[MINERALS[i]] = rand() % DIM + 1;
-
-  printf("%d\n", p.earth[0][0][0].minerals.size());
+  fill_earth(p);
+  
+  n = 0;
+  for(i = 0; i < MINE_WIDTH; ++i)
+    for(j = 0; j < MINE_WIDTH; ++j)
+      for(k = 0; k < MINE_DEPTH; ++k)
+        n += p.earth[i][j][k].minerals["PLATINUM"];
+  printf("Platinum: %d\n", n);
 }
