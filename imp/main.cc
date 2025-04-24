@@ -2,33 +2,140 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <string>
 #include <vector>
 #include <map>
 
+#define ll long long
+#define llu unsigned long long
 #define str string
 #define vec vector
 #define pb push_back
 
 using namespace std;
 
+struct block {
+  llu data;
+  
+  block(){}
+  block(llu b): data(b) {}
+  
+  block& operator=(const block& b){
+    data = b.data;
+  }
+  
+  void clear(){
+    data = 0;
+  }
+};
+
+struct mem {
+  vec<block> data;
+  
+  mem(){}
+  
+  void write(llu b){
+    data.pb(block(b));
+  }
+};
+
+struct nat {
+  mem data;
+  
+  nat(){}
+};
+
+struct num {
+  bool neg;
+  nat top, bot;
+  
+  num(): top(0), bot(1) {}
+  num(ll n): neg(n < 0), top(abs(n)), bot(1) {}
+  
+  void validate(){
+    if(bot == 0) bot = 1;
+    nat g = top.gcd(bot);
+    if(g > 1) top /= g, bot /= g;
+  }
+  
+  num& operator=(const num& n){
+    top = n.top, bot = n.bot, neg = n.neg;
+    validate();
+    return *this;
+  }
+  
+  bool operator==(const num& n) const {
+    return top == n.top && bot = n.bot && neg = n.neg;
+  }
+};
+
+struct point {
+  int x,y,z;
+  
+  point(){}
+  point(int _x, int _y): x(_x), y(_y), z(0) {}
+  point(int _x, int _y, int _z): x(_x), y(_y), z(_z) {}
+  
+  double dist(point& p){
+    int a = abs(x - p.x), b = abs(y - p.y), c = abs(z - p.z);
+    return sqrt(a*a + b*b + c*c);
+  }
+};
+
+template <typename T>
+struct graph {
+  vec<T> nodes;
+  map<int, int> edges;
+  graph(){}
+};
+
 struct Earth {
   map<str, int> minerals;
+  vec<Earth*> tunnels;
   Earth(){}
+};
+
+struct Unit {
+  int health, speed, power;
+  str name;
+  Unit(){}
+};
+
+struct Worker : Unit {
+  Worker(){}
 };
 
 struct Feature {
   int health;
   str name;
+  point loc;
+  vec<Worker> workers;
+  map<str, int> gems;
   Feature(){}
 };
 
-struct Unit {
-  int health, speed;
-  str name;
-  Unit(){}
-}
+struct Tower : Feature {
+  int damage, range;
+  graph<point> border;
+  Tower(){}
+};
+
+struct Mine : Feature {
+  Earth* top;
+  Mine(){}
+};
+
+struct Recipe {
+  map<str, int> parts, product;
+  Recipe(){}
+};
+
+struct Factory : Feature {
+  Recipe recipe;
+  Factory(){}
+};
 
 struct Tile {
   int altitude;
