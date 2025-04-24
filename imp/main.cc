@@ -16,35 +16,95 @@
 
 using namespace std;
 
-struct block {
-  llu data;
-  
-  block(){}
-  block(llu b): data(b) {}
-  
-  block& operator=(const block& b){
-    data = b.data;
-  }
-  
-  void clear(){
-    data = 0;
-  }
-};
-
-struct mem {
-  vec<block> data;
-  
-  mem(){}
-  
-  void write(llu b){
-    data.pb(block(b));
-  }
-};
-
 struct nat {
-  mem data;
+  vec<llu> data;
   
-  nat(){}
+  nat(){ data.pb(0) }
+  nat(ll n){ data.pb(abs(n)); }
+  nat(const nat& n){ *this = n; }
+  
+  void validate(){
+    if(data.empty()) data.pb(0);
+  }
+  
+  nat& operator=(const nat& n){
+    data.clear();
+    data = n.data;
+    validate();
+  }
+  
+  bool operator==(const nat& n) const {
+    for(int i = 0; i < data.size(); ++i)
+      if(data[i] != n.data[i]) return false;
+    return true;
+  }
+  
+  bool operator<(const nat& n) const {
+    if(data.size() < n.data.size()) return true;
+    if(data.size() > n.data.size()) return false;
+    for(int i = data.size()-1; i >= 0; --i){
+      if(data[i] < n.data[i]) return true;
+      if(data[i] > n.data[i]) return false;
+    }
+    return false;
+  }
+  
+  bool operator<=(const nat& n) const {
+    return (*this == n || *this < n);
+  }
+  bool operator>(const nat& n) const {
+    return !(*this <= n);
+  }
+  bool operator>=(const nat& n) const {
+    return !(*this < n);
+  }
+  
+  nat& operator&=(const nat& n){
+    if(n.data.size() < data.size())
+      for(int i = 0; i < data.size()-n.data.size(); ++i)
+        data.pop_back();
+    for(int i = 0; i < data.size(); ++i)
+      data[i] &= n.data[i];
+    return *this;
+  }
+  
+  nat& operator|=(const nat& n){
+    if(n.data.size() < data.size())
+      for(int i = 0; i < data.size()-n.data.size(); ++i)
+        data.pop_back();
+    for(int i = 0; i < data.size(); ++i)
+      data[i] |= n.data[i];
+    return *this;
+  }
+  
+  nat& operator^=(const nat& n){
+    if(n.data.size() < data.size())
+      for(int i = 0; i < data.size()-n.data.size(); ++i)
+        data.pop_back();
+    for(int i = 0; i < data.size(); ++i)
+      data[i] ^= n.data[i];
+    return *this;
+  }
+  
+  nat operator&(const nat& n) const {
+    nat r = *this;
+    r &= n;
+    return r;
+  }
+  nat operator|(const nat& n) const {
+    nat r = *this;
+    r |= n;
+    return r;
+  }
+  nat operator^(const nat& n) const {
+    nat r = *this;
+    r ^= n;
+    return r;
+  }
+  
+  nat& operator+=(const nat& n){
+    
+  }
 };
 
 struct num {
