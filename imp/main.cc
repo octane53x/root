@@ -16,6 +16,8 @@
 
 using namespace std;
 
+void pass(){}
+
 struct nat {
   vec<llu> data;
   
@@ -103,7 +105,58 @@ struct nat {
   }
   
   nat& operator+=(const nat& n){
-    
+    if(n.data.size() > data.size())
+      for(int i = 0; i < n.data.size()-data.size(); ++i)
+        data.pb(0);
+    bool carry = false;
+    for(int i = 0; i < data.size(); ++i){
+      llu b = 1;
+      for(int j = 0; j < 64; ++j){
+        if(data[i] | b){
+          if(n.data[i] | b){
+            if(carry) pass();
+            else data[i] &= (~b), carry = true;
+          }else{
+            if(carry) data[i] &= (~b);
+            else pass();
+          }
+        }else{
+          if(n.data[i] | b){
+            if(carry) pass();
+            else data[i] |= b, carry = true;
+          }else{
+            if(carry) data[i] |= b, carry = false;
+            else pass();
+          }
+        }
+        b <<= 1;
+      }
+    }
+    if(carry)
+      data.pb(1);
+    return *this;
+  }
+  
+  nat kar(const nat& x, const nat& y){
+    if(x.data.size() > 1 && y.data.size() > 1){
+      nat xl,xr,yl,yr;
+      xr.data.clear(), xl.data.clear(), yl.data.clear(), yr.data.clear();
+      for(int i = 0; i < (x.data.size() >> 1); ++i)
+        xr.pb(x[i]);
+      for(int i = (x.data.size() >> 1); i < x.data.size(); ++i)
+        xl.pb(x[i]);
+      for(int i = 0; i < (y.data.size() >> 1); ++i)
+        yr.pb(y[i]);
+      for(int i = (y.data.size() >> 1); i < y.data.size(); ++i)
+        yl.pb(y[i]);
+      return (kar(xl, yl) << ???) + ... //! resume
+    }
+  }
+  
+  nat& operator*=(const nat& n){
+    nat r = kar(*this, n);
+    *this = r;
+    return *this;
   }
 };
 
