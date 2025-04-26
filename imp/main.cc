@@ -14,19 +14,40 @@
 #define vec vector
 #define pb push_back
 
+#define SHIFT_MAX (1 << 30)
+
 using namespace std;
 
 void pass(){}
+
+void err(char* msg){
+  printf("ERR: %s\n", msg);
+  exit(-1);
+}
+
+void assert(bool b, char* msg){
+  if(!b) err((str("ASSERT: ") + str(msg)).c_str());
+}
+
+int min(int x, int y){ return (x < y) ? x : y; }
+int max(int x, int y){ return (x > y) ? x : y; }
 
 struct nat {
   vec<llu> data;
   
   nat(){ data.pb(0) }
-  nat(ll n){ data.pb(abs(n)); }
+  nat(int n){ data.pb(abs(n)); }
   nat(const nat& n){ *this = n; }
   
   void validate(){
+    while(data[data.size()-1] == 0)
+      data.pop_back();
     if(data.empty()) data.pb(0);
+  }
+  
+  int to_int(){
+    assert(*this <= (int)((1LL << 31) - 1), "Number too large to convert");
+    return data[0];
   }
   
   nat& operator=(const nat& n){
@@ -67,6 +88,7 @@ struct nat {
         data.pop_back();
     for(int i = 0; i < data.size(); ++i)
       data[i] &= n.data[i];
+    validate();
     return *this;
   }
   
@@ -76,6 +98,7 @@ struct nat {
         data.pop_back();
     for(int i = 0; i < data.size(); ++i)
       data[i] |= n.data[i];
+    validate();
     return *this;
   }
   
@@ -85,6 +108,41 @@ struct nat {
         data.pop_back();
     for(int i = 0; i < data.size(); ++i)
       data[i] ^= n.data[i];
+    validate();
+    return *this;
+  }
+  
+  nat& operator>>=(const nat& n){
+    if(n > SHIFT_MAX){
+      *this = 0;
+      return *this;
+    }
+    int sh = n.to_int();
+    int S = sh / 64, s = sh % 64;
+    for(int i = 0; i < data.size()-S; ++i)
+      data[i] = data[i+S];
+    for(int i = 0; i < S; ++i)
+      data.pop_back();
+    for(int i = 0; i < data.size()-1; ++i)
+      data[i] = ((data[i] >> s) | (data[i+1] << (64-s)));
+    data[data.size()-1] >>= s;
+    validate();
+    return *this;
+  }
+  
+  nat& operator<<=(const nat& n){
+    assert(n < SHIFT_MAX, "Shift too large");
+    int sh = n.to_int();
+    int S = sh / 64, s = sh % 64, k = data.size()-1;
+    for(int i = 0; i < S; ++i)
+      data.pb(0);
+    for(int i = k; i >= 0; --i)
+      data[i+S] = data[i];
+    data.pb(0);
+    for(int i = data.size()-1; i > 0; --i)
+      data[i] = ((data[i] << s) | (data[i-1] >> (64-s)));
+    data[0] <<= s;
+    validate();
     return *this;
   }
   
@@ -101,6 +159,16 @@ struct nat {
   nat operator^(const nat& n) const {
     nat r = *this;
     r ^= n;
+    return r;
+  }
+  nat operator>>(const nat& n) const {
+    nat r = *this;
+    r >>= n;
+    return r;
+  }
+  nat operator<<(const nat& n) const {
+    nat r = *this;
+    r <<= n;
     return r;
   }
   
@@ -134,28 +202,34 @@ struct nat {
     }
     if(carry)
       data.pb(1);
+    validate();
     return *this;
   }
   
   nat kar(const nat& x, const nat& y){
     if(x.data.size() > 1 && y.data.size() > 1){
+      int N = (min(x.data.size(), y.data.size()) >> 1);
       nat xl,xr,yl,yr;
       xr.data.clear(), xl.data.clear(), yl.data.clear(), yr.data.clear();
-      for(int i = 0; i < (x.data.size() >> 1); ++i)
+      for(int i = 0; i < N; ++i)
         xr.pb(x[i]);
-      for(int i = (x.data.size() >> 1); i < x.data.size(); ++i)
+      for(int i = N; i < x.data.size(); ++i)
         xl.pb(x[i]);
-      for(int i = 0; i < (y.data.size() >> 1); ++i)
+      for(int i = 0; i < N; ++i)
         yr.pb(y[i]);
-      for(int i = (y.data.size() >> 1); i < y.data.size(); ++i)
+      for(int i = N; i < y.data.size(); ++i)
         yl.pb(y[i]);
-      return (kar(xl, yl) << ???) + ... //! resume
+      return (kar(xl, yl) << (N << 7))
+           + ((kar(xl + xr, yl + yr) - kar(xl, yl) - kar(xr, yr)) << (N << 6))
+           + kar(xr, yr);
     }
+    
   }
   
   nat& operator*=(const nat& n){
     nat r = kar(*this, n);
     *this = r;
+    validate();
     return *this;
   }
 };
