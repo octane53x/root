@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <math.h>
 
 #include <string>
@@ -29,8 +30,24 @@ void assert(bool b, char* msg){
   if(!b) err((str("ASSERT: ") + str(msg)).c_str());
 }
 
+void sleep(int ms){
+  clock_t start = clock();
+  while(1){
+    clock_t t = clock();
+    int p = (double)(t - start) / CLOCKS_PER_SEC * 1000.0;
+    if(p >= ms) break;
+  }
+}
+
 int min(int x, int y){ return (x < y) ? x : y; }
 int max(int x, int y){ return (x > y) ? x : y; }
+
+template <typename T>
+bool contains(vec<T>& v, T t){
+  for(int i = 0; i < v.size(); ++i)
+    if(v[i] == t) return true;
+  return false;
+}
 
 struct nat {
   vec<llu> data;
@@ -278,67 +295,6 @@ struct graph {
   graph(){}
 };
 
-struct Earth {
-  map<str, int> minerals;
-  vec<Earth*> tunnels;
-  Earth(){}
-};
-
-struct Unit {
-  int health, speed, power;
-  str name;
-  Unit(){}
-};
-
-struct Worker : Unit {
-  Worker(){}
-};
-
-struct Feature {
-  int health;
-  str name;
-  point loc;
-  vec<Worker> workers;
-  map<str, int> gems;
-  Feature(){}
-};
-
-struct Tower : Feature {
-  int damage, range;
-  graph<point> border;
-  Tower(){}
-};
-
-struct Mine : Feature {
-  Earth* top;
-  Mine(){}
-};
-
-struct Recipe {
-  map<str, int> parts, product;
-  Recipe(){}
-};
-
-struct Factory : Feature {
-  Recipe recipe;
-  Factory(){}
-};
-
-struct Tile {
-  int altitude;
-  str name;
-  Feature* feature;
-  vec<Unit> units;
-  Tile(){}
-};
-
-struct Planet {
-  vec<vec<vec<Earth> > > earth;
-  vec<vec<Tile> > surface;
-  vec<Feature> features;
-  Planet(){}
-};
-
 const int C_MINERALS = 3;
 const vec<str> MINERALS = {
   // CUSTOM:
@@ -412,12 +368,85 @@ const int
   MIN_BLOCKS = 10,
   MAX_BLOCKS = 10000;
 
-template <typename T>
-bool contains(vec<T>& v, T t){
-  for(int i = 0; i < v.size(); ++i)
-    if(v[i] == t) return true;
-  return false;
-}
+struct Block {
+  map<str, int> minerals;
+  vec<Block*> tunnels;
+  Block(){}
+};
+
+struct Unit {
+  int health, speed, energy;
+  str name;
+  Unit(){}
+};
+
+struct Worker : Unit {
+  Worker(){}
+};
+
+struct Bot : Unit {
+  map<str, int> gems;
+};
+
+struct Feature {
+  int health;
+  str name;
+  point loc;
+  Feature(){}
+};
+
+struct Tree : Feature {
+  int wood;
+  Tree(): name("TREE") {}
+};
+
+struct Tower : Feature {
+  int damage, range;
+  graph<point> border;
+  map<str, int> gems;
+  Tower(): name("TOWER") {}
+};
+
+struct Mine : Feature {
+  Block* top;
+  vec<Worker> workers;
+  map<str, int> gems;
+  Mine(): name("MINE") {}
+};
+
+struct Farm : Feature {
+  graph<point> border;
+  vec<vec<str> > crops;
+  vec<Worker> workers;
+  map<str, int> gems;
+  Farm(): name("FARM") {}
+};
+
+struct Recipe {
+  map<str, int> parts, product;
+  Recipe(){}
+};
+
+struct Factory : Feature {
+  Recipe recipe;
+  map<str, int> gems;
+  Factory(): name("FACTORY") {}
+};
+
+struct Tile {
+  int altitude;
+  str name;
+  Feature* feature;
+  vec<Unit> units;
+  Tile(){}
+};
+
+struct Planet {
+  vec<vec<vec<Block> > > earth;
+  vec<vec<Tile> > surface;
+  vec<Feature> features;
+  Planet(){}
+};
 
 void fill_earth(Planet& p){
   // Custom minerals
@@ -444,7 +473,31 @@ void fill_earth(Planet& p){
     }
     
     // Place mineral
-    int B = //! resume
+    //! int B =
+  }
+}
+
+void move(int x, int y){
+  
+}
+
+void console(){
+  printf("(1) MOVE\n");
+  printf("(2) BUILD\n");
+  printf("(3) RECIPE\n");
+  int c;
+  scanf("%d", c);
+  switch(c){
+  case 1:
+    printf("LOC: %d, %d\n");
+    printf("Enter x y\n");
+    int x,y;
+    scanf("%d %d", x, y);
+    move(x, y);
+    break;
+    
+  case 2:
+    
   }
 }
 
