@@ -361,12 +361,19 @@ const vec<str> GEMS = {
 };
 
 const int
+  TOWER_SIZE = 5,
+  MINE_SIZE = 3,
+  FACTORY_SIZE = 4,
+
   MINE_WIDTH = 201,
   MINE_DEPTH = 100,
   MIN_MINERALS = 3,
   MAX_MINERALS = 10,
   MIN_BLOCKS = 10,
   MAX_BLOCKS = 10000;
+  
+struct Game;
+Game g;
 
 struct Block {
   map<str, int> minerals;
@@ -375,12 +382,13 @@ struct Block {
 };
 
 struct Unit {
-  int health, speed, energy;
+  int id, health, speed, energy;
   str name;
   Unit(){}
 };
 
 struct Worker : Unit {
+  int progress;
   Worker(){}
 };
 
@@ -389,9 +397,9 @@ struct Bot : Unit {
 };
 
 struct Feature {
-  int health;
+  int id, health;
   str name;
-  point loc;
+  point loc, size;
   Feature(){}
 };
 
@@ -404,14 +412,16 @@ struct Tower : Feature {
   int damage, range;
   graph<point> border;
   map<str, int> gems;
-  Tower(): name("TOWER") {}
+  Tower(int _x, int _y): name("TOWER"), loc(point(_x, _y)),
+                         size(point(TOWER_SIZE, TOWER_SIZE)) {}
 };
 
 struct Mine : Feature {
   Block* top;
   vec<Worker> workers;
   map<str, int> gems;
-  Mine(): name("MINE") {}
+  Mine(int _x, int _y): name("MINE"), loc(point(_x, _y)),
+                        size(point(MINE_SIZE, MINE_SIZE)) {}
 };
 
 struct Farm : Feature {
@@ -430,7 +440,13 @@ struct Recipe {
 struct Factory : Feature {
   Recipe recipe;
   map<str, int> gems;
-  Factory(): name("FACTORY") {}
+  Factory(int _x, int _y): name("FACTORY"), loc(point(_x, _y)),
+                           size(point(FACTORY_SIZE, FACTORY_SIZE)) {}
+};
+
+struct Lab : Feature {
+  map<str, int> gems;
+  Lab(): name("LAB") {}
 };
 
 struct Tile {
@@ -442,20 +458,34 @@ struct Tile {
 };
 
 struct Planet {
+  int id;
   vec<vec<vec<Block> > > earth;
   vec<vec<Tile> > surface;
   vec<Feature> features;
-  Planet(){}
+  Planet(){
+    id = g.next_id();
+  }
 };
 
-void fill_earth(Planet& p){
+struct Game {
+  int last_id;
+  vec<Planet> planets;
+  Planet* planet; // Where the player is
+  Bot* player;
+  Game(): last_id(1) {}
+  int next_id(){
+    return ++last_id;
+  }
+};
+
+void gen_earth(){
   // Custom minerals
   for(int i = 0; i < MINE_WIDTH; ++i)
     for(int j = 0; j < MINE_WIDTH; ++j)
       for(int k = 0; k < MINE_DEPTH; ++k){
-        p.earth[i][j][k].minerals["SOIL"] = 100;
+        g.planet->earth[i][j][k].minerals["SOIL"] = 100;
         if(!(rand() % 4))
-          p.earth[i][j][k].minerals["STONE"] = rand() % 100 + 1;
+          g.planet->earth[i][j][k].minerals["STONE"] = rand() % 100 + 1;
       }
 
   // Random minerals
@@ -477,7 +507,31 @@ void fill_earth(Planet& p){
   }
 }
 
+void gen_surface(){
+  
+}
+
 void move(int x, int y){
+  if(g.planet->surface[x][y].feature != NULL){
+    printf("ERR: Tile occupied\n");
+    return;
+  }
+  sleep(1000);
+  const vec<Unit>& u = g.planet->surface[xp][yp].units;
+  int xp = g.player->loc.x, yp = g.player->loc.y;
+  for(int i = 0; i < u.size(); ++i){
+    if(u[i].id = g.player->id){
+      Bot b = (Bot)u[i];
+      u.erase(u.begin() + i);
+      u.pb(b);
+      break;
+    }
+  }
+  printf("Moved player from (%d,%d) to (%d,%d)\n", xp,yp,x,y);
+}
+
+void build(Feature f){
+  // Check if occupied
   
 }
 
@@ -489,7 +543,7 @@ void console(){
   scanf("%d", c);
   switch(c){
   case 1:
-    printf("LOC: %d, %d\n");
+    printf("LOC: (%d,%d)\n", g.player->loc.x, g.player->loc.y);
     printf("Enter x y\n");
     int x,y;
     scanf("%d %d", x, y);
@@ -497,20 +551,44 @@ void console(){
     break;
     
   case 2:
-    
+    printf("(1) TOWER\n");
+    printf("(2) MINE\n");
+    printf("(3) FACTORY\n");
+    scanf("%d", c);
+    printf("Enter x y\n");
+    int x,y;
+    scanf("%d %d", x, y);
+    switch(c){
+    case 1:
+      build(Tower(x, y));
+      break;
+    case 2:
+      build(Mine(x, y));
+      break;
+    case 3:
+      build(Factory(x, y));
+      break;
+    default:
+      break;
+    }
+    break;
+
+  case 3:
+  
+    break;
+
+  default:
+  
+    break;
   }
 }
 
 int main(){
   int i,j,k, n;
-  Planet p;
   
-  fill_earth(p);
-  
-  n = 0;
-  for(i = 0; i < MINE_WIDTH; ++i)
-    for(j = 0; j < MINE_WIDTH; ++j)
-      for(k = 0; k < MINE_DEPTH; ++k)
-        n += p.earth[i][j][k].minerals["PLATINUM"];
-  printf("Platinum: %d\n", n);
+  gen_earth();
+  gen_surface();
+  while(1){
+    console();
+  }
 }
