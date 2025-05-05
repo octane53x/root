@@ -29,9 +29,7 @@ struct thing {
     if(type.parents.empty()) type.parents.pb(typ("thing"));
     if(id < 1) id = get_id(); }
 
-  llu get_id(){
-    if(!next_id) next_id = 1;
-    return next_id++; }
+  llu get_id(){ return next_id++; }
 
   bool is_type(const char* _t){
     str t = str(_t);
@@ -58,5 +56,7 @@ struct thing {
     r->type = type;
     r->name = name;
     return r; } };
+
+llu thing::next_id = 1;
 
 #endif

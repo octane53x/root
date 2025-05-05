@@ -25,7 +25,6 @@ struct Planet {
   vec<vec<Tile> > surface;
   vec<Feature*> features;
   Planet(){
-    id = g.next_id();
     gen_earth();
     gen_surface(); }
   void gen_earth();
@@ -33,29 +32,33 @@ struct Planet {
 
 void Planet::gen_earth(){
   // Custom minerals
-  for(int i = 0; i < MINE_WIDTH; ++i)
-    for(int j = 0; j < MINE_WIDTH; ++j)
+  for(int i = 0; i < MINE_WIDTH; ++i){
+    earth.pb(vec<vec<Block> >());
+    for(int j = 0; j < MINE_WIDTH; ++j){
+      earth[i].pb(vec<Block>());
       for(int k = 0; k < MINE_DEPTH; ++k){
+        earth[i][j].pb(Block());
         earth[i][j][k].minerals["SOIL"] = 100;
         if(!(rand() % 4))
-          earth[i][j][k].minerals["STONE"] = rand() % 100 + 1; }
+          earth[i][j][k].minerals["STONE"] = rand() % 100 + 1; } } }
 
   // Random minerals
-  vec<str> used; //! uset
-  int M = rand() % (MAX_MINERALS - MIN_MINERALS) + MIN_MINERALS;
-  for(int m = 0; m < M; ++m){
+  // vec<str> used; //! uset
+  // int M = rand() % (MAX_MINERALS - MIN_MINERALS) + MIN_MINERALS;
+  // for(int m = 0; m < M; ++m){
 
-    // Select mineral
-    int r;
-    bool done = false;
-    while(!done){
-      r = rand() % (MINERALS.size()-C_MINERALS) + C_MINERALS;
-      if(!contains(used, MINERALS[r]))
-        done = true, used.pb(MINERALS[r]); }
+  //   // Select mineral
+  //   int r;
+  //   bool done = false;
+  //   while(!done){
+  //     r = rand() % (MINERALS.size()-C_MINERALS) + C_MINERALS;
+  //     if(!contains(used, MINERALS[r]))
+  //       done = true, used.pb(MINERALS[r]); }
 
     // Place mineral
     //! int B =
-  } }
+  //}
+}
 
 void Planet::gen_surface(){
   for(int i = 0; i < SURFACE_WIDTH; ++i){

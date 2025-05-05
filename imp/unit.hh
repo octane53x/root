@@ -9,8 +9,7 @@ struct Unit {
   int id, health, speed, energy;
   str name;
   point loc;
-  Unit(){
-    id = g.next_id(); } };
+  Unit(){} };
 
 struct Worker : Unit {
   int progress;
