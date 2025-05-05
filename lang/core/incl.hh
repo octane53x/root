@@ -1,4 +1,4 @@
-// incl.hh
+// INCL
 
 #ifndef INCL_HH
 #define INCL_HH

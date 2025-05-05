@@ -3,6 +3,8 @@
 #ifndef CONST_HH
 #define CONST_HH
 
+#include "../lang/lang.hh"
+
 const int
   TOWER_SIZE = 5,
   MINE_SIZE = 3,

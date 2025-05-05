@@ -4,34 +4,34 @@
 
 struct nat {
   vec<llu> data;
-  
+
   nat(){ data.pb(0) }
   nat(int n){ data.pb(abs(n)); }
   nat(const nat& n){ *this = n; }
-  
+
   void validate(){
     while(data[data.size()-1] == 0)
       data.pop_back();
     if(data.empty()) data.pb(0);
   }
-  
+
   int to_int(){
     assert(*this <= (int)((1LL << 31) - 1), "Number too large to convert");
     return data[0];
   }
-  
+
   nat& operator=(const nat& n){
     data.clear();
     data = n.data;
     validate();
   }
-  
+
   bool operator==(const nat& n) const {
     for(int i = 0; i < data.size(); ++i)
       if(data[i] != n.data[i]) return false;
     return true;
   }
-  
+
   bool operator<(const nat& n) const {
     if(data.size() < n.data.size()) return true;
     if(data.size() > n.data.size()) return false;
@@ -41,7 +41,7 @@ struct nat {
     }
     return false;
   }
-  
+
   bool operator<=(const nat& n) const {
     return (*this == n || *this < n);
   }
@@ -51,7 +51,7 @@ struct nat {
   bool operator>=(const nat& n) const {
     return !(*this < n);
   }
-  
+
   nat& operator&=(const nat& n){
     if(n.data.size() < data.size())
       for(int i = 0; i < data.size()-n.data.size(); ++i)
@@ -61,7 +61,7 @@ struct nat {
     validate();
     return *this;
   }
-  
+
   nat& operator|=(const nat& n){
     if(n.data.size() < data.size())
       for(int i = 0; i < data.size()-n.data.size(); ++i)
@@ -71,7 +71,7 @@ struct nat {
     validate();
     return *this;
   }
-  
+
   nat& operator^=(const nat& n){
     if(n.data.size() < data.size())
       for(int i = 0; i < data.size()-n.data.size(); ++i)
@@ -81,7 +81,7 @@ struct nat {
     validate();
     return *this;
   }
-  
+
   nat& operator>>=(const nat& n){
     if(n > SHIFT_MAX){
       *this = 0;
@@ -99,7 +99,7 @@ struct nat {
     validate();
     return *this;
   }
-  
+
   nat& operator<<=(const nat& n){
     assert(n < SHIFT_MAX, "Shift too large");
     int sh = n.to_int();
@@ -115,7 +115,7 @@ struct nat {
     validate();
     return *this;
   }
-  
+
   nat operator&(const nat& n) const {
     nat r = *this;
     r &= n;
@@ -141,7 +141,7 @@ struct nat {
     r <<= n;
     return r;
   }
-  
+
   nat& operator+=(const nat& n){
     if(n.data.size() > data.size())
       for(int i = 0; i < n.data.size()-data.size(); ++i)
@@ -175,7 +175,7 @@ struct nat {
     validate();
     return *this;
   }
-  
+
   nat kar(const nat& x, const nat& y){
     if(x.data.size() > 1 && y.data.size() > 1){
       int N = (min(x.data.size(), y.data.size()) >> 1);
@@ -193,9 +193,9 @@ struct nat {
            + ((kar(xl + xr, yl + yr) - kar(xl, yl) - kar(xr, yr)) << (N << 6))
            + kar(xr, yr);
     }
-    
+
   }
-  
+
   nat& operator*=(const nat& n){
     nat r = kar(*this, n);
     *this = r;
@@ -204,25 +204,27 @@ struct nat {
   }
 };
 
-struct num {
+struct num : thing {
   bool neg;
   nat top, bot;
-  
+
   num(): top(0), bot(1) {}
   num(ll n): neg(n < 0), top(abs(n)), bot(1) {}
-  
+
   void validate(){
+    thing::validate();
+    top.validate(), bot.validate();
     if(bot == 0) bot = 1;
     nat g = top.gcd(bot);
     if(g > 1) top /= g, bot /= g;
   }
-  
+
   num& operator=(const num& n){
     top = n.top, bot = n.bot, neg = n.neg;
     validate();
     return *this;
   }
-  
+
   bool operator==(const num& n) const {
     return top == n.top && bot = n.bot && neg = n.neg;
   }

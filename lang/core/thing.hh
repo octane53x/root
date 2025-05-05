@@ -1,4 +1,7 @@
-// thing.hh
+// THING
+
+#ifndef THING_HH
+#define THING_HH
 
 #include "incl.hh"
 
@@ -8,7 +11,9 @@ struct typ {
 
   typ(): name("void"){}
   typ(const char* s): name(s){}
-};
+  typ& operator=(const char* s){
+    name = str(s);
+    return *this; } };
 
 struct thing {
   llu id;
@@ -16,42 +21,42 @@ struct thing {
   typ type;
   str name;
 
-  thing(): typ("thing") {
+  thing(): type("thing") {
     id = get_id();
-    name = type.name + str(id);
-  }
+    /*! name = type.name + str(id); */ }
 
-  _num get_id(){
+  void validate(){
+    if(type.parents.empty()) type.parents.pb(typ("thing"));
+    if(id < 1) id = get_id(); }
+
+  llu get_id(){
     if(!next_id) next_id = 1;
-    return next_id++;
-  }
+    return next_id++; }
 
   bool is_type(const char* _t){
-    _str t = _str(_t);
-    if(t == type.to_str()) return true;
-    else if(t == "void" || type.to_str() == "void")
+    str t = str(_t);
+    if(t == type.name) return true;
+    else if(t == str("void") || type.name == str("void"))
       return false;
     std::queue<typ> q;
     for(typ& u : type.parents)
       q.push(u);
     while(!q.empty()){
       typ u = q.front();
-      if(u.to_str() == t) return true;
+      if(u.name == t) return true;
       for(typ& v : u.parents)
         q.push(v);
-      q.pop();
-    }
-    return false;
-  }
+      q.pop(); }
+    return false; }
 
   //!
-  llu hash(){ return id.get_llu(); }
+  llu hash(){ return id; }
 
   thing* clone(){
-    thing* r = (thing*)alloc(sizeof(thing));
+    thing* r = new thing;
     r->id = get_id();
     r->type = type;
     r->name = name;
-    return r;
-  }
-};
+    return r; } };
+
+#endif

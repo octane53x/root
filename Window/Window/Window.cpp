@@ -1,7 +1,7 @@
 // WINDOW
 
 #include <windows.h>
-#include "../../lang/core/util.hh"
+#include "../../imp/imp.hh"
 
 const int WIN_W = 1024,
           WIN_H = 768;

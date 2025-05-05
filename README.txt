@@ -5,17 +5,9 @@ Hopefully large files can be generated or have links provided
 Included should be primarily C++ and perhaps some Python files
 
 
-FILE STRUCTURE
+TODO
 
-incl <- util
-util <- obj
-obj <- num
-obj <- scene
-ui <- scene
-num <- lang
-scene <- lang
-
-lang <- scene
-scene <- scenes
-scenes <- imp
-game <- imp
+! Inherit imp objs by thing
+! Label text/font support
+! Scene: Start Menu
+! Recipes
