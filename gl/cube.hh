@@ -1,0 +1,5 @@
+// CUBE
+
+struct Cube {
+
+};

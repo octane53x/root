@@ -17,6 +17,10 @@
 #include <map>
 #include <unordered_map>
 
+#include <algorithm>
+
+#define uchar unsigned char
+#define ui unsigned int
 #define ll long long
 #define llu unsigned long long
 #define str string
