@@ -3,6 +3,6 @@
 #ifndef LANG_HH
 #define LANG_HH
 
-#include "../gl/scene.hh"
+#include "../gl/env.hh"
 
 #endif

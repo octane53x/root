@@ -1,44 +1,23 @@
 // WINDOW
 
+#include <fstream> //!
+
+#include <atlimage.h>
+
 #include <windows.h>
+#include <windowsx.h>
 #include "../../imp/imp.hh"
+
+Env* env;
+point cursor;
+ofstream fs;
 
 const int WIN_W = 1024,
           WIN_H = 768;
 
-void draw(const HDC& hdc){
-  //!
-  int x = 0;
-  while(1){
-    RECT r;
-    r.left = 50+x;
-    r.top = 50+x;
-    r.right = 100+x;
-    r.bottom = 100+x;
-    for(int i = 0; i < 100; ++i){
-      FillRect(hdc, &r, (HBRUSH)(COLOR_WINDOW + 1));
-      ++x;
-      r.left = 50+x;
-      r.top = 50+x;
-      r.right = 100+x;
-      r.bottom = 100+x;
-      FillRect(hdc, &r, (HBRUSH)(COLOR_HIGHLIGHT + 1));
-      sleep(10);
-    }
-    for(int i = 0; i < 100; ++i){
-      FillRect(hdc, &r, (HBRUSH)(COLOR_WINDOW + 1));
-      --x;
-      r.left = 50+x;
-      r.top = 50+x;
-      r.right = 100+x;
-      r.bottom = 100+x;
-      FillRect(hdc, &r, (HBRUSH)(COLOR_HIGHLIGHT + 1));
-      sleep(10);
-    }
-  }
-}
-
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
+  bool dir;
+  str s;
   switch (uMsg) {
   case WM_DESTROY:
     PostQuitMessage(0);
@@ -46,14 +25,68 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   case WM_PAINT: {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
-    draw(hdc);
+
+    //!
+    HBITMAP bmp = CreateBitmap(1024, 768, 1, 32,
+        env.active_scene->next_frame());
+    //HBITMAP hBmp = (HBITMAP)LoadImage(NULL, TEXT("../../gl/fonts/aldo/A.bmp"),
+    //    IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    //
+    HDC hdcMem = CreateCompatibleDC(NULL);
+    HBITMAP hBmpPrev = (HBITMAP)SelectObject(hdcMem, hBmp);
+    StretchBlt(hdc, 0, 0, 1024, 768, hdcMem, 0, 0, 60, 90, SRCCOPY);
+
     EndPaint(hwnd, &ps);
     return 0; }
+  case WM_MOUSEMOVE:
+    env->cursor = point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    return 0;
+  case WM_MOUSEWHEEL:
+    //!
+    return 0;
+  case WM_KEYDOWN:
+  case WM_KEYUP:
+    dir = (uMsg == WM_KEYDOWN);
+    switch(wParam){
+      case VK_LBUTTON: s = "LCLICK"; break;
+      case VK_RBUTTON: s = "RCLICK"; break;
+      case VK_MBUTTON: s = "MCLICK"; break;
+      case VK_BACK: s = "BACKSPACE"; break;
+      case VK_TAB: s = "TAB"; break;
+      case VK_RETURN: s = "ENTER"; break;
+      case VK_SHIFT: s = "SHIFT"; break;
+      case VK_CONTROL: s = "CONTROL"; break;
+      case VK_MENU: s = "ALT"; break;
+      case VK_CAPITAL: s = "CAPSLOCK"; break;
+      case VK_ESCAPE: s = "ESCAPE"; break;
+      case VK_SPACE: s = "SPACE"; break;
+      case VK_LEFT: s = "LEFT"; break;
+      case VK_UP: s = "UP"; break;
+      case VK_RIGHT: s = "RIGHT"; break;
+      case VK_DOWN: s = "DOWN"; break;
+      case VK_DELETE: s = "DELETE"; break;
+      case VK_OEM_1: s = "COLON"; break;
+      case VK_OEM_PLUS: s = "EQUALS"; break;
+      case VK_OEM_COMMA: s = "COMMA"; break;
+      case VK_OEM_MINUS: s = "MINUS"; break;
+      case VK_OEM_PERIOD: s = "PERIOD"; break;
+      case VK_OEM_2: s = "SLASH"; break;
+      case VK_OEM_3: s = "TILDE"; break;
+      case VK_OEM_4: s = "LBRACKET"; break;
+      case VK_OEM_5: s = "BACKSLASH"; break;
+      case VK_OEM_6: s = "RBRACKET"; break;
+      case VK_OEM_7: s = "QUOTE"; break;
+    }
+    if(wParam >= '0' && wParam <= 'Z') s = (char)wParam;
+    env->keys.push(pair<str,bool>(s, dir));
+    return 0;
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
                     PWSTR pCmdLine, int nCmdShow) {
+  env = new Env();
+  env->active_scene = new TitleScreen();
   const wchar_t CLASS[] = L"WindowClass";
   WNDCLASS wc = {};
   wc.lpfnWndProc = WindowProc;

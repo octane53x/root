@@ -11,14 +11,14 @@ void err(const char* msg){
   printf("ERR: %s\n", msg);
   exit(-1); }
 
-void assert(bool b, char* msg){
+void assert(bool b, const char* msg){
   if(!b) err((str("ASSERT: ") + str(msg)).c_str()); }
 
 void sleep(int ms){
   clock_t start = clock();
   while(1){
     clock_t t = clock();
-    int p = (double)(t - start) / CLOCKS_PER_SEC * 1000.0;
+    int p = (int)floor((double)(t - start) / CLOCKS_PER_SEC * 1000.0);
     if(p >= ms) break; } }
 
 const int RMAX = 1000000;

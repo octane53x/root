@@ -8,14 +8,12 @@
 
 struct Frame {
   vec<vec<color> > data;
-  Frame(){}
-};
+  Frame(){} };
 
 struct Scene {
   vec<Label> labels;
   vec<Button> buttons;
   Frame next_frame();
-  Scene(){}
-};
+  Scene(){} };
 
 #endif

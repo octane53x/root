@@ -4,15 +4,15 @@
 #define UI_HH
 
 struct Label {
+  int size; // Pixel height
+  str text, font;
   point pos;
-  str text;
-  Label(){}
-};
+  color text_color;
+  Label(){} };
 
 struct Button {
   point pos;
   Label label;
-  virtual void fn() = 0;
-};
+  virtual void fn() = 0; };
 
 #endif
