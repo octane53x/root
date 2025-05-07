@@ -3,7 +3,7 @@
 #ifndef RECIPE_HH
 #define RECIPE_HH
 
-#include "../lang/lang.hh"
+#include "imp_incl.hh"
 
 struct Recipe {
   map<str, int> parts, product;

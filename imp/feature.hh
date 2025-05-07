@@ -3,8 +3,8 @@
 #ifndef FEATURE_HH
 #define FEATURE_HH
 
-#include "../lang/lang.hh"
-#include "const.hh"
+#include "imp_incl.hh"
+#include "data.hh"
 #include "unit.hh"
 #include "recipe.hh"
 

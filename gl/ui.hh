@@ -3,6 +3,8 @@
 #ifndef UI_HH
 #define UI_HH
 
+#include "gl_incl.hh"
+
 struct Label {
   int size; // Pixel height
   str text, font;

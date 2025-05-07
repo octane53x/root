@@ -1,19 +1,10 @@
 // WINDOW
 
-#include <fstream> //!
-
-#include <atlimage.h>
-
 #include <windows.h>
 #include <windowsx.h>
 #include "../../imp/imp.hh"
 
 Env* env;
-point cursor;
-ofstream fs;
-
-const int WIN_W = 1024,
-          WIN_H = 768;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   bool dir;

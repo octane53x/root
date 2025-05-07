@@ -3,7 +3,7 @@
 #ifndef GAME_HH
 #define GAME_HH
 
-#include "../lang/lang.hh"
+#include "imp_incl.hh"
 #include "planet.hh"
 
 struct Game {

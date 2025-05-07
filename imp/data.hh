@@ -1,9 +1,9 @@
-// CONST
+// DATA
 
-#ifndef CONST_HH
-#define CONST_HH
+#ifndef DATA_HH
+#define DATA_HH
 
-#include "../lang/lang.hh"
+#include "imp_incl.hh"
 
 const int
   TOWER_SIZE = 5,

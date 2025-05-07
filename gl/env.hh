@@ -3,7 +3,7 @@
 #ifndef ENV_HH
 #define ENV_HH
 
-#include "../lang/core/obj.hh"
+#include "gl_incl.hh"
 #include "scene.hh"
 
 struct Env {
