@@ -1,9 +1,9 @@
 // IMP SCENES
 
-#include "imp_incl.hh"
+#ifndef SCENES_HH
+#define SCENES_HH
 
-const int WIN_W = 1024,
-          WIN_H = 768;
+#include "imp_incl.hh"
 
 struct TitleScreen : Scene {
   Label title;
@@ -13,14 +13,11 @@ struct TitleScreen : Scene {
     title.text_color = color(0,0,0);
     title.size = 300;
     title.font = "aldo";
-    title.pos = point(100, 100);
-    bkgd = Scene::draw_bkgd();
-    bkgd = draw_bkgd(bkgd);
-  }
+    title.pos = point(100, 100); }
   Frame next_frame(){
-    return bkgd;
-  }
-  Frame draw_bkgd(Frame f){
-    title.draw(f);
-  }
-};
+    return bkgd; }
+  void draw_bkgd(){
+    Scene::draw_bkgd();
+    title.draw(&bkgd); } };
+
+#endif

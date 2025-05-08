@@ -7,20 +7,20 @@
 #include "ui.hh"
 
 struct Scene {
+  point win_size;
   color bkgd_color;
   Frame bkgd;
   vec<Label> labels;
   vec<Button> buttons;
-  virtual Frame next_frame() = 0;
 
   Scene(){}
-  Frame draw_bkgd(){
+  virtual Frame next_frame() = 0;
+  virtual void draw_bkgd(){
     Frame f;
-    for(int i = 0; i < WIN_W; ++i){
-      f.data.pb(vec<color>());
-      for(int j = 0; j < WIN_H; ++j)
-        f.data.pb(bkgd_color);
-    }
-  } };
+    for(int i = 0; i < win_size.x; ++i){
+      f.pb(vec<color>());
+      for(int j = 0; j < win_size.y; ++j)
+        f[i].pb(bkgd_color); }
+    bkgd = f; } };
 
 #endif

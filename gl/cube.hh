@@ -7,8 +7,9 @@ const llu INIT_SIZE = 1000000000000000000LLU;
 
 struct Cube {
   llu size;
-  Cube* outer, T, N, W, E, S, B, TNW, TNE, TSW, TSE, BNW, BNE, BSW, BSE;
-  Cube** inner, side;
+  Cube* outer, *T, *N, *W, *E, *S, *B,
+               *TNW, *TNE, *TSW, *TSE, *BNW, *BNE, *BSW, *BSE;
+  Cube** inner, **side;
   Cube(): size(INIT_SIZE) {}
   void split(){
     inner = new Cube*[8];

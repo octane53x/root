@@ -7,11 +7,13 @@
 #include "scene.hh"
 
 struct Env {
-  point cursor;
+  point cursor, win_size;
   queue<pair<str, bool> > keys; // true = keydown
   umap<str, umap<char, vec<vec<color> > > > fonts;
   Scene* active_scene;
-  Env(){}
-};
+  Env(){
+    win_size = point(INIT_WIN_W, INIT_WIN_H); }
+  void init(){
+    active_scene->win_size = win_size; } };
 
 #endif

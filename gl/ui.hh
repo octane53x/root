@@ -10,11 +10,16 @@ struct Label {
   str text, font;
   point pos;
   color text_color;
-  Label(){} };
+  Label(){}
+  //!
+  void draw(Frame* f){} };
 
 struct Button {
   point pos;
+  Image image;
   Label label;
-  virtual void fn() = 0; };
+  virtual void fn() = 0;
+  //!
+  void draw(Frame* f){} };
 
 #endif
