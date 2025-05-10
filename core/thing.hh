@@ -3,7 +3,7 @@
 #ifndef THING_HH
 #define THING_HH
 
-#include "incl.hh"
+#include "util.hh"
 
 struct typ {
   str name;

@@ -3,7 +3,6 @@
 #ifndef FEATURE_HH
 #define FEATURE_HH
 
-#include "imp_incl.hh"
 #include "data.hh"
 #include "unit.hh"
 #include "recipe.hh"

@@ -3,24 +3,23 @@
 #ifndef SCENE_HH
 #define SCENE_HH
 
-#include "gl_incl.hh"
 #include "ui.hh"
 
-struct Scene {
+struct scene {
   point win_size;
   color bkgd_color;
-  Frame bkgd;
-  vec<Label> labels;
-  vec<Button> buttons;
+  image bkgd_frame;
+  umap<str, font*> fonts;
+  vec<label> labels;
+  vec<button> buttons;
 
-  Scene(){}
-  virtual Frame next_frame() = 0;
+  scene(){}
+  virtual image next_frame() = 0;
   virtual void draw_bkgd(){
-    Frame f;
-    for(int i = 0; i < win_size.x; ++i){
-      f.pb(vec<color>());
+    image f(win_size);
+    for(int i = 0; i < win_size.x; ++i)
       for(int j = 0; j < win_size.y; ++j)
-        f[i].pb(bkgd_color); }
-    bkgd = f; } };
+        f.data[i].pb(bkgd_color);
+    bkgd_frame = f; } };
 
 #endif

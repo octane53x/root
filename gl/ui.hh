@@ -3,23 +3,33 @@
 #ifndef UI_HH
 #define UI_HH
 
-#include "gl_incl.hh"
+#include "../core/obj.hh"
 
-struct Label {
+struct label {
   int size; // Pixel height
-  str text, font;
+  str text;
   point pos;
   color text_color;
-  Label(){}
-  //!
-  void draw(Frame* f){} };
+  font* font;
+  label(){}
+  void draw(image* f){
+    int x = pos.x;
+    for(int k = 0; k < text.size(); ++k){
+      image img = font->syms[text[k]];
+      for(int i = 0; i < img.size.x; ++i){
+        for(int j = 0; j < img.size.y; ++j)
+          if(img.data[i][j] != WHITE)
+            f->data[x+i][pos.y+j] = text_color;
+        if(x+i >= f->size.x) return; }
+      x += img.size.x; } } };
 
-struct Button {
+struct button {
   point pos;
-  Image image;
-  Label label;
+  image img;
+  label label;
+  button(){}
   virtual void fn() = 0;
   //!
-  void draw(Frame* f){} };
+  void draw(image* f){} };
 
 #endif

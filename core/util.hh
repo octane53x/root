@@ -3,7 +3,7 @@
 #ifndef UTIL_HH
 #define UTIL_HH
 
-#include "incl.hh"
+#include "def.hh"
 
 void pass(){}
 

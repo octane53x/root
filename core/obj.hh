@@ -3,8 +3,8 @@
 #ifndef OBJ_HH
 #define OBJ_HH
 
-#include "util.hh"
 #include "thing.hh"
+//! #include "num.hh"
 
 struct point : thing {
   int x,y,z;
@@ -21,6 +21,10 @@ struct color : thing {
   color(uchar _r, uchar _g, uchar _b): color() { r = _r, g = _g, b = _b; }
   color(uchar _r, uchar _g, uchar _b, uchar _a):
       color() { r = _r, g = _g, b = _b, a = _a; }
+  bool operator==(const color& c){
+    return r == c.r && g == c.g && b == c.b && a == c.a; }
+  bool operator!=(const color& c){
+    return !(*this == c); }
   color avg(const color& c){
     return color((r+c.r)>>1, (g+c.g)>>1, (b+c.b)>>1, (a+c.a)>>1); } };
 
@@ -29,5 +33,21 @@ struct graph : thing {
   vec<T> nodes;
   umap<int, int> edges;
   graph(){ type = "graph"; } };
+
+struct image {
+  point size;
+  vec<vec<color> > data;
+  image(){}
+  image(point _size): size(_size) {
+    for(int i = 0; i < size.x; ++i)
+      data.pb(vec<color>());
+  }
+};
+
+struct font {
+  str name;
+  umap<char, image> syms;
+  font(){}
+};
 
 #endif

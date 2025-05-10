@@ -5,6 +5,11 @@
 
 #include "obj.hh"
 
+const double PI = 3.14159265358979;
+
+const str SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+/* {.,/?:;'"+=-_\|!@#$%^&8()[]{}<> */
+
 const color BLACK = color(0, 0, 0),
             RED = color(255, 0, 0),
             LIME = color(0, 255, 0),

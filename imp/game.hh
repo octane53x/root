@@ -3,7 +3,6 @@
 #ifndef GAME_HH
 #define GAME_HH
 
-#include "imp_incl.hh"
 #include "planet.hh"
 
 struct Game {
@@ -12,7 +11,7 @@ struct Game {
   Game(){
     planet = new Planet();
     player = new Bot();
-    int x = PLAYER_START_X, y = PLAYER_START_Y;
+    int x = PLAYER_START.x, y = PLAYER_START.y;
     planet->surface[x][y].units.pb(player);
     player->loc.x = x, player->loc.y = y; }
   // Player actions

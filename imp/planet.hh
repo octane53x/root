@@ -3,7 +3,6 @@
 #ifndef PLANET_HH
 #define PLANET_HH
 
-#include "imp_incl.hh"
 #include "feature.hh"
 #include "unit.hh"
 

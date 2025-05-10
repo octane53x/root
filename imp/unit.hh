@@ -3,7 +3,7 @@
 #ifndef UNIT_HH
 #define UNIT_HH
 
-#include "imp_incl.hh"
+#include "../core/obj.hh"
 
 struct Unit {
   int id, health, speed, energy;

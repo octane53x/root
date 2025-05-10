@@ -3,7 +3,7 @@
 #ifndef RECIPE_HH
 #define RECIPE_HH
 
-#include "imp_incl.hh"
+#include "../core/obj.hh"
 
 struct Recipe {
   map<str, int> parts, product;

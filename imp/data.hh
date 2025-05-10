@@ -3,7 +3,7 @@
 #ifndef DATA_HH
 #define DATA_HH
 
-#include "imp_incl.hh"
+#include "../core/obj.hh"
 
 const int
   TOWER_SIZE = 5,
@@ -17,10 +17,9 @@ const int
   MIN_MINERALS = 3,
   MAX_MINERALS = 10,
   MIN_BLOCKS = 10,
-  MAX_BLOCKS = 10000,
+  MAX_BLOCKS = 10000;
 
-  PLAYER_START_X = 0,
-  PLAYER_START_Y = 0;
+const point PLAYER_START = point(0, 0);
 
 const int C_MINERALS = 3;
 const vec<str> MINERALS = {

@@ -2,12 +2,12 @@
 
 //! resize window
 
-#include <windows.h>
-#include <windowsx.h>
+#include "../../core/os.hh"
 #include "../../imp/impact.hh"
 
-Impact env;
-ui bmp_data[INIT_WIN_W * INIT_WIN_H]; //! MAX_WIN
+const point INIT_WIN_SIZE = point(1024, 768);
+
+Impact* env;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   bool dir;
@@ -21,14 +21,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     HDC hdc = BeginPaint(hwnd, &ps);
 
     // Copy frame to screen
-    Frame f = env.active_scene->next_frame();
-    for(int i = 0; i < env.win_size.x; ++i)
-      for(int j = 0; j < env.win_size.y; ++j)
-        bmp_data[i * INIT_WIN_H /*!*/ + j] |=
-            ((ui)f[i][j].r << 16) | ((ui)f[i][j].g << 8) | f[i][j].b;
-    HBITMAP bmp = CreateBitmap(env.win_size.x, env.win_size.y, 1, 32, bmp_data);
-    //HBITMAP hBmp = (HBITMAP)LoadImage(NULL, TEXT("../../gl/fonts/aldo/A.bmp"),
-    //    IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    image f = env->active_scene->next_frame();
+    HBITMAP bmp = image_to_bmp(f);
     HDC hdcMem = CreateCompatibleDC(NULL);
     HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
     StretchBlt(hdc, 0, 0, 1024, 768, hdcMem, 0, 0, 60, 90, SRCCOPY);
@@ -36,7 +30,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     EndPaint(hwnd, &ps);
     return 0; }
   case WM_MOUSEMOVE:
-    env.cursor = point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    env->cursor = point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     return 0;
   case WM_MOUSEWHEEL:
     //!
@@ -75,14 +69,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
       case VK_OEM_7: s = "QUOTE"; break;
     }
     if(wParam >= '0' && wParam <= 'Z') s = (char)wParam;
-    env.keys.push(pair<str,bool>(s, dir));
+    env->keys.push(pair<str,bool>(s, dir));
     return 0;
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
                     PWSTR pCmdLine, int nCmdShow) {
-  env.init();
+  env = new Impact(INIT_WIN_SIZE);
+  env->init();
   const wchar_t CLASS[] = L"WindowClass";
   WNDCLASS wc = {};
   wc.lpfnWndProc = WindowProc;
@@ -91,7 +86,7 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
   RegisterClass(&wc);
   HWND hwnd = CreateWindowEx(
       0, CLASS, L"Window", WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, CW_USEDEFAULT, INIT_WIN_W, INIT_WIN_H,
+      CW_USEDEFAULT, CW_USEDEFAULT, INIT_WIN_SIZE.x, INIT_WIN_SIZE.y,
       nullptr, nullptr, hInst, nullptr);
   if(hwnd == nullptr) return 0;
   ShowWindow(hwnd, nCmdShow);

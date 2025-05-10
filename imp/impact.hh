@@ -3,16 +3,22 @@
 #ifndef IMPACT_HH
 #define IMPACT_HH
 
-#include "../lang/lang.hh"
+#include "../gl/fonts/font.hh"
+#include "../gl/env.hh"
 #include "game.hh"
-#include "scenes.hh"
+#include "scene/title.hh"
 
-struct Impact : Env {
+struct Impact : env {
   Game* g;
-  Impact(){}
+  Impact(point _win_size): env(_win_size) {}
   void init(){
-    active_scene = new TitleScreen();
-    Env::init();
-    active_scene->draw_bkgd(); } };
+    fonts["aldo"] = input_font("aldo");
+    Title* title = new Title();
+    active_scene = title;
+    env::init();
+    title->init();
+    title->draw_bkgd();
+    //!
+    } };
 
 #endif

@@ -3,7 +3,7 @@
 #ifndef NUM_HH
 #define NUM_HH
 
-#include "incl.hh"
+#include "util.hh"
 
 const int SHIFT_MAX = (1 << 30);
 
