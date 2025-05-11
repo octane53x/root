@@ -39,8 +39,11 @@ struct image {
   vec<vec<color> > data;
   image(){}
   image(point _size): size(_size) {
-    for(int i = 0; i < size.x; ++i)
+    for(int i = 0; i < size.y; ++i){
       data.pb(vec<color>());
+      for(int j = 0; j < size.x; ++j)
+        data[i].pb(color(255, 0, 255));
+    }
   }
 };
 

@@ -12,27 +12,27 @@ image fix_sym(image img){
   for(int i = 0; i < img.size.x; ++i){
     bool found = false;
     for(int j = 0; j < img.size.y; ++j)
-      if(img.data[i][j] != WHITE){ found = true; break; }
+      if(img.data[j][i] != WHITE){ found = true; break; }
     if(found){ left = i; break; } }
   for(int i = img.size.x-1; i >= 0; --i){
     bool found = false;
     for(int j = 0; j < img.size.y; ++j)
-      if(img.data[i][j] != WHITE){ found = true; break; }
+      if(img.data[j][i] != WHITE){ found = true; break; }
     if(found){ right = i; break; } }
   for(int j = 0; j < img.size.y; ++j){
     bool found = false;
     for(int i = 0; i < img.size.x; ++i)
-      if(img.data[i][j] != WHITE){ found = true; break; }
+      if(img.data[j][i] != WHITE){ found = true; break; }
     if(found){ top = j; break; } }
-  for(int j = img.size.y; j >= 0; --j){
+  for(int j = img.size.y-1; j >= 0; --j){
     bool found = false;
     for(int i = 0; i < img.size.x; ++i)
-      if(img.data[i][j] != WHITE){ found = true; break; }
+      if(img.data[j][i] != WHITE){ found = true; break; }
     if(found){ bot = j; break; } }
   image r(point(right-left+1, bot-top+1));
-  for(int i = left; i <= right; ++i)
-    for(int j = top; j <= bot; ++j)
-      r.data[i].pb(img.data[i][j]);
+  for(int i = top; i <= bot; ++i)
+    for(int j = left; j <= right; ++j)
+      r.data[i-top][j-left] = img.data[i][j];
   return r;
 }
 

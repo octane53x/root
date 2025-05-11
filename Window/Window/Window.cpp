@@ -25,7 +25,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     HBITMAP bmp = image_to_bmp(f);
     HDC hdcMem = CreateCompatibleDC(NULL);
     HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
-    StretchBlt(hdc, 0, 0, 1024, 768, hdcMem, 0, 0, 60, 90, SRCCOPY);
+    StretchBlt(hdc, 0, 0, env->win_size.x, env->win_size.y, hdcMem,
+        0, 0, env->win_size.x, env->win_size.y, SRCCOPY);
 
     EndPaint(hwnd, &ps);
     return 0; }

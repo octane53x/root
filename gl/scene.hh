@@ -17,9 +17,9 @@ struct scene {
   virtual image next_frame() = 0;
   virtual void draw_bkgd(){
     image f(win_size);
-    for(int i = 0; i < win_size.x; ++i)
-      for(int j = 0; j < win_size.y; ++j)
-        f.data[i].pb(bkgd_color);
+    for(int j = 0; j < win_size.y; ++j)
+      for(int i = 0; i < win_size.x; ++i)
+        f.data[j][i] = bkgd_color;
     bkgd_frame = f; } };
 
 #endif
