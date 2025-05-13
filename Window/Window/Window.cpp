@@ -22,11 +22,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
     // Copy frame to screen
     image f = env->active_scene->next_frame();
-    HBITMAP bmp = image_to_bmp(f);
+    HBITMAP bmp = image_to_bmp(hdc, f);
     HDC hdcMem = CreateCompatibleDC(NULL);
     HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
-    StretchBlt(hdc, 0, 0, env->win_size.x, env->win_size.y, hdcMem,
-        0, 0, env->win_size.x, env->win_size.y, SRCCOPY);
+    BitBlt(hdc, 0, 0, f.size.x, f.size.y, hdcMem, 0, 0, SRCCOPY);
+    SelectObject(hdcMem, bmpPrev);
+    DeleteDC(hdcMem);
 
     EndPaint(hwnd, &ps);
     return 0; }

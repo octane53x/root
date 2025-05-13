@@ -18,7 +18,8 @@ struct point : thing {
 struct color : thing {
   uchar r,g,b,a;
   color(){ type = "color"; }
-  color(uchar _r, uchar _g, uchar _b): color() { r = _r, g = _g, b = _b; }
+  color(uchar _r, uchar _g, uchar _b):
+      color() { r = _r, g = _g, b = _b, a = 0; }
   color(uchar _r, uchar _g, uchar _b, uchar _a):
       color() { r = _r, g = _g, b = _b, a = _a; }
   bool operator==(const color& c){

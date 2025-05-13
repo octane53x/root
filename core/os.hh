@@ -5,7 +5,7 @@
 
 #include "const.hh"
 
-ui bmp_data[10000000]; // 10 mil pixels
+ui bmp_data[10000000]={0}; // 10 mil pixels
 
 LPCWSTR str_to_lpcw(str s){
   int size = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
@@ -28,10 +28,36 @@ image load_bmp(str dir){
         ((uchar*)b.bmBits)[k+2]); }
   return img; }
 
-HBITMAP image_to_bmp(image& f){
+void save_bmp(image f, str file){
   for(int i = 0; i < f.size.y; ++i)
     for(int j = 0; j < f.size.x; ++j)
-      bmp_data[i * f.size.y + j] |= ((ui)f.data[i][j].r << 16)
+      bmp_data[i * f.size.x + j] = ((ui)f.data[i][j].r << 16)
+          | ((ui)f.data[i][j].g << 8) | f.data[i][j].b;
+  BITMAPINFOHEADER ih;
+  ih.biSize = sizeof(BITMAPINFOHEADER);
+  ih.biBitCount = 32;
+  ih.biPlanes = 1;
+  ih.biCompression = BI_RGB;
+  ih.biWidth = f.size.x;
+  ih.biHeight = f.size.y;
+  ih.biSizeImage = ((((ih.biWidth * ih.biBitCount) + 31) & ~31) >> 3)
+      * ih.biHeight;
+  BITMAPFILEHEADER fh;
+  fh.bfType = 'B'+('M'<<8);
+  fh.bfOffBits = sizeof(BITMAPFILEHEADER) + ih.biSize;
+  fh.bfSize = fh.bfOffBits + ih.biSizeImage;
+  fh.bfReserved1 = fh.bfReserved2 = 0;
+  FILE* fp;
+  fopen_s(&fp, file.c_str(), "wb");
+  fwrite(&fh, 1, sizeof(BITMAPFILEHEADER), fp);
+  fwrite(&ih, 1, sizeof(BITMAPINFOHEADER), fp);
+  fwrite(bmp_data, 1, ih.biSizeImage, fp);
+  fclose(fp); }
+
+HBITMAP image_to_bmp(HDC hdc, image& f){
+  for(int i = 0; i < f.size.y; ++i)
+    for(int j = 0; j < f.size.x; ++j)
+      bmp_data[i * f.size.x + j] = ((ui)f.data[i][j].r << 16)
           | ((ui)f.data[i][j].g << 8) | f.data[i][j].b;
   return CreateBitmap(f.size.x, f.size.y, 1, 32, bmp_data); }
 
