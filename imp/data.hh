@@ -3,7 +3,7 @@
 #ifndef DATA_HH
 #define DATA_HH
 
-#include "../core/obj.hh"
+#include "../gl/gl_obj.hh"
 
 const int
   TOWER_SIZE = 5,

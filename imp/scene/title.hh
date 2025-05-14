@@ -7,6 +7,7 @@
 
 struct Title : scene {
   label title_lbl;
+  vec<image> tris; //!
   Title(){
     bkgd_color = color(255,0,0);
     title_lbl.text = "IMPACT";
@@ -14,7 +15,8 @@ struct Title : scene {
     title_lbl.size = 300;
     title_lbl.pos = point(100, 100); }
   void init(){
-    title_lbl.font = fonts["aldo"]; }
+    title_lbl.font = fonts["aldo"];
+    draw_bkgd(); }
   image next_frame(){
     //!
     return bkgd_frame; }

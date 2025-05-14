@@ -3,7 +3,7 @@
 #ifndef OS_HH
 #define OS_HH
 
-#include "const.hh"
+#include "image.hh"
 
 ui bmp_data[10000000]={0}; // 10 mil pixels
 

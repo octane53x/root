@@ -3,7 +3,7 @@
 #ifndef UI_HH
 #define UI_HH
 
-#include "../core/obj.hh"
+#include "gl_const.hh"
 
 struct label {
   int size; // Pixel height

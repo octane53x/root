@@ -3,7 +3,7 @@
 #ifndef CUBE_HH
 #define CUBE_HH
 
-#include "../core/obj.hh"
+#include "gl_obj.hh"
 
 const llu INIT_SIZE = 1000000000000000000LLU;
 

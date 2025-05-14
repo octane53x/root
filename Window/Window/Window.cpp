@@ -2,7 +2,7 @@
 
 //! resize window
 
-#include "../../core/os.hh"
+#include "../../gl/os.hh"
 #include "../../imp/impact.hh"
 
 const point INIT_WIN_SIZE = point(1024, 768);

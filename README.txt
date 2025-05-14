@@ -11,25 +11,28 @@ FILE STRUCTURE
 incl <- def
 def <- util
 util <- thing
-thing <- num
-num <- obj
+thing <- obj, num
 obj <- const
-const <- os
-os <- Window
 
   GL
-obj <- cube, ui
+thing <- gl_obj
+gl_obj <- gl_const, cube
+gl_const <- image, ui
+image <- os
 ui <- scene
 scene <- env
 
   IMP
-obj <- data, unit, recipe
+gl_obj <- data, unit, recipe
 data, unit, recipe <- feature
 feature <- planet
 planet <- game
 scene <- title
 font, env, game, title <- impact
 impact <- Window
+
+  DRIVER
+os, imp <- Window
 
 
 TODO
