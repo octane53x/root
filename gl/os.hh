@@ -14,8 +14,13 @@ LPCWSTR str_to_lpcw(str s){
   return r; }
 
 image load_bmp(str dir){
+#ifdef _WIN32
   HBITMAP bmp = (HBITMAP)LoadImage(NULL, str_to_lpcw(dir), IMAGE_BITMAP,
       0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+#else
+  HBITMAP bmp = (HBITMAP)LoadImage(NULL, dir.c_str(), IMAGE_BITMAP,
+      0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+#endif
   BITMAP b;
   GetObject(bmp, (int)sizeof(b), &b);
   point size(b.bmWidth, b.bmHeight);
@@ -48,7 +53,11 @@ void save_bmp(image f, str file){
   fh.bfSize = fh.bfOffBits + ih.biSizeImage;
   fh.bfReserved1 = fh.bfReserved2 = 0;
   FILE* fp;
+#ifdef _WIN32
   fopen_s(&fp, file.c_str(), "wb");
+#else
+  fp = fopen(file.c_str(), "wb");
+#endif
   fwrite(&fh, 1, sizeof(BITMAPFILEHEADER), fp);
   fwrite(&ih, 1, sizeof(BITMAPINFOHEADER), fp);
   fwrite(bmp_data, 1, ih.biSizeImage, fp);

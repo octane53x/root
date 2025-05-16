@@ -2,8 +2,8 @@
 
 //! resize window
 
-#include "../../gl/os.hh"
-#include "../../imp/impact.hh"
+#include "../gl/os.hh"
+#include "../imp/impact.hh"
 
 const point INIT_WIN_SIZE = point(1024, 768);
 
@@ -12,7 +12,7 @@ Impact* env;
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   bool dir;
   str s;
-  switch (uMsg) {
+  switch(uMsg){
   case WM_DESTROY:
     PostQuitMessage(0);
     return 0;

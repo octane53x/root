@@ -12,8 +12,8 @@ struct Impact : env {
   Game* g;
   Impact(point _win_size): env(_win_size) {}
   void init(){
-    font f("aldo");
-    fonts[f.name] = f;
+    //font f("aldo");
+    //fonts[f.name] = f;
     Title* title = new Title();
     active_scene = title;
     env::init();

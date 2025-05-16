@@ -3,6 +3,7 @@
 #ifndef SCENES_HH
 #define SCENES_HH
 
+#include "../../gl/shape.hh"
 #include "../../gl/scene.hh"
 
 struct Title : scene {
@@ -22,7 +23,9 @@ struct Title : scene {
     return bkgd_frame; }
   void draw_bkgd(){
     scene::draw_bkgd();
-    title_lbl.draw(&bkgd_frame);
+    //title_lbl.draw(&bkgd_frame);
+    line l(point(100, 100), point(800, 500));
+    l.draw(&bkgd_frame);
     //!
     } };
 

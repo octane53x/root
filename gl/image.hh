@@ -49,7 +49,7 @@ void image::fix(){
   *this = r; }
 
 void image::scale(double s){
-  image r(point(s * size.x + 1, s * size.y + 1));
+  image r(point((int)ceil(s*size.x), (int)ceil(s*size.y)));
   //!
   *this = r; }
 

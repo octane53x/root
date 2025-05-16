@@ -12,8 +12,8 @@ struct graph : thing {
   graph(){ type = "graph"; } };
 
 template <typename T>
-struct tree : graph {
+struct tree : graph<T> {
   T root;
-  tree(){ type = "tree"; } };
+  tree(){ this->type = "tree"; } };
 
 #endif
