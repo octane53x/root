@@ -3,7 +3,7 @@
 #ifndef IMAGE_HH
 #define IMAGE_HH
 
-#include "gl_const.hh"
+#include "gl_obj.hh"
 
 struct image : thing {
   point pos, size;

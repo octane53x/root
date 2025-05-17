@@ -7,6 +7,9 @@
 
 #define FONT_LOC "../../gl/fonts/"
 
+const str SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+/* {.,/?:;'"+=-_\|!@#$%^&8()[]{}<> */
+
 struct font : thing {
   str name;
   umap<char, image> syms;

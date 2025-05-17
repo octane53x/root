@@ -24,8 +24,7 @@ struct Title : scene {
   void draw_bkgd(){
     scene::draw_bkgd();
     //title_lbl.draw(&bkgd_frame);
-    line l(point(100, 100), point(800, 500));
-    l.draw(&bkgd_frame);
+    triangle(point(100,100), point(100,200), point(50,150)).draw(&bkgd_frame);
     //!
     } };
 
