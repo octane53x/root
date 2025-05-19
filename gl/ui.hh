@@ -28,7 +28,6 @@ struct button {
   label label;
   button(){}
   virtual void fn() = 0;
-  //!
   void draw(image* f){} };
 
 #endif

@@ -5,7 +5,7 @@
 #include "../gl/os.hh"
 #include "../imp/impact.hh"
 
-const point INIT_WIN_SIZE = point(1024, 768);
+const point INIT_WIN_SIZE = point(500, 500);
 
 Impact* env;
 
@@ -20,19 +20,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
 
+    clock_t clock0 = clock();
+
     // Copy frame to screen
-    image f = env->active_scene->next_frame();
+    image* f = env->active_scene->next_frame();
+
+    clock_t clock1 = clock();
+    {ofstream fs("../debug.txt", ios::app);
+    fs << "next_frame: " << (double)(clock1-clock0)/CLOCKS_PER_SEC << "\n";
+    fs.close();}
+
     HBITMAP bmp = image_to_bmp(hdc, f);
     HDC hdcMem = CreateCompatibleDC(NULL);
     HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
-    BitBlt(hdc, 0, 0, f.size.x, f.size.y, hdcMem, 0, 0, SRCCOPY);
+    BitBlt(hdc, 0, 0, f->size.x, f->size.y, hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, bmpPrev);
     DeleteDC(hdcMem);
 
     EndPaint(hwnd, &ps);
     return 0; }
-  case WM_MOUSEMOVE:
+  case WM_MOUSEMOVE: //! replace with GetCursorPos every frame
     env->cursor = point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+
+    {ofstream fs("../debug.txt", ios::app);
+    fs << "MOVE: " << env->cursor.x << "," << env->cursor.y << "\n";
+    fs.close();}
+
     return 0;
   case WM_MOUSEWHEEL:
     //!
@@ -95,5 +108,6 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
   MSG msg = {};
   while(GetMessage(&msg, nullptr, 0, 0)){
     TranslateMessage(&msg);
-    DispatchMessage(&msg); }
+    DispatchMessage(&msg);
+    InvalidateRect(hwnd, nullptr, FALSE); }
   return 0; }

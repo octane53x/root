@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 #include <fstream>
+#include <climits>
 #include <algorithm>
 
 #include <windows.h>

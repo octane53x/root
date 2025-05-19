@@ -25,33 +25,46 @@ void line::draw(image* img){
     i += (xlong ? xi : yi); }
   img->data[b.y][b.x] = fill_color; }
 
-void triangle::draw(image* img){
-  image tmp(img->size);
-  line(a, b).draw(&tmp);
-  line(a, c).draw(&tmp);
-  line(b, c).draw(&tmp);
-  line(a, b).draw(img);
-  line(a, c).draw(img);
-  line(b, c).draw(img);
-  for(int i = 0; i < tmp.size.y; ++i){
-    bool fill = false;
-    int jt;
-    for(int j = 0; j < tmp.size.x; ++j){
-      if(tmp.data[i][j] == BLACK){
-        fill = !fill;
-        if(fill) jt = j;
-        else for(int k = jt; k <= j; ++k)
-          img->data[i][k] = fill_color; } } } }
+void polygon::draw(image* img){
+  int top = INT_MAX, bot = 0, left = INT_MAX, right = 0;
+  for(int i = 0; i < points.size(); ++i){
+    top = min(top, points[i].y);
+    bot = max(bot, points[i].y);
+    left = min(left, points[i].x);
+    right = max(right, points[i].x); }
+  image tmp(point(right-left+1, bot-top+1));
+  vec<point> p;
+  for(int i = 0; i < points.size(); ++i)
+    p.pb(point(points[i].x-left, points[i].y-top));
+  for(int i = 0; i < points.size()-1; ++i)
+    line(p[i], p[i+1]).draw(&tmp);
+  line(p.back(), p[0]).draw(&tmp);
+  int x, y = (tmp.size.y >> 1);
+  for(x = 0; x < tmp.size.x; ++x)
+    if(tmp.data[y][x] == BLACK){ ++x; break; }
+  queue<point> q;
+  q.push(point(x, y));
+  tmp.data[y][x] = BLACK;
+  while(!q.empty()){
+    point p = q.front();
+    q.pop();
+    if(tmp.data[p.y-1][p.x] == WHITE){
+      q.push(point(p.x, p.y-1));
+      tmp.data[p.y-1][p.x] = BLACK; }
+    if(tmp.data[p.y+1][p.x] == WHITE){
+      q.push(point(p.x, p.y+1));
+      tmp.data[p.y+1][p.x] = BLACK; }
+    if(tmp.data[p.y][p.x-1] == WHITE){
+      q.push(point(p.x-1, p.y));
+      tmp.data[p.y][p.x-1] = BLACK; }
+    if(tmp.data[p.y][p.x+1] == WHITE){
+      q.push(point(p.x+1, p.y));
+      tmp.data[p.y][p.x+1] = BLACK; } }
+  for(int i = 0; i < tmp.size.y; ++i)
+    for(int j = 0; j < tmp.size.x; ++j)
+      if(tmp.data[i][j] == BLACK)
+        img->data[i+top][j+left] = fill_color; }
 
-// image rectangle(point topleft, point size, color col){
-//   image r(size);
-//   for(int i = 0; i < size.y; ++i)
-//     for(int j = 0; j < size.x; ++j)
-//       r.data[i][j] = col;
-//   return r; }
-
-// image circle(point center, int rad, color col){
-
-// }
+//! image circle(point center, int rad, color col){}
 
 #endif

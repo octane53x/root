@@ -63,11 +63,11 @@ void save_bmp(image f, str file){
   fwrite(bmp_data, 1, ih.biSizeImage, fp);
   fclose(fp); }
 
-HBITMAP image_to_bmp(HDC hdc, image& f){
-  for(int i = 0; i < f.size.y; ++i)
-    for(int j = 0; j < f.size.x; ++j)
-      bmp_data[i * f.size.x + j] = ((ui)f.data[i][j].r << 16)
-          | ((ui)f.data[i][j].g << 8) | f.data[i][j].b;
-  return CreateBitmap(f.size.x, f.size.y, 1, 32, bmp_data); }
+HBITMAP image_to_bmp(HDC hdc, image* f){
+  for(int i = 0; i < f->size.y; ++i)
+    for(int j = 0; j < f->size.x; ++j)
+      bmp_data[i * f->size.x + j] = ((ui)f->data[i][j].r << 16)
+          | ((ui)f->data[i][j].g << 8) | f->data[i][j].b;
+  return CreateBitmap(f->size.x, f->size.y, 1, 32, bmp_data); }
 
 #endif

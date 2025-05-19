@@ -5,19 +5,16 @@
 
 #include "../core/thing.hh"
 
-struct color : thing {
-  uchar r,g,b,a;
-  color(){ type = "color"; }
-  color(uchar _r, uchar _g, uchar _b):
-      color() { r = _r, g = _g, b = _b, a = 0; }
-  color(uchar _r, uchar _g, uchar _b, uchar _a):
-      color() { r = _r, g = _g, b = _b, a = _a; }
+struct color {
+  uchar r,g,b;
+  color(): r(0), g(0), b(0) {}
+  color(uchar _r, uchar _g, uchar _b): r(_r), g(_g), b(_b) {}
   bool operator==(const color& c){
-    return r == c.r && g == c.g && b == c.b && a == c.a; }
+    return r == c.r && g == c.g && b == c.b; }
   bool operator!=(const color& c){
     return !(*this == c); }
   color avg(const color& c){
-    return color((r+c.r)>>1, (g+c.g)>>1, (b+c.b)>>1, (a+c.a)>>1); } };
+    return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); } };
 
 const color BLACK = color(0, 0, 0),
             RED = color(255, 0, 0),
@@ -42,11 +39,11 @@ const color BLACK = color(0, 0, 0),
             INDIGO = color(75, 0, 130),
             PINK = color(255, 192, 203);
 
-struct point : thing {
+struct point {
   int x,y,z;
-  point(){ type = "point"; }
-  point(int _x, int _y): point() { x = _x, y = _y, z = 0; }
-  point(int _x, int _y, int _z): point() { x = _x, y = _y, z = _z; }
+  point(){}
+  point(int _x, int _y){ x = _x, y = _y, z = 0; }
+  point(int _x, int _y, int _z){ x = _x, y = _y, z = _z; }
   double dist(const point& p){
     int a = abs(x - p.x), b = abs(y - p.y), c = abs(z - p.z);
     return sqrt(a*a + b*b + c*c); } };
@@ -61,21 +58,11 @@ struct line : thing {
   line(point _a, point _b): line() { a = _a, b = _b, fill_color = BLACK; }
   void draw(image* img); };
 
-struct triangle : thing {
-  point a,b,c;
+struct polygon : thing {
+  vec<point> points;
   color fill_color;
-  triangle(){ type = "triangle"; }
-  triangle(point _a, point _b, point _c): triangle() {
-      a = _a, b = _b, c = _c, fill_color = BLACK; }
-  void draw(image* img); };
-
-struct rectangle : thing {
-  int width, height;
-  point topleft;
-  color fill_color;
-  rectangle(){ type = "rectangle"; }
-  rectangle(point tl, int w, int h): rectangle() {
-      topleft = tl, width = w, height = h, fill_color = BLACK; }
+  polygon(){ type = "polygon"; }
+  polygon(const vec<point>& _p): polygon() { points = _p; }
   void draw(image* img); };
 
 struct circle : thing {

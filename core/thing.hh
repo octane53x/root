@@ -8,7 +8,6 @@
 struct typ {
   str name;
   vec<typ> parents;
-
   typ(): name("void"){}
   typ(const char* s): name(s){}
   typ& operator=(const char* s){
@@ -18,10 +17,11 @@ struct typ {
 struct thing {
   llu id;
   static llu next_id;
-  typ type;
+  /*! static */ typ type;
   str name;
 
-  thing(): type("thing") {
+  thing(){
+    type = "thing";
     id = get_id();
     /*! name = type.name + str(id); */ }
 

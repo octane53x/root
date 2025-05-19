@@ -5,8 +5,8 @@
 
 #include "../gl/gl_obj.hh"
 
-struct Recipe {
+struct Recipe : thing {
   map<str, int> parts, product;
-  Recipe(){} };
+  Recipe(){ type = "Recipe"; } };
 
 #endif

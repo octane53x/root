@@ -5,17 +5,18 @@
 
 #include "../gl/gl_obj.hh"
 
-struct Unit {
+struct Unit : thing {
   int id, health, speed, energy;
   str name;
   point loc;
-  Unit(){} };
+  Unit(){ type = "Unit"; } };
 
 struct Worker : Unit {
   int progress;
-  Worker(){} };
+  Worker(){ type = "Worker"; } };
 
 struct Bot : Unit {
-  map<str, int> gems; };
+  map<str, int> gems;
+  Bot(){ type = "Bot"; } };
 
 #endif

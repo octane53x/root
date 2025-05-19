@@ -53,10 +53,8 @@ APRIL: BREAK
 
 TODO
 
-! Inherit imp objs by thing
-! Label text/font support
+! Fix load_bmp
 ! Scene: Start Menu
-! Recipes
 
 
 ACKNOWLEDGEMENTS
