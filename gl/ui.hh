@@ -3,12 +3,11 @@
 #ifndef UI_HH
 #define UI_HH
 
-#include "gl_obj.hh"
+#include "obj.hh"
 
-struct label {
+struct label : object {
   int size; // Pixel height
   str text;
-  point pos;
   color text_color;
   font* font;
   label(){}
@@ -22,8 +21,7 @@ struct label {
             f->data[pos.y+i][x+j] = text_color;
       x += img.size.x; } } };
 
-struct button {
-  point pos;
+struct button : object {
   image img;
   label label;
   button(){}

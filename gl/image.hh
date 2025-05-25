@@ -3,22 +3,7 @@
 #ifndef IMAGE_HH
 #define IMAGE_HH
 
-#include "gl_obj.hh"
-
-struct image : thing {
-  point pos, size;
-  vec<vec<color> > data;
-  image(){ type = "image"; }
-  image(point _size): image() {
-    size = _size;
-    for(int i = 0; i < size.y; ++i){
-      data.pb(vec<color>());
-      for(int j = 0; j < size.x; ++j)
-        data[i].pb(WHITE); } }
-  void fix();
-  void scale(double s);
-  void rotate(double r);
-  void flip(line axis); };
+#include "obj.hh"
 
 void image::fix(){
   int left,right,top,bot;

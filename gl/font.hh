@@ -3,6 +3,7 @@
 #ifndef FONT_INPUT_HH
 #define FONT_INPUT_HH
 
+#include "image.hh"
 #include "os.hh"
 
 #define FONT_LOC "../../gl/fonts/"
@@ -10,10 +11,10 @@
 const str SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 /* {.,/?:;'"+=-_\|!@#$%^&8()[]{}<> */
 
-struct font : thing {
+struct font {
   str name;
   umap<char, image> syms;
-  font(){ type = "font"; }
+  font(){}
   font(str fname): font() { input(fname); }
   void input(str fname); };
 

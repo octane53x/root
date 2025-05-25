@@ -178,7 +178,7 @@ struct nat {
     validate();
     return *this; } };
 
-struct num : thing {
+struct num {
   bool neg;
   nat top, bot;
 

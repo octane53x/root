@@ -7,32 +7,24 @@ Included should be primarily C++ and perhaps some Python files
 
 FILE STRUCTURE
 
-  CORE
+  GL
 incl <- def
 def <- util
-util <- thing
-thing <- obj, num
-obj <- const
-
-  GL
-thing <- gl_obj
-gl_obj <- gl_const, cube
-gl_const <- image, ui
-image <- shape, os
-ui <- scene
-scene <- env
+util <- obj, num
+obj <- image, shape, cube, ui, os, scene
+image, os <- font
+scene <- move, env
 
   IMP
-gl_obj <- data, unit, recipe
+obj <- data, unit, recipe
 data, unit, recipe <- feature
 feature <- planet
 planet <- game
-shape, scene <- title
+shape, move, scene, ui <- title
 font, env, game, title <- impact
-impact <- Window
 
   DRIVER
-os, imp <- Window
+os, impact <- Window
 
 
 SCHEDULE

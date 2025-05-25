@@ -3,9 +3,9 @@
 #ifndef SHAPE_HH
 #define SHAPE_HH
 
-#include "image.hh"
+#include "obj.hh"
 
-void line::draw(image* img){
+void line::draw(image* bkgd){
   int xi = (a.x < b.x) ? 1 : -1;
   int yi = (a.y < b.y) ? 1 : -1;
   int w = ((b.x - a.x) * xi);
@@ -17,16 +17,16 @@ void line::draw(image* img){
   for(int i = (xlong ? a.x : a.y); i != (xlong ? b.x : b.y);){
     int ii = i, jj = j, s;
     if(xlong) s = ii, ii = jj, jj = s;
-    //! for(int t =
-    img->data[ii][jj] = fill_color;
+    //! thickness: for(int t =
+    bkgd->data[ii][jj] = fill_color;
     double dp = d;
     d += di;
     if((int)floor(d) != (int)floor(dp)) j += (xlong ? yi : xi);
     i += (xlong ? xi : yi); }
-  img->data[b.y][b.x] = fill_color; }
+  bkgd->data[b.y][b.x] = fill_color; }
 
-void polygon::draw(image* img){
-  int top = INT_MAX, bot = 0, left = INT_MAX, right = 0;
+void polygon::draw(image* bkgd){
+  int top = bkgd->size.y, bot = 0, left = bkgd->size.x, right = 0;
   for(int i = 0; i < points.size(); ++i){
     top = min(top, points[i].y);
     bot = max(bot, points[i].y);
@@ -62,8 +62,9 @@ void polygon::draw(image* img){
       tmp.data[p.y][p.x+1] = BLACK; } }
   for(int i = 0; i < tmp.size.y; ++i)
     for(int j = 0; j < tmp.size.x; ++j)
-      if(tmp.data[i][j] == BLACK)
-        img->data[i+top][j+left] = fill_color; }
+      if(tmp.data[i][j] == BLACK && i+top >= 0 && i+top < bkgd->size.y
+          && j+left >= 0 && j+left < bkgd->size.x)
+        bkgd->data[i+top][j+left] = fill_color; }
 
 //! image circle(point center, int rad, color col){}
 

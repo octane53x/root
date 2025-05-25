@@ -3,4 +3,5 @@ rm *~
 rm core/*~
 rm gl/*~
 rm imp/*~
+rm imp/scene/*~
 rm Window/*~

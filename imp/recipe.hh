@@ -3,10 +3,10 @@
 #ifndef RECIPE_HH
 #define RECIPE_HH
 
-#include "../gl/gl_obj.hh"
+#include "../gl/obj.hh"
 
-struct Recipe : thing {
+struct Recipe {
   map<str, int> parts, product;
-  Recipe(){ type = "Recipe"; } };
+  Recipe(){} };
 
 #endif

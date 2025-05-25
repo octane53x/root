@@ -6,25 +6,24 @@
 #include "feature.hh"
 #include "unit.hh"
 
-struct Block : thing {
+struct Block {
   map<str, int> minerals;
   vec<Block*> tunnels;
-  Block(){ type = "Block"; } };
+  Block(){} };
 
-struct Tile : thing {
+struct Tile {
   int altitude;
   str name;
   Feature* feature;
   vec<Unit*> units;
-  Tile(){ type = "Tile"; } };
+  Tile(){} };
 
-struct Planet : thing {
+struct Planet {
   int id;
   vec<vec<vec<Block> > > earth;
   vec<vec<Tile> > surface;
   vec<Feature*> features;
   Planet(){
-    type = "Planet";
     gen_earth();
     gen_surface(); }
   void gen_earth();

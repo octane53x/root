@@ -1,9 +1,15 @@
-// GL OBJ
+// OBJ
 
-#ifndef GL_OBJ_HH
-#define GL_OBJ_HH
+#ifndef OBJ_HH
+#define OBJ_HH
 
-#include "../core/thing.hh"
+#include "util.hh"
+
+template <typename T>
+struct graph {
+  vec<T> nodes;
+  umap<int, vec<int> > edges;
+  graph(){} };
 
 struct color {
   uchar r,g,b;
@@ -50,28 +56,72 @@ struct point {
 
 struct image;
 
-struct line : thing {
+struct line {
   int thick;
   point a,b;
   color fill_color;
-  line(){ type = "line"; }
+  line(){}
   line(point _a, point _b): line() { a = _a, b = _b, fill_color = BLACK; }
-  void draw(image* img); };
+  void draw(image* bkgd); };
 
-struct polygon : thing {
+struct polygon {
   vec<point> points;
   color fill_color;
-  polygon(){ type = "polygon"; }
+  polygon(){}
   polygon(const vec<point>& _p): polygon() { points = _p; }
-  void draw(image* img); };
+  void draw(image* bkgd); };
 
-struct circle : thing {
+struct circle {
   int radius;
   point center;
   color fill_color;
-  circle(){ type = "circle"; }
+  circle(){}
   circle(point c, int r): circle() {
       center = c, radius = r, fill_color = BLACK; }
-  void draw(image* img); };
+  void draw(image* bkgd); };
+
+struct image {
+  point size;
+  vec<vec<color> > data;
+  image(){}
+  image(point _size): image() {
+    size = _size;
+    for(int i = 0; i < size.y; ++i){
+      data.pb(vec<color>());
+      for(int j = 0; j < size.x; ++j)
+        data[i].pb(WHITE); } }
+  void fix();
+  void scale(double s);
+  void rotate(double r);
+  void flip(line axis); };
+
+enum mov_type {
+  ROOT,
+  PATH,
+  ORBIT };
+
+struct object;
+
+struct movement {
+  mov_type type;
+  object* root;
+  vec<point> path;
+  movement(){} };
+
+struct object {
+  double vel;
+  point pos, img_root;
+  image img;
+  movement mov;
+  object(){}
+  void move(int ms);
+  void draw(image* bkgd){
+    for(int i = 0; i < img.size.y; ++i)
+      for(int j = 0; j < img.size.x; ++j){
+        int y = pos.y - img_root.y + i;
+        int x = pos.x - img_root.x + j;
+        if(img.data[i][j] != WHITE
+            && y >= 0 && y < bkgd->size.y && x >= 0 && x < bkgd->size.x)
+          bkgd->data[y][x] = img.data[i][j]; } } };
 
 #endif

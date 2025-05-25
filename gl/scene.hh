@@ -3,17 +3,22 @@
 #ifndef SCENE_HH
 #define SCENE_HH
 
-#include "ui.hh"
+#include "obj.hh"
 
-struct scene : thing {
+bool zcompare(const object* a, const object* b){
+  return a->pos.z > b->pos.z; }
+
+struct scene {
+  clock_t last_frame;
   point win_size;
   color bkgd_color;
   image frame;
   umap<str, font*> fonts;
-  vec<label> labels;
-  vec<button> buttons;
+  vec<object*> objs;
 
-  scene(){ type = "scene"; }
+  scene(): last_frame(0) {}
+  virtual image* next_frame() = 0;
+
   virtual void draw_bkgd(){
     if(frame.data.empty()){
       frame.size = win_size;
@@ -25,6 +30,12 @@ struct scene : thing {
     for(int i = 0; i < win_size.y; ++i)
       for(int j = 0; j < win_size.x; ++j)
         frame.data[i][j] = bkgd_color; }
-  virtual image* next_frame() = 0; };
+
+  void move_objs(int ms);
+  void draw_objs(){
+    sort(objs.begin(), objs.end(), zcompare);
+    for(int i = 0; i < objs.size(); ++i)
+      objs[i]->draw(&frame);
+  } };
 
 #endif

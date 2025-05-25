@@ -9,21 +9,20 @@
 
 struct Block;
 
-struct Feature : thing {
+struct Feature {
   int health;
   point loc, size;
-  Feature(){ type = "Feature"; } };
+  Feature(){} };
 
 struct Tree : Feature {
   int wood;
-  Tree(){ type = "Tree"; } };
+  Tree(){} };
 
 struct Tower : Feature {
   int damage, range;
   graph<point> border;
   map<str, int> gems;
   Tower(int _x, int _y){
-    type = "Tower";
     loc = point(_x, _y);
     size = point(TOWER_SIZE, TOWER_SIZE); } };
 
@@ -32,7 +31,6 @@ struct Mine : Feature {
   vec<Worker> workers;
   map<str, int> gems;
   Mine(int _x, int _y){
-    type = "Mine";
     loc = point(_x, _y);
     size = point(MINE_SIZE, MINE_SIZE); } };
 
@@ -41,18 +39,17 @@ struct Farm : Feature {
   vec<vec<str> > crops;
   vec<Worker> workers;
   map<str, int> gems;
-  Farm(){ type = "Farm"; } };
+  Farm(){} };
 
 struct Factory : Feature {
   Recipe recipe;
   map<str, int> gems;
   Factory(int _x, int _y){
-    type = "Factory";
     loc = point(_x, _y);
     size = point(FACTORY_SIZE, FACTORY_SIZE); } };
 
 struct Lab : Feature {
   map<str, int> gems;
-  Lab(){ type = "Lab"; } };
+  Lab(){} };
 
 #endif

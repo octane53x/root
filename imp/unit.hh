@@ -3,20 +3,20 @@
 #ifndef UNIT_HH
 #define UNIT_HH
 
-#include "../gl/gl_obj.hh"
+#include "../gl/obj.hh"
 
-struct Unit : thing {
+struct Unit {
   int id, health, speed, energy;
   str name;
   point loc;
-  Unit(){ type = "Unit"; } };
+  Unit(){} };
 
 struct Worker : Unit {
   int progress;
-  Worker(){ type = "Worker"; } };
+  Worker(){} };
 
 struct Bot : Unit {
   map<str, int> gems;
-  Bot(){ type = "Bot"; } };
+  Bot(){} };
 
 #endif

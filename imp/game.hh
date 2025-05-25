@@ -5,11 +5,10 @@
 
 #include "planet.hh"
 
-struct Game : thing {
+struct Game {
   Planet* planet; // Where the player is
   Bot* player;
   Game(){
-    type = "Game";
     planet = new Planet();
     player = new Bot();
     int x = PLAYER_START.x, y = PLAYER_START.y;
