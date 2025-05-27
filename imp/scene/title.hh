@@ -15,13 +15,10 @@ struct start_button : button {
 };
 
 struct Title : scene {
-  clock_t last_tri;
   label title_lbl, start_lbl;
   start_button start_btn;
-  vec<polygon> tris;
 
   Title(){
-    last_tri = 0;
     bkgd_color = color(255,0,0);
     title_lbl.text = "IMPACT";
     title_lbl.text_color = color(0,0,0);
@@ -29,7 +26,19 @@ struct Title : scene {
     title_lbl.pos = point(100, 100); }
 
   void init(){
-    title_lbl.font = fonts["aldo"]; }
+    //title_lbl.font = fonts["aldo"];
+    object* a = new object();
+    polygon p;
+    p.points = {point(0,0), point(20,0), point(20,20), point(0,20)};
+    p.fill_color = GREEN;
+    a->img.set_size(point(21,21));
+    p.draw(&a->img);
+    a->img_root = point(10,10);
+    a->pos = point(200,200);
+    a->mov.type = mov_type::PATH;
+    a->mov.path = {point(100,0), point(0,100), point(-100,0), point(0,-100)};
+    a->mov.vel = 50.0;
+    objs.pb(a); }
 
   void draw_bkgd(){
     scene::draw_bkgd();
@@ -44,25 +53,6 @@ struct Title : scene {
     move_objs((now - last_frame) / (CLOCKS_PER_SEC / 1000));
     last_frame = now;
     draw_objs();
-
-    if((double)(now - last_tri) / CLOCKS_PER_SEC >= 1.0){
-      int h = rand() % 150 + 50;
-      int y = rand() % (win_size.y - h);
-      int x = win_size.x - 1;
-      polygon p({point(x,y), point(x,y+h), point(x-(h>>1),y+(h>>1))});
-      tris.pb(p);
-      last_tri = now; }
-
-    for(int i = 0; i < tris.size(); ++i){
-      int t = 0;
-      for(int j = 0; j < tris[i].points.size(); ++j){
-        tris[i].points[j].x -= 5;
-        if(tris[i].points[j].x < 0) ++t; }
-      if(t == tris[i].points.size()){
-        tris.erase(tris.begin() + i);
-        --i; }
-      else tris[i].draw(&frame); }
-
     return &frame; } };
 
 #endif

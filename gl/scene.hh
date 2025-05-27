@@ -8,6 +8,11 @@
 bool zcompare(const object* a, const object* b){
   return a->pos.z > b->pos.z; }
 
+struct move_node {
+  object* obj;
+  move_node* parent;
+  vec<move_node*> children; };
+
 struct scene {
   clock_t last_frame;
   point win_size;
@@ -32,6 +37,8 @@ struct scene {
         frame.data[i][j] = bkgd_color; }
 
   void move_objs(int ms);
+  void move_rec(move_node* node, point mov, int ms);
+
   void draw_objs(){
     sort(objs.begin(), objs.end(), zcompare);
     for(int i = 0; i < objs.size(); ++i)
