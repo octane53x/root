@@ -5,7 +5,8 @@
 #include "../gl/os.hh"
 #include "../imp/impact.hh"
 
-const point INIT_WIN_SIZE = point(500, 500);
+const int INIT_WIN_W = 500,
+          INIT_WIN_H = 500;
 
 Impact* env;
 
@@ -33,19 +34,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     HBITMAP bmp = image_to_bmp(hdc, f);
     HDC hdcMem = CreateCompatibleDC(NULL);
     HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
-    BitBlt(hdc, 0, 0, f->size.x, f->size.y, hdcMem, 0, 0, SRCCOPY);
+    BitBlt(hdc, 0, 0, f->width, f->height, hdcMem, 0, 0, SRCCOPY);
     SelectObject(hdcMem, bmpPrev);
     DeleteDC(hdcMem);
 
     EndPaint(hwnd, &ps);
     return 0; }
   case WM_MOUSEMOVE: //! replace with GetCursorPos every frame
-    env->cursor = point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-
-    {ofstream fs("../debug.txt", ios::app);
-    fs << "MOVE: " << env->cursor.x << "," << env->cursor.y << "\n";
-    fs.close();}
-
+    env->cursor_x = GET_X_LPARAM(lParam), env->cursor_y = GET_Y_LPARAM(lParam);
     return 0;
   case WM_MOUSEWHEEL:
     //!
@@ -91,7 +87,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
                     PWSTR pCmdLine, int nCmdShow) {
-  env = new Impact(INIT_WIN_SIZE);
+  env = new Impact(INIT_WIN_W, INIT_WIN_H);
   env->init();
   const wchar_t CLASS[] = L"WindowClass";
   WNDCLASS wc = {};
@@ -101,7 +97,7 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
   RegisterClass(&wc);
   HWND hwnd = CreateWindowEx(
       0, CLASS, L"Window", WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, CW_USEDEFAULT, INIT_WIN_SIZE.x, INIT_WIN_SIZE.y,
+      CW_USEDEFAULT, CW_USEDEFAULT, INIT_WIN_W, INIT_WIN_H,
       nullptr, nullptr, hInst, nullptr);
   if(hwnd == nullptr) return 0;
   ShowWindow(hwnd, nCmdShow);

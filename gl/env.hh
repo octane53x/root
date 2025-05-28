@@ -6,17 +6,16 @@
 #include "scene.hh"
 
 struct env {
-  point cursor, win_size;
+  int cursor_x, cursor_y, win_w, win_h;
   queue<pair<str, bool> > keys; // true = keydown
   umap<str, font> fonts;
   scene* active_scene;
-  env(point _win_size): win_size(_win_size) {}
+  env(int _w, int _h): win_w(_w), win_h(_h) {}
   void init(){
-    active_scene->win_size = win_size;
+    active_scene->win_w = win_w, active_scene->win_h = win_h;
     umap<str, font>::iterator it;
     for(it = fonts.begin(); it != fonts.end(); ++it)
       active_scene->fonts[it->first] = &it->second;
-    //!
   } };
 
 #endif

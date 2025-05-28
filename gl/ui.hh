@@ -5,6 +5,8 @@
 
 #include "obj.hh"
 
+const int SYMBOL_SPACING = 5;
+
 struct label : object {
   int size; // Pixel height
   str text;
@@ -12,14 +14,14 @@ struct label : object {
   font* font;
   label(){}
   void draw(image* f){
-    int x = pos.x;
+    int x = (int)floor(pos.x);
     for(int k = 0; k < text.size(); ++k){
       image img = font->syms[text[k]];
-      for(int i = 0; i < img.size.y; ++i)
-        for(int j = 0; j < img.size.x; ++j)
+      for(int i = 0; i < img.height; ++i)
+        for(int j = 0; j < img.width; ++j)
           if(img.data[i][j] != WHITE)
-            f->data[pos.y+i][x+j] = text_color;
-      x += img.size.x; } } };
+            f->data[(int)floor(pos.y)+i][x+j] = text_color;
+      x += img.width + SYMBOL_SPACING; } } };
 
 struct button : object {
   image img;

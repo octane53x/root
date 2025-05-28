@@ -46,10 +46,11 @@ const color BLACK = color(0, 0, 0),
             PINK = color(255, 192, 203);
 
 struct point {
-  int x,y,z;
+  double x,y,z;
   point(){}
-  point(int _x, int _y){ x = _x, y = _y, z = 0; }
-  point(int _x, int _y, int _z){ x = _x, y = _y, z = _z; }
+  point(double _x, double _y){ x = _x, y = _y, z = 0; }
+  point(double _x, double _y, double _z){ x = _x, y = _y, z = _z; }
+
   point& operator+=(const point& p){
     x += p.x, y += p.y, z += p.z;
     return *this; }
@@ -65,26 +66,30 @@ struct point {
     r -= p;
     return r; }
   point& operator*=(double n){
-    x = (int)floor((double)x * n);
-    y = (int)floor((double)y * n);
-    z = (int)floor((double)z * n);
+    x *= n, y *= n, z *= n;
     return *this; }
   point operator*(double n){
     point r = *this;
     r *= n;
     return r; }
   point& operator/=(double n){
-    x = (int)floor((double)x / n);
-    y = (int)floor((double)y / n);
-    z = (int)floor((double)z / n);
+    x /= n, y /= n, z /= n;
     return *this; }
   point operator/(double n){
     point r = *this;
     r /= n;
     return r; }
+
   double dist(const point& p){
-    int a = abs(x - p.x), b = abs(y - p.y), c = abs(z - p.z);
-    return sqrt(a*a + b*b + c*c); } };
+    double a = x - p.x, b = y - p.y, c = z - p.z;
+    return sqrt(a*a + b*b + c*c); }
+  // deg is in radians
+  void rotate(const point& p, double deg){
+    *this -= p;
+    point p2 = *this;
+    x = p2.x * cos(deg) - p2.y * sin(deg);
+    y = p2.x * sin(deg) + p2.y * cos(deg);
+    *this += p; } };
 
 struct image;
 
@@ -104,7 +109,7 @@ struct polygon {
   void draw(image* bkgd); };
 
 struct circle {
-  int radius;
+  double radius;
   point center;
   color fill_color;
   circle(){}
@@ -113,15 +118,15 @@ struct circle {
   void draw(image* bkgd); };
 
 struct image {
-  point size;
+  int width, height;
   vec<vec<color> > data;
   image(){}
-  image(point _size){ set_size(_size); }
-  void set_size(point s){
-    size = s;
-    for(int i = 0; i < size.y; ++i){
+  image(int _w, int _h){ set_size(_w, _h); }
+  void set_size(int _w, int _h){
+    width = _w, height = _h;
+    for(int i = 0; i < height; ++i){
       data.pb(vec<color>());
-      for(int j = 0; j < size.x; ++j)
+      for(int j = 0; j < width; ++j)
         data[i].pb(WHITE); } }
   void fix();
   void scale(double s);
@@ -138,11 +143,11 @@ struct object;
 
 struct movement {
   mov_type type;
-  double vel;
-  int path_pos, path_prog;
+  int path_pos;
+  double vel, path_prog; // vel = pixels/sec
   vec<point> path;
   object* root;
-  movement(): type(mov_type::NONE), vel(0.0), path_pos(0), path_prog(0),
+  movement(): type(mov_type::NONE), vel(0.0), path_pos(0), path_prog(0.0),
       root(NULL) {} };
 
 struct object {
@@ -153,15 +158,15 @@ struct object {
   movement mov;
 
   object(){ id = next_id++; }
-  point move(int ms);
+  point move(double ms);
 
   void draw(image* bkgd){
-    for(int i = 0; i < img.size.y; ++i)
-      for(int j = 0; j < img.size.x; ++j){
-        int y = pos.y - img_root.y + i;
-        int x = pos.x - img_root.x + j;
+    for(int i = 0; i < img.height; ++i)
+      for(int j = 0; j < img.width; ++j){
+        int y = (int)floor(pos.y - img_root.y) + i;
+        int x = (int)floor(pos.x - img_root.x) + j;
         if(img.data[i][j] != WHITE
-            && y >= 0 && y < bkgd->size.y && x >= 0 && x < bkgd->size.x)
+            && y >= 0 && y < bkgd->height && x >= 0 && x < bkgd->width)
           bkgd->data[y][x] = img.data[i][j]; } } };
 
 llu object::next_id = 1;

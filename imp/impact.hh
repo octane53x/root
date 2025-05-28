@@ -10,7 +10,7 @@
 
 struct Impact : env {
   Game* g;
-  Impact(point _win_size): env(_win_size) {}
+  Impact(int _w, int _h): env(_w, _h) {}
   void init(){
     //font f("aldo");
     //fonts[f.name] = f;

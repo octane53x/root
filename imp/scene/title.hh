@@ -30,15 +30,26 @@ struct Title : scene {
     object* a = new object();
     polygon p;
     p.points = {point(0,0), point(20,0), point(20,20), point(0,20)};
-    p.fill_color = GREEN;
-    a->img.set_size(point(21,21));
+    p.fill_color = BLUE;
+    a->img.set_size(21, 21);
     p.draw(&a->img);
     a->img_root = point(10,10);
     a->pos = point(200,200);
     a->mov.type = mov_type::PATH;
     a->mov.path = {point(100,0), point(0,100), point(-100,0), point(0,-100)};
     a->mov.vel = 50.0;
-    objs.pb(a); }
+    objs.pb(a);
+
+    object* b = new object();
+    p.fill_color = YELLOW;
+    b->img.set_size(21, 21);
+    p.draw(&b->img);
+    b->img_root = point(10,10);
+    b->pos = point(200,150);
+    b->mov.type = mov_type::ORBIT;
+    b->mov.root = a;
+    b->mov.vel = 200.0;
+    objs.pb(b); }
 
   void draw_bkgd(){
     scene::draw_bkgd();
@@ -50,7 +61,7 @@ struct Title : scene {
   image* next_frame(){
     draw_bkgd();
     clock_t now = clock();
-    move_objs((now - last_frame) / (CLOCKS_PER_SEC / 1000));
+    move_objs((double)(now - last_frame) * 1000.0 / CLOCKS_PER_SEC);
     last_frame = now;
     draw_objs();
     return &frame; } };
