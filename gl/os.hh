@@ -15,22 +15,23 @@ LPCWSTR str_to_lpcw(str s){
 
 image load_bmp(str dir){
 #ifdef _WIN32
-  HBITMAP bmp = (HBITMAP)LoadImage(NULL, str_to_lpcw(dir), IMAGE_BITMAP,
+  HBITMAP hbmp = (HBITMAP)LoadImage(NULL, str_to_lpcw(dir), IMAGE_BITMAP,
       0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
 #else
-  HBITMAP bmp = (HBITMAP)LoadImage(NULL, dir.c_str(), IMAGE_BITMAP,
+  HBITMAP hbmp = (HBITMAP)LoadImage(NULL, dir.c_str(), IMAGE_BITMAP,
       0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
 #endif
   BITMAP b;
-  GetObject(bmp, (int)sizeof(b), &b);
+  GetObject(hbmp, sizeof(BITMAP), &b);
   int w = b.bmWidth, h = b.bmHeight;
   image img(w, h);
   int area = w * h;
   for(int k = 0; k < area * 3; k += 3){
-    int i = k / (w * 3);
+    int i = (k / 3) / w;
     int j = (k / 3) % w;
-    img.data[i][j] = color(((uchar*)b.bmBits)[k], ((uchar*)b.bmBits)[k+1],
+    img.data[h-i-1][j] = color(((uchar*)b.bmBits)[k], ((uchar*)b.bmBits)[k+1],
         ((uchar*)b.bmBits)[k+2]); }
+
   return img; }
 
 void save_bmp(image f, str file){

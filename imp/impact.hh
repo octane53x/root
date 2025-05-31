@@ -10,14 +10,14 @@
 
 struct Impact : env {
   Game* g;
+  Title title;
   Impact(int _w, int _h): env(_w, _h) {}
   void init(){
-    //font f("aldo");
-    //fonts[f.name] = f;
-    Title* title = new Title();
-    active_scene = title;
+    font f("aldo");
+    fonts[f.name] = f;
+    active_scene = &title;
     env::init();
-    title->init();
+    title.init();
     //!
     } };
 

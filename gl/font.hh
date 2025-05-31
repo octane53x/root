@@ -6,7 +6,7 @@
 #include "image.hh"
 #include "os.hh"
 
-#define FONT_LOC "../../gl/fonts/"
+#define FONT_LOC "../gl/fonts/"
 
 const str SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 /* {.,/?:;'"+=-_\|!@#$%^&8()[]{}<> */

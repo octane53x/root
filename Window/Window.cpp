@@ -21,16 +21,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
 
-    clock_t clock0 = clock();
-
     // Copy frame to screen
+    // clock_t clock0 = clock();
     image* f = env->active_scene->next_frame();
-
-    clock_t clock1 = clock();
-    {ofstream fs("../debug.txt", ios::app);
-    fs << "next_frame: " << (double)(clock1-clock0)/CLOCKS_PER_SEC << "\n";
-    fs.close();}
-
+    // clock_t clock1 = clock();
+    // {ofstream fs("../debug.txt", ios::app);
+    // fs << "next_frame: " << (double)(clock1-clock0)/CLOCKS_PER_SEC << "\n";
+    // fs.close();}
     HBITMAP bmp = image_to_bmp(hdc, f);
     HDC hdcMem = CreateCompatibleDC(NULL);
     HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);

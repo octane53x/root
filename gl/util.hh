@@ -5,6 +5,8 @@
 
 #include "def.hh"
 
+const double PI = 3.14159265358979323846;
+
 void pass(){}
 
 void err(const char* msg){
@@ -27,5 +29,8 @@ int crand(){
   while(r == 1)
     r = (int)floor((double)RMAX / (rand() % RMAX + 1));
   return r - 1; }
+
+int gcd(int a, int b){
+  return b ? gcd(b, a % b) : a; }
 
 #endif

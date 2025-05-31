@@ -17,7 +17,7 @@ struct scene {
   clock_t last_frame;
   int win_w, win_h;
   color bkgd_color;
-  image frame;
+  image bkgd, frame;
   umap<str, font*> fonts;
   vec<object*> objs;
 
@@ -25,16 +25,10 @@ struct scene {
   virtual image* next_frame() = 0;
 
   virtual void draw_bkgd(){
-    if(frame.data.empty()){
-      frame.width = win_w, frame.height = win_h;
-      for(int i = 0; i < win_h; ++i){
-        frame.data.pb(vec<color>());
-        for(int j = 0; j < win_w; ++j)
-          frame.data[i].pb(bkgd_color); }
-      return; }
+    bkgd.set_size(win_w, win_h);
     for(int i = 0; i < win_h; ++i)
       for(int j = 0; j < win_w; ++j)
-        frame.data[i][j] = bkgd_color; }
+        bkgd.data[i][j] = bkgd_color; }
 
   void move_objs(double ms);
   void move_rec(move_node* node, point mov, double ms);

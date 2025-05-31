@@ -17,6 +17,8 @@ struct label : object {
     int x = (int)floor(pos.x);
     for(int k = 0; k < text.size(); ++k){
       image img = font->syms[text[k]];
+      img.scale((double)size / img.height);
+      img.fix();
       for(int i = 0; i < img.height; ++i)
         for(int j = 0; j < img.width; ++j)
           if(img.data[i][j] != WHITE)

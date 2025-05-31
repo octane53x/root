@@ -91,6 +91,15 @@ struct point {
     y = p2.x * sin(deg) + p2.y * cos(deg);
     *this += p; } };
 
+struct uvec {
+  double deg;
+  uvec(){ deg = 0.0; }
+  uvec(double d){ deg = d; }
+  void rotate(double d){
+    deg += d;
+    while(deg >= PI * 2.0)
+      deg -= PI * 2.0; } };
+
 struct image;
 
 struct line {
@@ -124,6 +133,7 @@ struct image {
   image(int _w, int _h){ set_size(_w, _h); }
   void set_size(int _w, int _h){
     width = _w, height = _h;
+    data.clear();
     for(int i = 0; i < height; ++i){
       data.pb(vec<color>());
       for(int j = 0; j < width; ++j)
@@ -137,6 +147,7 @@ enum mov_type {
   NONE,
   ROOT,
   PATH,
+  CURVED_PATH,
   ORBIT };
 
 struct object;
