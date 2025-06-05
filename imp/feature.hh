@@ -12,11 +12,15 @@ struct Block;
 struct Feature {
   int health;
   point loc, size;
-  Feature(){} };
+  Feature(){}
+  virtual void update() = 0; };
 
 struct Tree : Feature {
   int wood;
-  Tree(){} };
+  Tree(){}
+  void update(){
+    //!
+  } };
 
 struct Tower : Feature {
   int damage, range;
@@ -24,7 +28,10 @@ struct Tower : Feature {
   map<str, int> gems;
   Tower(int _x, int _y){
     loc = point(_x, _y);
-    size = point(TOWER_SIZE, TOWER_SIZE); } };
+    size = point(TOWER_SIZE, TOWER_SIZE); }
+  void update(){
+    //!
+  } };
 
 struct Mine : Feature {
   Block* top;
@@ -32,24 +39,36 @@ struct Mine : Feature {
   map<str, int> gems;
   Mine(int _x, int _y){
     loc = point(_x, _y);
-    size = point(MINE_SIZE, MINE_SIZE); } };
+    size = point(MINE_SIZE, MINE_SIZE); }
+  void update(){
+    //!
+  } };
 
 struct Farm : Feature {
   graph<point> border;
   vec<vec<str> > crops;
   vec<Worker> workers;
   map<str, int> gems;
-  Farm(){} };
+  Farm(){}
+  void update(){
+    //!
+  } };
 
 struct Factory : Feature {
   Recipe recipe;
   map<str, int> gems;
   Factory(int _x, int _y){
     loc = point(_x, _y);
-    size = point(FACTORY_SIZE, FACTORY_SIZE); } };
+    size = point(FACTORY_SIZE, FACTORY_SIZE); }
+  void update(){
+    //!
+  } };
 
 struct Lab : Feature {
   map<str, int> gems;
-  Lab(){} };
+  Lab(){}
+  void update(){
+    //!
+  } };
 
 #endif

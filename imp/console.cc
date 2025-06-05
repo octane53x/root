@@ -1,6 +1,6 @@
 // IMP CONSOLE
 
-#include "imp.hh"
+#include "impact.hh"
 
 void console(Game& g){
   printf("(1) MOVE\n");
@@ -45,6 +45,12 @@ void console(Game& g){
 
 int main(){
   Game g;
+  g.planet = new Planet();
+  g.player = new Bot();
+  int x = (int)floor(PLAYER_START.x), y = (int)floor(PLAYER_START.y);
+  g.planet->surface[x][y].units.pb(g.player);
+  g.player->loc = point(x, y);
+
   while(1) console(g);
   return 0;
 }

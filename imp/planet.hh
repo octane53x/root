@@ -23,9 +23,17 @@ struct Planet {
   vec<vec<vec<Block> > > earth;
   vec<vec<Tile> > surface;
   vec<Feature*> features;
+  vec<Unit*> units;
+
   Planet(){
     gen_earth();
     gen_surface(); }
+  void update(){
+    for(Feature* f : features)
+      f->update();
+    for(Unit* u : units)
+      u->update(); }
+
   void gen_earth();
   void gen_surface(); };
 

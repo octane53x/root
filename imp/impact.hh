@@ -9,16 +9,19 @@
 #include "scene/title.hh"
 
 struct Impact : env {
-  Game* g;
+  Game game;
   Title title;
-  Impact(int _w, int _h): env(_w, _h) {}
-  void init(){
-    font f("aldo");
-    fonts[f.name] = f;
+
+  Impact(){}
+  void init(int w, int h){
+    fonts["aldo"] = font("aldo");
     active_scene = &title;
-    env::init();
+    env::init(w, h);
     title.init();
-    //!
-    } };
+    game.init(); }
+
+  void update(){
+    game.update();
+  } };
 
 #endif

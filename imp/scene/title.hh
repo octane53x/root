@@ -22,9 +22,9 @@ struct Title : scene {
 
   void init(){
     bkgd_color = color(255,0,0);
-    title_lbl.text = "MP";
+    title_lbl.text = "IMPACT0123456789";
     title_lbl.text_color = color(0,0,0);
-    title_lbl.size = 300;
+    title_lbl.size = 10;
     title_lbl.pos = point(100, 100);
     title_lbl.font = fonts["aldo"];
     draw_bkgd();

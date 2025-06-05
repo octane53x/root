@@ -8,7 +8,7 @@
 const int INIT_WIN_W = 500,
           INIT_WIN_H = 500;
 
-Impact* env;
+Impact imp;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   bool dir;
@@ -22,12 +22,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     HDC hdc = BeginPaint(hwnd, &ps);
 
     // Copy frame to screen
-    // clock_t clock0 = clock();
-    image* f = env->active_scene->next_frame();
-    // clock_t clock1 = clock();
-    // {ofstream fs("../debug.txt", ios::app);
-    // fs << "next_frame: " << (double)(clock1-clock0)/CLOCKS_PER_SEC << "\n";
-    // fs.close();}
+    image* f = imp.active_scene->next_frame();
     HBITMAP bmp = image_to_bmp(hdc, f);
     HDC hdcMem = CreateCompatibleDC(NULL);
     HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
@@ -38,7 +33,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     EndPaint(hwnd, &ps);
     return 0; }
   case WM_MOUSEMOVE: //! replace with GetCursorPos every frame
-    env->cursor_x = GET_X_LPARAM(lParam), env->cursor_y = GET_Y_LPARAM(lParam);
+    imp.cursor_x = GET_X_LPARAM(lParam), imp.cursor_y = GET_Y_LPARAM(lParam);
     return 0;
   case WM_MOUSEWHEEL:
     //!
@@ -77,15 +72,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
       case VK_OEM_7: s = "QUOTE"; break;
     }
     if(wParam >= '0' && wParam <= 'Z') s = (char)wParam;
-    env->keys.push(pair<str,bool>(s, dir));
+    imp.keys.push(pair<str,bool>(s, dir));
     return 0;
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
                     PWSTR pCmdLine, int nCmdShow) {
-  env = new Impact(INIT_WIN_W, INIT_WIN_H);
-  env->init();
+  imp.init(INIT_WIN_W, INIT_WIN_H); // Initialize environment
   const wchar_t CLASS[] = L"WindowClass";
   WNDCLASS wc = {};
   wc.lpfnWndProc = WindowProc;
@@ -102,5 +96,6 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
   while(GetMessage(&msg, nullptr, 0, 0)){
     TranslateMessage(&msg);
     DispatchMessage(&msg);
+    imp.update();
     InvalidateRect(hwnd, nullptr, FALSE); }
   return 0; }

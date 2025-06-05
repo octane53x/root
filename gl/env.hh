@@ -10,12 +10,13 @@ struct env {
   queue<pair<str, bool> > keys; // true = keydown
   umap<str, font> fonts;
   scene* active_scene;
-  env(int _w, int _h): win_w(_w), win_h(_h) {}
-  void init(){
-    active_scene->win_w = win_w, active_scene->win_h = win_h;
+  env(){}
+  void init(int w, int h){
+    active_scene->win_w = win_w = w, active_scene->win_h = win_h = h;
     umap<str, font>::iterator it;
     for(it = fonts.begin(); it != fonts.end(); ++it)
       active_scene->fonts[it->first] = &it->second;
-  } };
+  }
+  virtual void update() = 0; };
 
 #endif

@@ -6,14 +6,21 @@
 #include "planet.hh"
 
 struct Game {
+  clock_t last_update, tick;
   Planet* planet; // Where the player is
   Bot* player;
-  Game(){
-    planet = new Planet();
-    player = new Bot();
-    int x = (int)floor(PLAYER_START.x), y = (int)floor(PLAYER_START.y);
-    planet->surface[x][y].units.pb(player);
-    player->loc.x = x, player->loc.y = y; }
+
+  Game(){}
+  void init(){
+    //! Generate or find planet
+  }
+
+  void update(){
+    clock_t now = clock();
+    if(now - last_update >= tick){
+      if(planet != NULL) planet->update();
+      last_update = clock(); } }
+
   // Player actions
   void move(int x, int y);
   void build(Feature* f); };

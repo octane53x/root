@@ -9,14 +9,21 @@ struct Unit {
   int id, health, speed, energy;
   str name;
   point loc;
-  Unit(){} };
+  Unit(){}
+  virtual void update() = 0; };
 
 struct Worker : Unit {
   int progress;
-  Worker(){} };
+  Worker(){}
+  void update(){
+    //!
+  } };
 
 struct Bot : Unit {
   map<str, int> gems;
-  Bot(){} };
+  Bot(){}
+  void update(){
+    //!
+  } };
 
 #endif

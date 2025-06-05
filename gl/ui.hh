@@ -5,7 +5,8 @@
 
 #include "obj.hh"
 
-const int SYMBOL_SPACING = 5;
+const int SMALL_SPACING = 2,
+          LARGE_SPACING = 5;
 
 struct label : object {
   int size; // Pixel height
@@ -23,7 +24,7 @@ struct label : object {
         for(int j = 0; j < img.width; ++j)
           if(img.data[i][j] != WHITE)
             f->data[(int)floor(pos.y)+i][x+j] = text_color;
-      x += img.width + SYMBOL_SPACING; } } };
+      x += img.width + ((size >= 100) ? LARGE_SPACING : SMALL_SPACING); } } };
 
 struct button : object {
   image img;
