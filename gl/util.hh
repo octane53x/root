@@ -6,6 +6,7 @@
 #include "def.hh"
 
 const double PI = 3.14159265358979323846;
+const int INF = INT_MAX;
 
 void pass(){}
 

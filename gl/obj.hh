@@ -3,13 +3,8 @@
 #ifndef OBJ_HH
 #define OBJ_HH
 
-#include "util.hh"
-
-template <typename T>
-struct graph {
-  vec<T> nodes;
-  umap<int, vec<int> > edges;
-  graph(){} };
+//! #include "num.hh"
+#include "graph.hh"
 
 struct color {
   uchar r,g,b;
@@ -83,8 +78,7 @@ struct point {
   double dist(const point& p){
     double a = x - p.x, b = y - p.y, c = z - p.z;
     return sqrt(a*a + b*b + c*c); }
-  // deg is in radians
-  void rotate(const point& p, double deg){
+  void rotate(const point& p, double deg){ // deg in radians
     *this -= p;
     point p2 = *this;
     x = p2.x * cos(deg) - p2.y * sin(deg);
@@ -138,6 +132,7 @@ struct image {
       data.pb(vec<color>());
       for(int j = 0; j < width; ++j)
         data[i].pb(WHITE); } }
+  // image.hh
   void fix();
   void scale(double s);
   void rotate(double r);
@@ -169,7 +164,7 @@ struct object {
   movement mov;
 
   object(){ id = next_id++; }
-  point move(double ms);
+  point move(double ms); // move.hh
 
   void draw(image* bkgd){
     for(int i = 0; i < img.height; ++i)

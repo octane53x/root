@@ -35,7 +35,8 @@ FILE STRUCTURE
   GL
 incl <- def
 def <- util
-util <- obj, num
+util <- num, graph
+num, graph <- obj
 obj <- image, shape, cube, ui, os, scene
 image, os <- font
 scene <- move, env

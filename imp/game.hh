@@ -12,6 +12,9 @@ struct Game {
 
   Game(){}
   void init(){
+    last_update = 0;
+    tick = GAME_TICK * CLOCKS_PER_SEC
+    //! Connect to server
     //! Generate or find planet
   }
 

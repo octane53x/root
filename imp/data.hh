@@ -5,6 +5,13 @@
 
 #include "../gl/obj.hh"
 
+const double // in seconds
+  GAME_TICK = 0.1,
+  BASE_MINING_TIME = 10.0,
+  MINING_SCALE = 0.005, // per depth
+  DIG_TIME = 30.0,
+  TRAVEL_TIME = 1.0; // per block
+
 const int
   TOWER_SIZE = 5,
   MINE_SIZE = 3,
@@ -17,7 +24,9 @@ const int
   MIN_MINERALS = 3,
   MAX_MINERALS = 10,
   MIN_BLOCKS = 10,
-  MAX_BLOCKS = 10000;
+  MAX_BLOCKS = 10000,
+
+  WORKER_LOAD_SIZE = 100;
 
 const point PLAYER_START = point(0, 0);
 

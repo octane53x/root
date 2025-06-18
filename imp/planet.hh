@@ -7,13 +7,23 @@
 #include "unit.hh"
 
 struct Block {
+  bool tunnel;
+  double progress;
+  point loc;
   map<str, int> minerals;
-  vec<Block*> tunnels;
-  Block(){} };
+  vec<Block*> adjacent;
+
+  Block(){}
+  int total(){
+    int r = 0;
+    map<str, int>::iterator it;
+    for(it = minerals.begin(); it != minerals.end(); ++it)
+      r += it->second;
+    return r; } };
 
 struct Tile {
-  int altitude;
-  str name;
+  point loc;
+  str type;
   Feature* feature;
   vec<Unit*> units;
   Tile(){} };
@@ -30,9 +40,9 @@ struct Planet {
     gen_surface(); }
   void update(){
     for(Feature* f : features)
-      f->update();
+      f->update(this);
     for(Unit* u : units)
-      u->update(); }
+      u->update(this); }
 
   void gen_earth();
   void gen_surface(); };
@@ -44,10 +54,24 @@ void Planet::gen_earth(){
     for(int j = 0; j < MINE_WIDTH; ++j){
       earth[i].pb(vec<Block>());
       for(int k = 0; k < MINE_DEPTH; ++k){
-        earth[i][j].pb(Block());
+        Block b;
+        b.loc = point(i, j, k);
+        earth[i][j].pb(b);
         earth[i][j][k].minerals["SOIL"] = 100;
         if(!(rand() % 4))
           earth[i][j][k].minerals["STONE"] = rand() % 100 + 1; } } }
+
+  // Set adjacent blocks
+  for(int i = 0; i < MINE_WIDTH; ++i)
+    for(int j = 0; j < MINE_WIDTH; ++j)
+      for(int k = 0; k < MINE_DEPTH; ++k){
+        Block* b = &earth[i][j][k];
+        if(i > 0) b->adjacent.pb(&earth[i-1][j][k]);
+        if(i < MINE_WIDTH-1) b->adjacent.pb(&earth[i+1][j][k]);
+        if(j > 0) b->adjacent.pb(&earth[i][j-1][k]);
+        if(j < MINE_WIDTH-1) b->adjacent.pb(&earth[i][j+1][k]);
+        if(k > 0) b->adjacent.pb(&earth[i][j][k-1]);
+        if(k < MINE_DEPTH-1) b->adjacent.pb(&earth[i][j][k+1]); }
 
   // Random minerals
   // vec<str> used; //! uset
@@ -72,8 +96,8 @@ void Planet::gen_surface(){
     surface.pb(vec<Tile>());
     for(int j = 0; j < SURFACE_WIDTH; ++j){
       Tile t;
-      t.altitude = 0;
-      t.name = "GRASSLAND";
+      t.loc = point(i, j, 0); //! altitude
+      t.type = "GRASSLAND";
       surface[i].pb(t); } } }
 
 #endif

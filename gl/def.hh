@@ -13,6 +13,7 @@
 #define vec vector
 #define uset unordered_set
 #define umap unordered_map
+#define mmap multimap
 
 #define pb push_back
 #define popb pop_back
