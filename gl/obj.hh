@@ -85,6 +85,18 @@ struct point {
     y = p2.x * sin(deg) + p2.y * cos(deg);
     *this += p; } };
 
+namespace std {
+  template <>
+  struct hash<point> {
+    size_t operator()(const point& p) const {
+      size_t h1 = hash<double>{}(p.x);
+      size_t h2 = hash<double>{}(p.y);
+      size_t h3 = hash<double>{}(p.z);
+      return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+  };
+}
+
 struct uvec {
   double deg;
   uvec(){ deg = 0.0; }

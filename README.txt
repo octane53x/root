@@ -45,7 +45,8 @@ scene <- move, env
 obj <- data, unit, recipe
 data, unit, recipe <- feature
 feature <- planet
-planet <- game
+planet <- update
+update <- game
 shape, move, scene, ui <- title
 font, env, game, title <- impact
 

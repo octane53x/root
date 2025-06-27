@@ -51,29 +51,28 @@ struct graph {
   // Find the shortest path between two given nodes
   vec<T> path(T start, T end){
     mmap<int, node*> pq;
+    nodes[start].dist = 0;
     pq.insert({0, &nodes[start]});
 
     // Loop until priority queue is empty of nodes to visit
     while(!pq.empty()){
       mmap<int, node*>::iterator it = pq.begin();
       node* n = it->second;
+      n->vis = true;
       pq.erase(it);
       umap<node*, int>::iterator it2;
+
+      // Iterate each unvisited edge of node n
       for(it2 = n->edges.begin(); it2 != n->edges.end(); ++it2){
         node* n2 = it2->first;
+        if(n2->vis) continue;
 
         // Update node with new distance, if shorter
-        if(n2->vis){
-          int dist = n->dist + it2->second;
-          if(dist < n2->dist)
-            n2->dist = dist, n2->src = n;
-          continue; }
-
-        // Add neighbor to priority queue
-        n2->vis = true;
-        n2->dist = n->dist + it2->second;
-        n2->src = n;
-        pq.insert({it2->second, n2}); } }
+        int dist = n->dist + it2->second;
+        if(dist < n2->dist){
+          n2->dist = dist;
+          n2->src = n;
+          pq.insert({it2->second, n2}); } } }
 
     // Generate path from start to end
     vec<T> rev, p;

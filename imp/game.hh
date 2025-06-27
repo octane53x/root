@@ -3,7 +3,7 @@
 #ifndef GAME_HH
 #define GAME_HH
 
-#include "planet.hh"
+#include "update.hh"
 
 struct Game {
   clock_t last_update, tick;
@@ -13,7 +13,7 @@ struct Game {
   Game(){}
   void init(){
     last_update = 0;
-    tick = GAME_TICK * CLOCKS_PER_SEC
+    tick = GAME_TICK * CLOCKS_PER_SEC;
     //! Connect to server
     //! Generate or find planet
   }
