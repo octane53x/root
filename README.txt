@@ -1,41 +1,37 @@
 REPO README
 
-Everything is in this repo besides large data files
-Hopefully large files can be generated or have links provided
-Included should be primarily C++ and perhaps some Python files
+Primarily C++ and perhaps some Python files
+
+/Window: Windows window driver (Visual Studio)
+/ai:     Artificial intelligence
+/chef:   Codechef submissions
+/core:   Universal resources
+/gl:     Graphics library
+/imp:    Impact game
+/misc:   Miscellaneous
+/mtg:    Magic deck simulator
+/test:   Tests
 
 
 TODO
 
-! Remove "new" everywhere
+! point/uvec rotate
 ! Comments
-! Fix load_bmp
 ! Scene: Title Screen
-! Cube
-
-
-SCHEDULE
-
-MAY 2: 2D support
-JUNE 1: Ray tracing with Cube
-JUNE 2: 3D support
-JULY 1: Planet generation
-JULY 2: Procedural art for buildings
-AUG: BREAK
-SEPT: Features, Units, Recipes
-OCT: Logistics
-NOV: Mechanics
-DEC: BREAK
-JAN-MAR: IMP 1.5 Design
-APRIL: BREAK
+! Cube raytracing
+! Mining
+! Planet gen
+! Textures
 
 
 FILE STRUCTURE
 
-  GL
+  CORE
 incl <- def
 def <- util
 util <- num, graph
+
+  GL
 num, graph <- obj
 obj <- image, shape, cube, ui, os, scene
 image, os <- font

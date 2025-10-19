@@ -4,16 +4,19 @@
 #define OBJ_HH
 
 //! #include "num.hh"
-#include "graph.hh"
+#include "../core/graph.hh"
 
 struct color {
-  uchar r,g,b;
+  uchar r, g, b;
+
   color(): r(0), g(0), b(0) {}
-  color(uchar _r, uchar _g, uchar _b): r(_r), g(_g), b(_b) {}
+  color(const uchar _r, const uchar _g, const uchar _b): r(_r), g(_g), b(_b) {}
+
   bool operator==(const color& c){
     return r == c.r && g == c.g && b == c.b; }
   bool operator!=(const color& c){
     return !(*this == c); }
+
   color avg(const color& c){
     return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); } };
 
@@ -41,10 +44,11 @@ const color BLACK = color(0, 0, 0),
             PINK = color(255, 192, 203);
 
 struct point {
-  double x,y,z;
-  point(){}
-  point(double _x, double _y){ x = _x, y = _y, z = 0; }
-  point(double _x, double _y, double _z){ x = _x, y = _y, z = _z; }
+  double x, y, z;
+
+  point(): x(0.0), y(0.0), z(0.0) {}
+  point(const double _x, const double _y, const double _z):
+      x(_x), y(_y), z(_z) {}
 
   point& operator+=(const point& p){
     x += p.x, y += p.y, z += p.z;
@@ -60,17 +64,17 @@ struct point {
     point r = *this;
     r -= p;
     return r; }
-  point& operator*=(double n){
+  point& operator*=(const double n){
     x *= n, y *= n, z *= n;
     return *this; }
-  point operator*(double n){
+  point operator*(const double n){
     point r = *this;
     r *= n;
     return r; }
-  point& operator/=(double n){
+  point& operator/=(const double n){
     x /= n, y /= n, z /= n;
     return *this; }
-  point operator/(double n){
+  point operator/(const double n){
     point r = *this;
     r /= n;
     return r; }
@@ -83,7 +87,9 @@ struct point {
     point p2 = *this;
     x = p2.x * cos(deg) - p2.y * sin(deg);
     y = p2.x * sin(deg) + p2.y * cos(deg);
-    *this += p; } };
+    *this += p; }
+  //! void rotate(const point& p, const uvec3 uv){}
+};
 
 namespace std {
   template <>
@@ -92,28 +98,23 @@ namespace std {
       size_t h1 = hash<double>{}(p.x);
       size_t h2 = hash<double>{}(p.y);
       size_t h3 = hash<double>{}(p.z);
-      return h1 ^ (h2 << 1) ^ (h3 << 2);
-    }
-  };
-}
+      return h1 ^ (h2 << 1) ^ (h3 << 2); } }; }
 
 struct uvec {
-  double deg;
-  uvec(){ deg = 0.0; }
-  uvec(double d){ deg = d; }
-  void rotate(double d){
-    deg += d;
-    while(deg >= PI * 2.0)
-      deg -= PI * 2.0; } };
+  double xr, yr;
+  uvec(): xr(0.0, yr(0.0) {}
+  uvec(const double _xr, const double _yr): xr(_xr), yr(_yr) {}
+  //! void rotate(const uvec uv, const double deg){}
+};
 
 struct image;
 
 struct line {
   int thick;
-  point a,b;
-  color fill_color;
+  point2 a,b;
+  color fill;
   line(){}
-  line(point _a, point _b){ a = _a, b = _b, fill_color = BLACK; }
+  line(const point _a, const point _b){ a = _a, b = _b, fill_color = BLACK; }
   void draw(image* bkgd); };
 
 struct polygon {
@@ -122,6 +123,14 @@ struct polygon {
   polygon(){}
   polygon(const vec<point>& _p){ points = _p; }
   void draw(image* bkgd); };
+
+struct triangle {
+  point a,b,c;
+  color fill;
+  triangle(){}
+  triangle(const point _a, const point _b, const point _c):
+      a(_a), b(_b), c(_c) {}
+};
 
 struct circle {
   double radius;
@@ -150,6 +159,11 @@ struct image {
   void rotate(double r);
   void flip(line axis); };
 
+struct model {
+  point box;
+  vec<triangle> tris;
+};
+
 enum mov_type {
   NONE,
   ROOT,
@@ -172,7 +186,9 @@ struct object {
   llu id;
   static llu next_id;
   point pos, img_root;
-  image img;
+  uvec rot;
+  image* img;
+  model* mdl;
   movement mov;
 
   object(){ id = next_id++; }

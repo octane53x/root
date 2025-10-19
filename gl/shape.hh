@@ -69,6 +69,6 @@ void polygon::draw(image* bkgd){
           && j+left >= 0 && j+left < bkgd->width)
         bkgd->data[i+top][j+left] = fill_color; }
 
-//! image circle(point center, int rad, color col){}
+//! void circle::draw(image* bkgd){}
 
 #endif

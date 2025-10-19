@@ -1,0 +1,6 @@
+Window/.vs/
+Window/Window.sln
+Window/Window.vcxproj*
+Window/Window/
+Window/x64/
+main.exe
