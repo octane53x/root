@@ -30,6 +30,7 @@ struct scene {
       for(int j = 0; j < win_w; ++j)
         bkgd.data[i][j] = bkgd_color; }
 
+  // move.hh
   void move_objs(double ms);
   void move_rec(move_node* node, point mov, double ms);
 

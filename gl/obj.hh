@@ -115,6 +115,7 @@ struct line {
   color fill;
   line(){}
   line(const point _a, const point _b){ a = _a, b = _b, fill_color = BLACK; }
+  // shape.hh
   void draw(image* bkgd); };
 
 struct polygon {
@@ -122,15 +123,8 @@ struct polygon {
   color fill_color;
   polygon(){}
   polygon(const vec<point>& _p){ points = _p; }
+  // shape.hh
   void draw(image* bkgd); };
-
-struct triangle {
-  point a,b,c;
-  color fill;
-  triangle(){}
-  triangle(const point _a, const point _b, const point _c):
-      a(_a), b(_b), c(_c) {}
-};
 
 struct circle {
   double radius;
@@ -139,7 +133,15 @@ struct circle {
   circle(){}
   circle(point c, int r){
       center = c, radius = r, fill_color = BLACK; }
+  // shape.hh
   void draw(image* bkgd); };
+
+struct triangle {
+  point a,b,c;
+  color fill;
+  triangle(){}
+  triangle(const point _a, const point _b, const point _c):
+      a(_a), b(_b), c(_c) {} };
 
 struct image {
   int width, height;
@@ -161,8 +163,7 @@ struct image {
 
 struct model {
   point box;
-  vec<triangle> tris;
-};
+  vec<triangle> tris; };
 
 enum mov_type {
   NONE,

@@ -15,6 +15,8 @@ Primarily C++ and perhaps some Python files
 
 TODO
 
+! circle.draw
+! image.rotate, image.flip
 ! point/uvec rotate
 ! Comments
 ! Scene: Title Screen
