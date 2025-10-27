@@ -3,6 +3,7 @@
 #ifndef FEATURE_HH
 #define FEATURE_HH
 
+#include "../core/graph.hh"
 #include "data.hh"
 #include "unit.hh"
 #include "recipe.hh"

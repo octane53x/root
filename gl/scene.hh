@@ -3,7 +3,8 @@
 #ifndef SCENE_HH
 #define SCENE_HH
 
-#include "obj.hh"
+#include "obj/object.hh"
+#include "font.hh"
 
 bool zcompare(const object* a, const object* b){
   return a->pos.z > b->pos.z; }
@@ -30,9 +31,32 @@ struct scene {
       for(int j = 0; j < win_w; ++j)
         bkgd.data[i][j] = bkgd_color; }
 
-  // move.hh
-  void move_objs(double ms);
-  void move_rec(move_node* node, point mov, double ms);
+  void move_rec(move_node* node, point mov, double ms){
+    node->obj->pos += mov;
+    point mov2 = node->obj->move(ms);
+    for(int i = 0; i < node->children.size(); ++i)
+      move_rec(node->children[i], mov + mov2, ms); }
+
+  void move_objs(double ms){
+    vec<move_node> nodes;
+    umap<llu, int> m;
+    for(int i = 0; i < objs.size(); ++i){
+      move_node node;
+      node.obj = objs[i];
+      node.parent = NULL;
+      nodes.pb(node);
+      m[objs[i]->id] = (int)nodes.size() - 1; }
+    for(int i = 0; i < objs.size(); ++i){
+      if(objs[i]->mov.root == NULL) continue;
+      assert(m.find(objs[i]->mov.root->id) != m.end(), "obj not found");
+      assert(m.find(objs[i]->id) != m.end(), "obj not found");
+      int j = m[objs[i]->mov.root->id];
+      int k = m[objs[i]->id];
+      nodes[j].children.pb(&nodes[k]);
+      nodes[k].parent = &nodes[j]; }
+    for(int i = 0; i < nodes.size(); ++i)
+      if(nodes[i].parent == NULL)
+        move_rec(&nodes[i], point(0, 0, 0), ms); }
 
   void draw_objs(){
     sort(objs.begin(), objs.end(), zcompare);

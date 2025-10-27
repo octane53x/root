@@ -15,9 +15,16 @@ Primarily C++ and perhaps some Python files
 
 TODO
 
-! circle.draw
+! image rework
+! object virtual fn: custom movement
+! don't draw clear color
+! const params
+! ellipse.draw
+! curve, shape
 ! image.rotate, image.flip
 ! point/uvec rotate
+! orbit around uvec
+
 ! Comments
 ! Scene: Title Screen
 ! Cube raytracing
@@ -33,19 +40,29 @@ incl <- def
 def <- util
 util <- num, graph
 
+  GL/OBJ
+uvec <- point
+color <- image
+point, image <- line, polygon, ellipse
+point, color <- model
+image, model <- object
+object <- cube
+
   GL
-num, graph <- obj
-obj <- image, shape, cube, ui, os, scene
+image <- os
 image, os <- font
-scene <- move, env
+object, font <- scene
+image, font <- ui
+scene <- env
 
   IMP
-obj <- data, unit, recipe
-data, unit, recipe <- feature
+util <- recipe
+point <- data, unit
+graph, data, unit, recipe <- feature
 feature <- planet
 planet <- update
 update <- game
-shape, move, scene, ui <- title
+scene, ui <- title
 font, env, game, title <- impact
 
   DRIVER

@@ -3,7 +3,7 @@
 #ifndef UNIT_HH
 #define UNIT_HH
 
-#include "../gl/obj.hh"
+#include "../gl/obj/point.hh"
 
 struct Tile;
 struct Block;

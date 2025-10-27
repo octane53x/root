@@ -3,7 +3,7 @@
 #ifndef DATA_HH
 #define DATA_HH
 
-#include "../gl/obj.hh"
+#include "../gl/obj/point.hh"
 
 const double // in seconds
   GAME_TICK = 0.1,
@@ -28,7 +28,7 @@ const int
 
   WORKER_LOAD_SIZE = 100;
 
-const point PLAYER_START = point(0, 0);
+const point PLAYER_START = point(0, 0, 0);
 
 const int C_MINERALS = 3;
 const vec<str> MINERALS = {

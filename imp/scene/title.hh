@@ -3,8 +3,7 @@
 #ifndef SCENES_HH
 #define SCENES_HH
 
-#include "../../gl/shape.hh"
-#include "../../gl/move.hh"
+#include "../../gl/obj/polygon.hh"
 #include "../../gl/scene.hh"
 #include "../../gl/ui.hh"
 
@@ -32,7 +31,7 @@ struct Title : scene {
     object* a = new object();
     polygon p;
     p.points = {point(0,0), point(10,0), point(10,10), point(0,10)};
-    p.fill_color = BLUE;
+    p.fill = BLUE;
     a->img.set_size(11, 11);
     p.draw(&a->img);
     a->img_root = point(5,5);
@@ -44,7 +43,7 @@ struct Title : scene {
     objs.pb(a);
 
     object* b = new object();
-    p.fill_color = YELLOW;
+    p.fill = YELLOW;
     b->img.set_size(11, 11);
     p.draw(&b->img);
     b->img_root = point(5,5);
@@ -55,7 +54,7 @@ struct Title : scene {
     objs.pb(b);
 
     object* c = new object();
-    p.fill_color = GREEN;
+    p.fill = GREEN;
     c->img.set_size(11, 11);
     p.draw(&c->img);
     c->img_root = point(5,5);

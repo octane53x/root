@@ -3,34 +3,42 @@
 #ifndef UI_HH
 #define UI_HH
 
-#include "obj.hh"
+#include "obj/image.hh"
+#include "font.hh"
 
 const int SMALL_SPACING = 2,
           LARGE_SPACING = 5;
 
 struct label : object {
+
   int size; // Pixel height
   str text;
   color text_color;
   font* font;
+
   label(){}
+
   void draw(image* f){
     int x = (int)floor(pos.x);
     for(int k = 0; k < text.size(); ++k){
       image img = font->syms[text[k]];
       img.scale((double)size / img.height);
-      img.fix();
+      //img.fix();
       for(int i = 0; i < img.height; ++i)
         for(int j = 0; j < img.width; ++j)
-          if(img.data[i][j] != WHITE)
+          if(img.data[i][j] != CLEAR)
             f->data[(int)floor(pos.y)+i][x+j] = text_color;
       x += img.width + ((size >= 100) ? LARGE_SPACING : SMALL_SPACING); } } };
 
 struct button : object {
+
   image img;
   label label;
+
   button(){}
+
   virtual void fn() = 0;
+
   void draw(image* f){} };
 
 #endif

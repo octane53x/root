@@ -1,6 +1,6 @@
 // TEST
 
-#include "../imp/impact.hh"
+#include "../impact.hh"
 
 int main(){
   Impact imp;

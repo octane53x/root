@@ -3,8 +3,7 @@
 #ifndef CUBE_HH
 #define CUBE_HH
 
-#include "obj.hh"
-#include "model.hh"
+#include "object.hh"
 
 struct cube {
 
