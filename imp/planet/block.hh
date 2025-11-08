@@ -5,7 +5,7 @@
 
 #include "../unit/unit.hh"
 
-struct Block {
+struct Block : thing {
 
   bool tunnel;
   double progress;
@@ -15,6 +15,8 @@ struct Block {
   vec<Unit*> units;
 
   Block(){}
+
+  virtual void validate(){}
 
   int total(){
     int r = 0;

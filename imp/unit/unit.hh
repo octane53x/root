@@ -3,35 +3,26 @@
 #ifndef UNIT_HH
 #define UNIT_HH
 
-#include "../../gl/obj/point.hh"
+#include "../mech/item.hh"
 
 struct Planet;
 
-enum UnitType {
-  WORKER,
-  BOT,
-  SHIP
-};
+struct Unit : model {
 
-struct Unit {
+  enum Type {
+    WORKER,
+    BOT,
+    SHIP };
 
-  UnitType type;
-  llu id;
-  static llu next_id;
-
+  Type type;
   int health, speed, energy;
-  point loc;
+  umap<Item, int> inventory;
 
-  Unit(){
-    id = new_id();
-    set_type(); }
+  Unit(){}
 
-  llu new_id(){ return next_id++; }
+  virtual void validate(){
+    model::validate(); }
 
-  virtual void set_type() = 0;
-
-  virtual void update(Planet* p) = 0; };
-
-llu Unit::next_id = 1;
+  virtual void game_update(Planet* planet) = 0; };
 
 #endif

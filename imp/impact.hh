@@ -9,15 +9,21 @@
 #include "scene/title.hh"
 
 struct Impact : env {
+
   Game game;
-  Title title;
+  Title* title;
 
   Impact(){}
+
+  virtual void validate(){
+    env::validate(); }
+
   void init(int w, int h){
     fonts["aldo"] = font("aldo");
-    active_scene = &title;
+    title = new Title(w, h);
+    active_scene = title;
     env::init(w, h);
-    title.init();
+    title->init();
     game.init(); }
 
   void update(){

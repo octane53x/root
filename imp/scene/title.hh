@@ -3,21 +3,29 @@
 #ifndef SCENES_HH
 #define SCENES_HH
 
-#include "../../gl/obj/polygon.hh"
+#include "../../gl/polygon.hh"
+#include "../../gl/label.hh"
+#include "../../gl/button.hh"
 #include "../../gl/scene.hh"
-#include "../../gl/ui.hh"
 
-struct start_button : button {
+struct Play : button {
+
+  Play(){}
+
   void fn(){
     //!
   }
-};
+
+  void draw(image* bkgd){
+    //!
+  } };
 
 struct Title : scene {
-  label title_lbl, start_lbl;
-  start_button start_btn;
 
-  Title(){}
+  label title_lbl, start_lbl;
+  button* play;
+
+  Title(int w, int h): scene(w, h) {}
 
   void init(){
     bkgd_color = color(255,0,0);
@@ -28,55 +36,42 @@ struct Title : scene {
     title_lbl.font = fonts["aldo"];
     draw_bkgd();
 
-    object* a = new object();
-    polygon p;
-    p.points = {point(0,0), point(10,0), point(10,10), point(0,10)};
-    p.fill = BLUE;
-    a->img.set_size(11, 11);
-    p.draw(&a->img);
-    a->img_root = point(5,5);
+    polygon* a = new polygon();
+    a->points = {point(0,0), point(10,0), point(10,10), point(0,10)};
+    a->fill = BLUE;
     a->pos = point(250,150);
-    a->mov.type = mov_type::PATH;
-    a->mov.path = {point(100,100), point(-100,100), point(-100,-100),
+    a->mov = new object::movement(object::movement::PATH);
+    a->mov->path = {point(100,100), point(-100,100), point(-100,-100),
         point(100,-100)};
-    a->mov.vel = 50.0;
+    a->mov->vel = 50.0;
     objs.pb(a);
 
-    object* b = new object();
-    p.fill = YELLOW;
-    b->img.set_size(11, 11);
-    p.draw(&b->img);
-    b->img_root = point(5,5);
+    polygon* b = new polygon();
+    b->points = a->points;
+    b->fill = YELLOW;
     b->pos = point(250,100);
-    b->mov.type = mov_type::ORBIT;
-    b->mov.root = a;
-    b->mov.vel = 100.0;
+    b->mov = new object::movement(object::movement::ORBIT);
+    b->mov->root = a;
+    b->mov->vel = 100.0;
     objs.pb(b);
 
-    object* c = new object();
-    p.fill = GREEN;
-    c->img.set_size(11, 11);
-    p.draw(&c->img);
-    c->img_root = point(5,5);
+    polygon* c = new polygon();
+    c->points = a->points;
+    c->fill = GREEN;
     c->pos = point(250,125);
-    c->mov.type = mov_type::ORBIT;
-    c->mov.root = b;
-    c->mov.vel = 200.0;
-    objs.pb(c); }
+    c->mov = new object::movement(object::movement::ORBIT);
+    c->mov->root = b;
+    c->mov->vel = 200.0;
+    objs.pb(c);
+  }
 
   void draw_bkgd(){
     scene::draw_bkgd();
     title_lbl.draw(&bkgd);
     //start_lbl.draw(&frame);
     //start_btn.draw(&frame);
-    }
+  }
 
-  image* next_frame(){
-    frame = bkgd;
-    clock_t now = clock();
-    move_objs((double)(now - last_frame) * 1000.0 / CLOCKS_PER_SEC);
-    last_frame = now;
-    draw_objs();
-    return &frame; } };
+  void update(double ms){} };
 
 #endif

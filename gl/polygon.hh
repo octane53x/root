@@ -3,11 +3,10 @@
 #ifndef POLYGON_HH
 #define POLYGON_HH
 
-#include "point.hh"
-#include "image.hh"
 #include "line.hh"
+#include "image.hh"
 
-struct polygon {
+struct polygon : object {
 
   vec<point> points;
   color fill;
@@ -15,6 +14,15 @@ struct polygon {
   polygon(){}
   polygon(const vec<point>& _p){ points = _p; }
 
+  virtual void validate(){
+    object::validate(); }
+
+  virtual point update(double ms){ return point(0, 0); }
+
+  //!
+  bool inside(point p){ return false; }
+
+  //! Add object.pos to points
   void draw(image* bkgd){
     int top = bkgd->height, bot = 0, left = bkgd->width, right = 0;
     for(int i = 0; i < points.size(); ++i){

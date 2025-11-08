@@ -1,4 +1,4 @@
-// LOTTERY
+// LOTTERY MECHANIC
 
 #ifndef LOTTO_HH
 #define LOTTO_HH

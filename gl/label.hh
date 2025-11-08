@@ -1,9 +1,9 @@
-// USER INTERFACE
+// LABEL
 
-#ifndef UI_HH
-#define UI_HH
+#ifndef LABEL_HH
+#define LABEL_HH
 
-#include "obj/image.hh"
+#include "image.hh"
 #include "font.hh"
 
 const int SMALL_SPACING = 2,
@@ -18,6 +18,12 @@ struct label : object {
 
   label(){}
 
+  virtual void validate(){
+    object::validate();
+    assert(size > 0, "label text size not positive"); }
+
+  virtual point update(double ms){ return point(0, 0); }
+
   void draw(image* f){
     int x = (int)floor(pos.x);
     for(int k = 0; k < text.size(); ++k){
@@ -29,16 +35,5 @@ struct label : object {
           if(img.data[i][j] != CLEAR)
             f->data[(int)floor(pos.y)+i][x+j] = text_color;
       x += img.width + ((size >= 100) ? LARGE_SPACING : SMALL_SPACING); } } };
-
-struct button : object {
-
-  image img;
-  label label;
-
-  button(){}
-
-  virtual void fn() = 0;
-
-  void draw(image* f){} };
 
 #endif

@@ -8,15 +8,12 @@
 struct Mine : Feature {
 
   Block* top;
-  vec<Worker*> workers;
-  queue<Block*> nodes;
-  map<str, int> gems;
+  vec<Worker*> workers; //?
 
-  Mine(int _x, int _y){
-    loc = point(_x, _y);
-    size = point(MINE_SIZE, MINE_SIZE); }
+  Mine(){ type = MINE; }
 
-  void set_type(){ type = FeatureType::MINE; }
+  virtual void validate(){
+    Feature::validate(); }
 
   void update(Planet* planet){
     // for(Worker* worker : workers){

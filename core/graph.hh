@@ -5,23 +5,25 @@
 
 #include "util.hh"
 
-struct node {
-  bool vis;
-  int dist;
-  node* src;
-  umap<node*, int> edges; // value = distance
-  node(){ vis = false, dist = INF, src = NULL; }
-};
-
 template <typename T>
-struct graph {
+struct graph : thing {
 
-  // Members
+  struct node {
+
+    bool vis;
+    int dist;
+    node* src;
+    umap<node*, int> edges; // value = distance
+
+    node(){ vis = false, dist = INF, src = NULL; } };
+
+  //! Comment why we need keymap
   umap<T, node> nodes;
   umap<node*, T> keymap;
 
-  // Constructor
   graph(){}
+
+  virtual void validate(){}
 
   // Does the graph contain the key as a node
   bool contains(T key){

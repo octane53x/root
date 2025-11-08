@@ -3,38 +3,30 @@
 #ifndef FEATURE_HH
 #define FEATURE_HH
 
-#include "../../gl/obj/point.hh"
+#include "../../gl/model.hh"
+#include "../mech/gem.hh"
 
 struct Planet;
 
-enum FeatureType {
-  TREE,
-  TOWER,
-  MINE,
-  FARM,
-  FACTORY,
-  LAB
-};
+struct Feature : model {
 
-struct Feature {
+  enum Type {
+    TREE,
+    TOWER,
+    MINE,
+    FARM,
+    FACTORY,
+    LAB };
 
-  FeatureType type;
-  llu id;
-  static llu next_id;
-
+  Type type;
   int health;
-  point loc, size;
+  umap<Gem, int> gems;
 
-  Feature(){
-    id = new_id();
-    set_type(); }
+  Feature(){}
 
-  llu new_id(){ return next_id++; }
+  virtual void validate(){
+    model::validate(); }
 
-  virtual void set_type() = 0;
-
-  virtual void update(Planet* p) = 0; };
-
-llu Feature::next_id = 1;
+  virtual void game_update(Planet* planet) = 0; };
 
 #endif

@@ -6,13 +6,15 @@
 #include "../feature/feature.hh"
 #include "../unit/unit.hh"
 
-struct Tile {
+struct Tile : thing {
 
   point loc;
   str type;
   Feature* feature;
   vec<Unit*> units;
 
-  Tile(){} };
+  Tile(){}
+
+  virtual void validate(){} };
 
 #endif

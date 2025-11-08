@@ -5,7 +5,7 @@
 
 #include "object.hh"
 
-struct cube {
+struct cube : thing {
 
   static const int INNER = 8;
   static constexpr double INIT_SIZE = 1000000000000.0; // 10^12
@@ -42,6 +42,8 @@ struct cube {
     pos = point(0.0, 0.0, 0.0);
     outer = -1;
     cubes = &raw_cubes; }
+
+  virtual void validate(){}
 
   // Opposite location
   uchar opp(uchar loc){

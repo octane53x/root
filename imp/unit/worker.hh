@@ -5,25 +5,25 @@
 
 #include "../planet/planet.hh"
 
-enum Activity {
-  IDLE,
-  DIG,
-  TRAVEL,
-  OFFLOAD,
-  MINE,
-  ATTACK };
-
 struct Worker : Unit {
+
+  enum Activity {
+    IDLE,
+    DIG,
+    TRAVEL,
+    OFFLOAD,
+    MINE,
+    BUILD };
 
   Activity activity;
   int path_index;
   Block* target;
-  map<str, int> inventory;
   vec<Block*> path;
 
-  Worker(){}
+  Worker(){ type = WORKER; }
 
-  void set_type(){ type = UnitType::WORKER; }
+  virtual void validate(){
+    Unit::validate(); }
 
   int inventory_size(){
     int r = 0;

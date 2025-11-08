@@ -7,11 +7,12 @@
 
 struct Lab : Feature {
 
-  map<str, int> gems;
+  //! Research
 
-  Lab(){}
+  Lab(){ type = LAB; }
 
-  void set_type(){ type = FeatureType::LAB; }
+  virtual void validate(){
+    Feature::validate(); }
 
   void update(Planet* p){
     //!

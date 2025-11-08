@@ -3,10 +3,9 @@
 #ifndef LINE_HH
 #define LINE_HH
 
-#include "point.hh"
 #include "image.hh"
 
-struct line {
+struct line : object {
 
   int thick;
   point a,b;
@@ -14,6 +13,12 @@ struct line {
 
   line(){}
   line(const point _a, const point _b){ a = _a, b = _b, fill = BLACK; }
+
+  virtual void validate(){
+    object::validate();
+    assert(thick > 0, "line thickness not positive"); }
+
+  virtual point update(double ms){ return point(0, 0); }
 
   void draw(image* bkgd){
     int xi = (a.x < b.x) ? 1 : -1;

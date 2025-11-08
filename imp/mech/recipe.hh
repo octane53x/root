@@ -1,12 +1,16 @@
-// RECIPE
+// RECIPE MECHANIC
 
 #ifndef RECIPE_HH
 #define RECIPE_HH
 
-#include "../core/util.hh"
+#include "item.hh"
 
-struct Recipe {
-  map<str, int> parts, product;
-  Recipe(){} };
+struct Recipe : thing {
+
+  map<Item, int> parts, product;
+
+  Recipe(){}
+
+  virtual void validate(){} };
 
 #endif

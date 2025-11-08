@@ -9,9 +9,10 @@ struct Tree : Feature {
 
   int wood;
 
-  Tree(){}
+  Tree(){ type = TREE; }
 
-  void set_type(){ type = FeatureType::TREE; }
+  virtual void validate(){
+    Feature::validate(); }
 
   void update(Planet* p){
     //!

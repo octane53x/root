@@ -3,32 +3,49 @@
 #ifndef SCENE_HH
 #define SCENE_HH
 
-#include "obj/object.hh"
+#include "object.hh"
 #include "font.hh"
 
 bool zcompare(const object* a, const object* b){
   return a->pos.z > b->pos.z; }
 
-struct move_node {
-  object* obj;
-  move_node* parent;
-  vec<move_node*> children; };
+struct scene : thing {
 
-struct scene {
+  struct move_node {
+
+    object* obj;
+    move_node* parent;
+    vec<move_node*> children; };
+
   clock_t last_frame;
-  int win_w, win_h;
+  int width, height;
   color bkgd_color;
+  point pos;
   image bkgd, frame;
   umap<str, font*> fonts;
   vec<object*> objs;
 
-  scene(): last_frame(0) {}
-  virtual image* next_frame() = 0;
+  scene(int w, int h):
+      last_frame(0), width(w), height(h), bkgd(w, h), frame(w, h) {}
+
+  virtual void validate(){
+    assert(width > 0 && height > 0, "scene size not positive"); }
+
+  virtual void update(double ms) = 0;
+
+  image* next_frame(){
+    frame = bkgd;
+    clock_t now = clock();
+    double ms = (double)(now - last_frame) * 1000.0 / CLOCKS_PER_SEC;
+    last_frame = now;
+    update(ms);
+    move_objs(ms);
+    draw_objs();
+    return &frame; }
 
   virtual void draw_bkgd(){
-    bkgd.set_size(win_w, win_h);
-    for(int i = 0; i < win_h; ++i)
-      for(int j = 0; j < win_w; ++j)
+    for(int i = 0; i < height; ++i)
+      for(int j = 0; j < width; ++j)
         bkgd.data[i][j] = bkgd_color; }
 
   void move_rec(move_node* node, point mov, double ms){
@@ -47,10 +64,10 @@ struct scene {
       nodes.pb(node);
       m[objs[i]->id] = (int)nodes.size() - 1; }
     for(int i = 0; i < objs.size(); ++i){
-      if(objs[i]->mov.root == NULL) continue;
-      assert(m.find(objs[i]->mov.root->id) != m.end(), "obj not found");
+      if(objs[i]->mov->root == NULL) continue;
+      assert(m.find(objs[i]->mov->root->id) != m.end(), "obj not found");
       assert(m.find(objs[i]->id) != m.end(), "obj not found");
-      int j = m[objs[i]->mov.root->id];
+      int j = m[objs[i]->mov->root->id];
       int k = m[objs[i]->id];
       nodes[j].children.pb(&nodes[k]);
       nodes[k].parent = &nodes[j]; }

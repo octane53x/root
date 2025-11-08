@@ -3,27 +3,37 @@
 #ifndef COLOR_HH
 #define COLOR_HH
 
-#include "../../core/util.hh"
+#include "../core/thing.hh"
 
-struct color {
+struct color : thing {
 
-  bool clear;
+  enum Custom : uchar {
+    NONE,
+    CLEAR,
+    CLEAR_PEN,
+    DEBUG };
+
   uchar r, g, b;
+  Custom custom;
 
-  color(): r(0), g(0), b(0), clear(false) {}
-  color(bool _clear): r(0), g(0), b(0), clear(_clear) {}
-  color(const uchar _r, const uchar _g, const uchar _b): r(_r), g(_g), b(_b),
-      clear(false) {}
+  color(){}
+  color(Custom c): custom(c) {}
+  color(const uchar _r, const uchar _g, const uchar _b):
+      r(_r), g(_g), b(_b), custom(NONE) {}
 
   bool operator==(const color& c){
-    return r == c.r && g == c.g && b == c.b && clear == c.clear; }
+    return (custom != NONE && custom == c.custom)
+        || (r == c.r && g == c.g && b == c.b); }
   bool operator!=(const color& c){
     return !(*this == c); }
+
+  virtual void validate(){}
 
   color avg(const color& c){
     return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); } };
 
-const color CLEAR = color(true),
+const color CLEAR = color(color::CLEAR),
+            CLEAR_PEN = color(color::CLEAR_PEN),
             BLACK = color(0, 0, 0),
             RED = color(255, 0, 0),
             LIME = color(0, 255, 0),

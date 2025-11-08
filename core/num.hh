@@ -1,5 +1,7 @@
 // NUM
 
+//! Division is wrong
+
 #ifndef NUM_HH
 #define NUM_HH
 
@@ -9,14 +11,14 @@ const int
     SHIFT_MAX = (1 << 30),
     BITS_PER_BLOCK = 64;
 
-struct nat {
+struct nat : thing {
   vec<llu> data;
 
   nat(){ data.pb(0); }
   nat(llu n){ data.pb(n); }
   nat(const nat& n){ *this = n; }
 
-  void validate(){
+  virtual void validate(){
     while(data[data.size()-1] == 0)
       data.popb();
     if(data.empty()) data.pb(0); }
@@ -321,14 +323,14 @@ struct nat {
     return r; }
 };
 
-// struct num {
+// struct num : thing {
 //   bool neg;
 //   nat top, bot;
 
 //   num(): top(0), bot(1) {}
 //   num(ll n): neg(n < 0), top(abs(n)), bot(1) {}
 
-//   void validate(){
+//   virtual void validate(){
 //     top.validate(), bot.validate();
 //     if(bot == 0) bot = 1;
 //     nat g = top.gcd(bot);

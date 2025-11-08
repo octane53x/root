@@ -7,14 +7,13 @@
 
 struct Farm : Feature {
 
-  graph<point> border;
-  vec<vec<str> > crops;
-  vec<Worker*> workers;
-  map<str, int> gems;
+  vec<vec<Item> > crops;
+  vec<Worker*> workers; //?
 
-  Farm(){}
+  Farm(){ type = FARM; }
 
-  void set_type(){ type = FeatureType::FARM; }
+  virtual void validate(){
+    Feature::validate(); }
 
   void update(Planet* p){
     //!

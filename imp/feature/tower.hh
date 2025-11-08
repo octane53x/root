@@ -8,15 +8,12 @@
 struct Tower : Feature {
 
   int damage, range;
-  graph<point> border;
-  map<str, int> gems;
   Unit* target;
 
-  Tower(int _x, int _y){
-    loc = point(_x, _y);
-    size = point(TOWER_SIZE, TOWER_SIZE); }
+  Tower(){ type = TOWER; }
 
-  void set_type(){ type = FeatureType::TOWER; }
+  virtual void validate(){
+    Feature::validate(); }
 
   void update(Planet* p){
     //!
