@@ -29,9 +29,9 @@ struct Title : scene {
 
   void init(){
     bkgd_color = color(255,0,0);
-    title_lbl.text = "IMPACT0123456789";
+    title_lbl.text = "IMPACT";
     title_lbl.text_color = color(0,0,0);
-    title_lbl.size = 10;
+    title_lbl.size = 40;
     title_lbl.pos = point(100, 100);
     title_lbl.font = fonts["aldo"];
     draw_bkgd();
@@ -62,15 +62,11 @@ struct Title : scene {
     c->mov = new object::movement(object::movement::ORBIT);
     c->mov->root = b;
     c->mov->vel = 200.0;
-    objs.pb(c);
-  }
+    objs.pb(c); }
 
   void draw_bkgd(){
     scene::draw_bkgd();
-    title_lbl.draw(&bkgd);
-    //start_lbl.draw(&frame);
-    //start_btn.draw(&frame);
-  }
+    title_lbl.draw(&bkgd); }
 
   void update(double ms){} };
 

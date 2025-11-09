@@ -35,6 +35,11 @@ struct image : object {
       for(int j = 0; j < width; ++j)
         data[i].pb(CLEAR); } }
 
+  // Set pixel to color
+  void set_pixel(int x, int y, color c){
+    if(x >= 0 && x < width && y >= 0 && y < height)
+      data[y][x] = c; }
+
   // Delete margins of color
   void fix(color c){
     int left,right,top,bot;
@@ -70,6 +75,13 @@ struct image : object {
         if(data[y][x] == src)
           data[y][x] = dest; }
 
+  void replace_except(color src, color dest){
+    for(int y = 0; y < height; ++y)
+      for(int x = 0; x < width; ++x)
+        if(data[y][x] != src)
+          data[y][x] = dest; }
+
+  //! Not working for all scales
   image scale(double s){
     image r((int)ceil(s * width), (int)ceil(s * height));
     if(s < 1.0){ // Scale down
@@ -83,7 +95,7 @@ struct image : object {
         for(int x = 0; x < r.width; ++x){
           double sx2 = (double)nx / rx;
           int px = (sx2 > sx) ? (int)ceil(sx) : (int)floor(sx);
-          r.data[y][x] = data[dy][dx];
+          r.set_pixel(x, y, data[dy][dx]);
           dx += px; }
         dy += py; }
 
@@ -99,7 +111,7 @@ struct image : object {
           int px = (sx2 > sx) ? (int)ceil(sx) : (int)floor(sx);
           for(int i = 0; i < py; ++i)
             for(int j = 0; j < px; ++j)
-              r.data[dy+i][dx+j] = data[y][x];
+              r.set_pixel(dx+j, dy+i, data[y][x]);
           dx += px; }
         dy += py; } }
     return r; }
@@ -107,20 +119,19 @@ struct image : object {
   image rotate(double deg){
     image r(width, height);
     //!
-    return r;
-  }
+    return r; }
 
   image flip(uvec axis){
     image r(width, height);
     //!
-    return r;
-  }
+    return r; }
 
   void draw(image* bkgd){
     for(int y = max(0, (int)pos.y), yt = max(0, -(int)pos.y);
         y < min(bkgd->height, (int)pos.y+height); ++y, ++yt)
       for(int x = max(0, (int)pos.x), xt = max(0, -(int)pos.x);
           x < min(bkgd->width, (int)pos.x+width); ++x, ++xt)
-        if(data[y][x] != CLEAR) bkgd->data[y][x] = data[y][x]; } };
+        if(data[yt][xt] != CLEAR)
+          bkgd->set_pixel(x, y, data[yt][xt]); } };
 
 #endif

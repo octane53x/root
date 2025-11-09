@@ -18,8 +18,7 @@ struct env : thing {
     win_w = w, win_h = h;
     umap<str, font>::iterator it;
     for(it = fonts.begin(); it != fonts.end(); ++it)
-      active_scene->fonts[it->first] = &it->second;
-  }
+      active_scene->fonts[it->first] = &it->second; }
 
   virtual void validate(){}
 

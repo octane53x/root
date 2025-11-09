@@ -24,16 +24,14 @@ struct label : object {
 
   virtual point update(double ms){ return point(0, 0); }
 
-  void draw(image* f){
+  virtual void draw(image* bkgd){
     int x = (int)floor(pos.x);
     for(int k = 0; k < text.size(); ++k){
-      image img = font->syms[text[k]];
-      img.scale((double)size / img.height);
-      //img.fix();
-      for(int i = 0; i < img.height; ++i)
-        for(int j = 0; j < img.width; ++j)
-          if(img.data[i][j] != CLEAR)
-            f->data[(int)floor(pos.y)+i][x+j] = text_color;
+      image orig = font->syms[text[k]];
+      image img = orig.scale((double)size / orig.height);
+      img.pos = point(x, pos.y);
+      img.replace_except(CLEAR, text_color);
+      img.draw(bkgd);
       x += img.width + ((size >= 100) ? LARGE_SPACING : SMALL_SPACING); } } };
 
 #endif

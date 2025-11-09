@@ -23,7 +23,8 @@ struct color : thing {
 
   bool operator==(const color& c){
     return (custom != NONE && custom == c.custom)
-        || (r == c.r && g == c.g && b == c.b); }
+        || (custom == NONE && c.custom == NONE
+        && r == c.r && g == c.g && b == c.b); }
   bool operator!=(const color& c){
     return !(*this == c); }
 

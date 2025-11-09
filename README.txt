@@ -40,6 +40,7 @@ TODO
 ! orbit around uvec
 ! polygon.inside
 ! button click manager?
+! fix image.scale
 
 ! Comments
 ! Scene: Title Screen

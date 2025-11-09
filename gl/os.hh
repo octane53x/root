@@ -29,11 +29,11 @@ image load_bmp(str dir){
   for(int k = 0; k < area * 3; k += 3){
     int i = (k / 3) / w;
     int j = (k / 3) % w;
-    img.data[h-i-1][j] = color(((uchar*)b.bmBits)[k], ((uchar*)b.bmBits)[k+1],
-        ((uchar*)b.bmBits)[k+2]); }
-
+    img.set_pixel(j, h-i-1, color(((uchar*)b.bmBits)[k],
+        ((uchar*)b.bmBits)[k+1], ((uchar*)b.bmBits)[k+2])); }
   return img; }
 
+//! Saves it upside down
 void save_bmp(image f, str file){
   for(int i = 0; i < f.height; ++i)
     for(int j = 0; j < f.width; ++j)

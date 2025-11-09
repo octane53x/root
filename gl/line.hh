@@ -34,7 +34,7 @@ struct line : object {
       int ii = i, jj = j, s;
       if(xlong) s = ii, ii = jj, jj = s;
       //! thickness: for(int t =
-      bkgd->data[ii][jj] = fill;
+      bkgd->set_pixel(jj, ii, fill);
       double dp = d;
       d += di;
       if((int)floor(d) != (int)floor(dp)) j += (xlong ? yi : xi);
