@@ -24,10 +24,8 @@ struct model : object {
   virtual void validate(){
     object::validate(); }
 
-  virtual point update(double ms){ return point(0, 0); }
-
   void draw(image* bkgd){
-    //!
+    //! assume camera looking +z
   } };
 
 #endif

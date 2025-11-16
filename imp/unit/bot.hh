@@ -20,6 +20,12 @@ struct Bot : Unit {
   Bot(){ type = BOT; }
 
   virtual void validate(){
-    Unit::validate(); } };
+    Unit::validate(); }
+
+  virtual void game_update(Planet* p){
+    //!
+  }
+
+  virtual point update(double ms){ return point(0, 0); } };
 
 #endif

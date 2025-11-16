@@ -31,6 +31,12 @@ struct Game : thing {
       if(planet != NULL) planet->game_update();
       last_update = clock(); } }
 
+  // Load planet chunks based on camera position
+  void camera_update(point pos){
+    if(planet == NULL) return;
+    //!
+  }
+
   // Player actions
   void move(int x, int y);
   void build(Feature* f); };

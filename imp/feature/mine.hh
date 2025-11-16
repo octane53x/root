@@ -15,7 +15,7 @@ struct Mine : Feature {
   virtual void validate(){
     Feature::validate(); }
 
-  void update(Planet* planet){
+  virtual void game_update(Planet* planet){
     // for(Worker* worker : workers){
     //   if(worker->activity == Activity::IDLE){
     //     worker->target = nodes.front();
@@ -43,6 +43,8 @@ struct Mine : Feature {
     //     // Shortest path to target
 
     //     worker->activity = Activity::TRAVEL; } }
-  } };
+  }
+
+  virtual point update(double ms){ return point(0, 0); } };
 
 #endif

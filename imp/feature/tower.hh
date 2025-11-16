@@ -15,8 +15,10 @@ struct Tower : Feature {
   virtual void validate(){
     Feature::validate(); }
 
-  void update(Planet* p){
+  virtual void game_update(Planet* p){
     //!
-  } };
+  }
+
+  virtual point update(double ms){ return point(0, 0); } };
 
 #endif

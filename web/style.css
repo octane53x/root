@@ -1,0 +1,66 @@
+/* Website styling */
+
+/* Definitions */
+
+@font-face {
+  font-family: 'aldo';
+  src: url('aldo.ttf') format('truetype');
+}
+
+/* Customization */
+
+body {
+  background-color: black;
+  margin: 0;
+}
+
+h1 {
+  color: white;
+  font-family: 'aldo';
+  font-size: 100px;
+  text-align: center;
+  margin: 0;
+}
+
+h2 {
+  color: white;
+  font-family: 'aldo';
+  font-size: 40px;
+  text-align: center;
+  margin: 0;
+}
+
+p {
+  font-family: 'tahoma';
+  margin: 0;
+}
+
+.left-panel-link {
+  font-family: 'tahoma';
+  font-size: 20px;
+}
+
+/* Containers */
+
+.c1-ctr {
+  position: absolute;
+  top: 0px;
+}
+
+.main-ctr {
+  display: flex;
+  width: 100%;
+}
+
+.left-panel {
+  flex: 0 1 auto;
+  width: fit-content;
+  text-align: center;
+}
+
+.right-panel {
+  flex: 1 1 auto;
+  color: white;
+  padding-left: 5%;
+  padding-right: 5%;
+}

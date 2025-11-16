@@ -4,6 +4,7 @@
 #define ENV_HH
 
 #include "scene.hh"
+#include "camera.hh"
 
 struct env : thing {
 
@@ -11,6 +12,7 @@ struct env : thing {
   queue<pair<str, bool> > keys; // true = keydown
   umap<str, font> fonts;
   scene* active_scene;
+  camera cam;
 
   env(){}
 

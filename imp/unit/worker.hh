@@ -33,7 +33,7 @@ struct Worker : Unit {
     return r; }
 
   //! Add node to mine.nodes when discovered or offloading
-  void update(Planet* planet){
+  virtual void game_update(Planet* planet){
     // Block* block = &planet->earth[(int)loc.x][(int)loc.y][(int)loc.z];
 
     // if(activity == Activity::IDLE) pass();
@@ -85,6 +85,8 @@ struct Worker : Unit {
     //     target->progress = 0.0;
     //     if(inventory_size() == WORKER_LOAD_SIZE) activity = Activity::OFFLOAD;
     //     else activity = Activity::IDLE; } }
-  } };
+  }
+
+  virtual point update(double ms){ return point(0, 0); } };
 
 #endif

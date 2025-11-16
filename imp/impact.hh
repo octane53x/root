@@ -27,6 +27,7 @@ struct Impact : env {
     game.init(); }
 
   void update(){
+    game.camera_update(cam.pos);
     game.update();
   } };
 
