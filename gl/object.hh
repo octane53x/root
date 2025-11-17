@@ -31,6 +31,7 @@ struct object : thing {
   llu id;
   static llu next_id;
   point pos;
+  color fill;
   movement* mov;
 
   object(): mov(NULL) { id = new_id(); }

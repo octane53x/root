@@ -7,6 +7,7 @@
 
 struct Block : thing {
 
+  //! adjust members to describe mods
   bool tunnel;
   double progress;
   point loc;

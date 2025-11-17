@@ -16,7 +16,7 @@ struct Unit : model {
 
   Type type;
   int health, speed, energy;
-  umap<Item, int> inventory;
+  umap<str, Item> inventory; // key = item name
 
   Unit(){}
 

@@ -49,10 +49,4 @@ struct Gem : Item {
   virtual void validate(){
     Item::validate(); } };
 
-namespace std {
-  template <>
-  struct hash<Gem> {
-    size_t operator()(const Gem& gem) const {
-      return hash<str>()(gem.name); } }; }
-
 #endif

@@ -3,7 +3,6 @@
 #ifndef CHUNK_HH
 #define CHUNK_HH
 
-#include "block.hh"
 #include "tile.hh"
 
 // Chunk size defined in planet.hh
@@ -11,8 +10,8 @@
 struct Chunk : object {
 
   int size;
-  vec<vec<vec<Block> > > earth;
-  vec<vec<Tile> > terrain;
+  ui seed;
+  vec<vec<Tile> > tiles;
 
   Chunk(){}
 

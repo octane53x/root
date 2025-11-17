@@ -20,7 +20,7 @@ struct Feature : model {
 
   Type type;
   int health;
-  umap<Gem, int> gems;
+  umap<str, Gem> gems; // key = gem name
 
   Feature(){}
 

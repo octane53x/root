@@ -3,13 +3,17 @@
 #ifndef EARTH_HH
 #define EARTH_HH
 
-#include "chunk.hh"
+#include "block.hh"
+#include "node.hh"
 
 struct Earth : thing {
 
+  vec<Node> nodes;
+  vec<Block> mods;
+
   virtual void validate(){}
 
-  void generate(llu rng_seed, Chunk* chunk){
+  void gen_planet(int planet_size){
     //!
   } };
 

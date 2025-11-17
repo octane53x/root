@@ -74,4 +74,6 @@ namespace std {
       size_t h3 = hash<double>()(p.z);
       return h1 ^ (h2 << 1) ^ (h3 << 2); } }; }
 
+const point NULL_POINT = point(DBL_MIN, DBL_MIN, DBL_MIN);
+
 #endif

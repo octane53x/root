@@ -5,19 +5,19 @@
 
 #include "image.hh"
 
-struct triangle {
-
-  point a,b,c;
-  color fill;
-
-  triangle(){}
-  triangle(const point _a, const point _b, const point _c):
-      a(_a), b(_b), c(_c) {} };
-
 struct model : object {
 
+  struct tri {
+
+    point a,b,c;
+    color fill; //? textures
+
+    tri(){}
+    tri(const point _a, const point _b, const point _c):
+        a(_a), b(_b), c(_c) {} };
+
   point hitbox;
-  vec<triangle> triangles;
+  vec<tri> triangles;
 
   model(){}
 

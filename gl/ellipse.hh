@@ -8,7 +8,6 @@
 struct ellipse : object {
 
   double rad1, rad2;
-  color fill;
   point center;
 
   circle(){}

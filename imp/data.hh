@@ -29,37 +29,4 @@ const int
 
 const point PLAYER_START = point(0, 0, 0);
 
-const int C_MINERALS = 3;
-const vec<str> MINERALS = {
-  // CUSTOM:
-  "SOIL",
-  "SAND",
-  "STONE",
-  // RANDOM:
-  "COAL",
-  "IRON",
-  "COPPER",
-  "ALUMINUM",
-  "LIMESTONE",
-  "GRANITE",
-  "MARBLE",
-  "LEAD",
-  "TIN",
-  "ZINC",
-  "NICKEL",
-  "GYPSUM",
-  "LITHIUM",
-  "SULFUR",
-  "PHOSPHORUS",
-  "SILICON",
-  "TITANIUM",
-  "SILVER",
-  "GOLD",
-  "PLATINUM",
-  "ADAMANTIUM",
-  "URANIUM",
-  "NEPTUNIUM",
-  "PLUTONIUM" };
-
-
 #endif

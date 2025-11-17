@@ -9,7 +9,6 @@
 struct polygon : object {
 
   vec<point> points;
-  color fill;
 
   polygon(){}
   polygon(const vec<point>& _p){ points = _p; }
@@ -17,10 +16,35 @@ struct polygon : object {
   virtual void validate(){
     object::validate(); }
 
-  virtual point update(double ms){ return point(0, 0); }
+  point size() const {
+    double xmin = INFD, xmax = -INFD, ymin = INFD, ymax = -INFD;
+    for(int i = 0; i < points.size(); ++i)
+      xmin = min(xmin, points[i].x),
+      xmax = max(xmax, points[i].x),
+      ymin = min(ymin, points[i].y),
+      ymax = max(ymax, points[i].y);
+    return point(xmax - xmin, ymax - ymin); }
 
-  //!
-  bool inside(point p){ return false; }
+  bool inside(const point p) const {
+    line ray(p, point(p.x, p.y + size().y));
+    int n = 0;
+    for(int i = 0; i < points.size()-1; ++i)
+      if(line(points[i], points[i+1]).intersects(ray)) ++n;
+    if(line(points.back(), points[0]).intersects(ray)) ++n;
+    for(int i = 0; i < points.size(); ++i)
+      if(ray.on_seg(points[i])) --n;
+    return n & 1; }
+
+  double area() const {
+    double p1 = 0.0, p2 = 0.0;
+    for(int i = 0; i < points.size()-1; ++i)
+      p1 += points[i].x * points[i+1].y,
+      p2 += points[i].y * points[i+1].x;
+    p1 += points.back().x * points[0].y;
+    p2 += points.back().y * points[0].x;
+    return fabs(p1 - p2) / 2.0; }
+
+  virtual point update(double ms){ return point(0, 0); }
 
   void draw(image* bkgd){
     vec<point> points2;

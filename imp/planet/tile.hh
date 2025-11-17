@@ -6,15 +6,27 @@
 #include "../feature/feature.hh"
 #include "../unit/unit.hh"
 
-struct Tile : thing {
+struct Tile : object {
 
-  point loc;
-  str type;
+  enum TileType {
+    WATER,
+    GRASS,
+    SNOW,
+    CLIFF,
+    BUSH,
+    COAST,
+    SWAMP };
+
+  TileType type;
   Feature* feature;
   vec<Unit*> units;
 
   Tile(){}
 
-  virtual void validate(){} };
+  virtual void validate(){}
+
+  virtual point update(double ms){ return point(0, 0); }
+
+  virtual void draw(image* bkgd){} };
 
 #endif

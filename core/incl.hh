@@ -19,6 +19,7 @@
 
 #include <fstream>
 #include <climits>
+#include <cfloat>
 #include <algorithm>
 
 #include <windows.h>
