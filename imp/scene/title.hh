@@ -1,39 +1,34 @@
-// IMP SCENES
+// TITLE SCENE
 
-#ifndef SCENES_HH
-#define SCENES_HH
+#ifndef TITLE_HH
+#define TITLE_HH
 
 #include "../../gl/polygon.hh"
 #include "../../gl/label.hh"
 #include "../../gl/button.hh"
 #include "../../gl/scene.hh"
 
-struct Play : button {
-
-  Play(){}
-
-  void fn(){
-    //!
-  }
-
-  void draw(image* bkgd){
-    //!
-  } };
-
 struct Title : scene {
 
+  clock_t last_update_1;
   label title_lbl, start_lbl;
   button* play;
+  polygon* rand_color_box;
 
-  Title(int w, int h): scene(w, h) {}
+  Title(): last_update_1(0) {}
 
-  void init(){
+  virtual void validate(){
+    scene::validate(); }
+
+  void init(int w, int h){
+    scene::init(w, h);
+
     bkgd_color = color(255,0,0);
     title_lbl.text = "IMPACT";
     title_lbl.text_color = color(0,0,0);
     title_lbl.size = 40;
     title_lbl.pos = point(100, 100);
-    title_lbl.font = fonts["aldo"];
+    title_lbl.font = &fonts["aldo"];
     draw_bkgd();
 
     polygon* a = new polygon();
@@ -62,12 +57,18 @@ struct Title : scene {
     c->mov = new object::movement(object::movement::ORBIT);
     c->mov->root = b;
     c->mov->vel = 200.0;
+    rand_color_box = c;
     objs.pb(c); }
 
   void draw_bkgd(){
     scene::draw_bkgd();
     title_lbl.draw(&bkgd); }
 
-  void update(double ms){} };
+  void update(double ms){
+    clock_t now = clock();
+    if((double)(now - last_update_1) / CLOCKS_PER_SEC >= 0.1){
+      rand_color_box->fill = color().random();
+      last_update_1 = now;
+    } } };
 
 #endif

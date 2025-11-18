@@ -25,7 +25,7 @@ struct polygon : object {
       ymax = max(ymax, points[i].y);
     return point(xmax - xmin, ymax - ymin); }
 
-  bool inside(const point p) const {
+  bool inside(const point& p) const {
     line ray(p, point(p.x, p.y + size().y));
     int n = 0;
     for(int i = 0; i < points.size()-1; ++i)
@@ -34,6 +34,26 @@ struct polygon : object {
     for(int i = 0; i < points.size(); ++i)
       if(ray.on_seg(points[i])) --n;
     return n & 1; }
+
+  bool intersects(const polygon& o){
+    // True if any points lie inside the other
+    for(int i = 0; i < points.size(); ++i)
+      if(o.inside(points[i])) return true;
+    for(int i = 0; i < o.points.size(); ++i)
+      if(inside(o.points[i])) return true;
+    // True if any edges intersect other edges
+    vec<line> v1, v2;
+    for(int i = 0; i < points.size()-1; ++i)
+      v1.pb(line(points[i], points[i+1]));
+    v1.pb(line(points.back(), points[0]));
+    for(int i = 0; i < o.points.size()-1; ++i)
+      v2.pb(line(o.points[i], o.points[i+1]));
+    v2.pb(line(o.points.back(), o.points[0]));
+    for(int i = 0; i < v1.size(); ++i)
+      for(int j = 0; j < v2.size(); ++j)
+        if(v1[i].intersects(v2[j])) return true;
+    // Otherwise false
+    return false; }
 
   double area() const {
     double p1 = 0.0, p2 = 0.0;

@@ -17,15 +17,23 @@ DIRECTORIES
 /test:   Tests
 
 
+COMMENTS
+
+Dynamically allocated:
+  gl/button, gl/object
+  imp/feature, imp/unit
+
+These structures require formal deletion to prevent memory leaks because
+they need to be stored as pointers to a base class. This both allows usage of
+virtual functions and prevents needing a unique container for every derivation.
+
+Note many structures inherit from these and are not listed here.
+
+
 TODO
 
-! clear_pen
-! title scene Square object
-! scene width/height, env win_w/h
-  -> env.next_frame
 ! imp console
 ! demo square rotate
-! add pos to line,polygon draw
 ! clear out data.hh
 
 ! unit.target
@@ -38,9 +46,12 @@ TODO
 ! image.rotate, image.flip
 ! point/uvec rotate
 ! orbit around uvec
-! polygon.inside
 ! button click manager?
 ! fix image.scale
+! resize window
+! delete objects properly
+! call validates
+! scene draw time
 
 ! Comments
 ! Scene: Title Screen

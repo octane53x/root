@@ -11,7 +11,7 @@ struct line : object {
   point a,b;
 
   line(){}
-  line(const point _a, const point _b){ a = _a, b = _b, fill = BLACK; }
+  line(const point& _a, const point& _b){ a = _a, b = _b, fill = BLACK; }
 
   virtual void validate(){
     object::validate();
@@ -21,7 +21,7 @@ struct line : object {
     return deq(a.x, b.x) ? INFD : (b.y - a.y) / (b.x - a.x); }
 
   // Returns true if the point lies on the line segment
-  bool on_seg(const point p) const {
+  bool on_seg(const point& p) const {
     if(!deq(line(a, p).slope(), line(b, p).slope())) return false;
     double xmin = min(a.x, b.x), xmax = max(a.x, b.x),
         ymin = min(a.y, b.y), ymax = max(a.y, b.y);
@@ -30,7 +30,7 @@ struct line : object {
 
   // Returns zero if the point is on the line extended from the segment
   // Returns 1 or -1 for different sides of the line
-  int side(const point p) const {
+  int side(const point& p) const {
     double r = (b.x - a.x) * (p.y - a.y) - (p.x - a.x) * (b.y - a.y);
     if(deq(r, 0.0)) return 0;
     else if(r > 0.0) return 1;

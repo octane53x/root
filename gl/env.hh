@@ -1,29 +1,46 @@
 // ENVIRONMENT
 
+// Load scenes before initializing
+
 #ifndef ENV_HH
 #define ENV_HH
 
 #include "scene.hh"
-#include "camera.hh"
+
+bool zcompare_scene(const scene* a, const scene* b){
+  return a->z > b->z; }
 
 struct env : thing {
 
-  int cursor_x, cursor_y, win_w, win_h;
+  int win_w, win_h;
+  point cursor;
+  color bkgd_color;
   queue<pair<str, bool> > keys; // true = keydown
-  umap<str, font> fonts;
-  scene* active_scene;
-  camera cam;
+  image bkgd, frame;
+  vec<scene*> scenes;
 
-  env(){}
+  env(): bkgd_color(BLACK) {}
+
+  virtual void validate(){
+    assert(win_w > 0 && win_h > 0, "window size not positive"); }
 
   void init(int w, int h){
     win_w = w, win_h = h;
-    umap<str, font>::iterator it;
-    for(it = fonts.begin(); it != fonts.end(); ++it)
-      active_scene->fonts[it->first] = &it->second; }
+    bkgd.set_size(w, h);
+    for(int i = 0; i < h; ++i)
+      for(int j = 0; j < w; ++j)
+        bkgd.set_pixel(j, i, bkgd_color);
+    for(int i = 0; i < scenes.size(); ++i)
+      scenes[i]->init(w, h); }
 
-  virtual void validate(){}
-
-  virtual void update() = 0; };
+  image* draw_scenes(){
+    vec<scene*> active_scenes;
+    for(int i = 0; i < scenes.size(); ++i)
+      if(scenes[i]->active) active_scenes.pb(scenes[i]);
+    sort(active_scenes.begin(), active_scenes.end(), zcompare_scene);
+    frame = bkgd;
+    for(int i = 0; i < active_scenes.size(); ++i)
+      active_scenes[i]->next_frame()->draw(&frame);
+    return &frame; } };
 
 #endif

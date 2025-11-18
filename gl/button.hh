@@ -6,21 +6,20 @@
 #include "polygon.hh"
 
 // Polygon is the click hitbox
-struct button : polygon {
+struct button : polygon, image {
 
   button(){}
+
+  virtual void validate(){
+    polygon::validate();
+    image::validate(); }
 
   virtual void fn() = 0;
 
   bool click(point c){
-    return inside(c); }
-
-  virtual void validate(){
-    polygon::validate(); }
-
-  virtual point update(double ms){ return point(0, 0); }
-
-  // object.draw passed through
-};
+    if(inside(c)){
+      fn();
+      return true; }
+    return false; } };
 
 #endif

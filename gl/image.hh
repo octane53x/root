@@ -16,10 +16,6 @@ struct image : object {
   image(): width(0), height(0) {}
   image(int w, int h){ set_size(w, h); }
 
-  virtual point update(double ms){ return point(0, 0); }
-
-  bool empty(){ return width == 0; }
-
   virtual void validate(){
     object::validate();
     assert((data.empty() && width == 0 && height == 0)
@@ -125,6 +121,8 @@ struct image : object {
     image r(width, height);
     //!
     return r; }
+
+  virtual point update(double ms){ return point(0, 0); }
 
   void draw(image* bkgd){
     for(int y = max(0, (int)pos.y), yt = max(0, -(int)pos.y);

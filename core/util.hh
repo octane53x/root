@@ -45,8 +45,9 @@ int gcd(int a, int b){
 llu lrand(){
   return (llu)rand() * rand() + rand(); }
 
-const int RMAX = 1000000; //?
+//! Param
 int crand(){
+  const int RMAX = 1000000;
   int r = 1;
   while(r == 1)
     r = (int)floor((double)RMAX / (rand() % RMAX + 1));

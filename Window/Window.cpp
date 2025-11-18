@@ -1,14 +1,9 @@
 // WINDOW
 
-//! resize window
-
-#include "../gl/os.hh"
 #include "../imp/impact.hh"
 
 const int INIT_WIN_W = 500,
           INIT_WIN_H = 500;
-
-Impact imp;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   bool dir;
@@ -22,7 +17,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     HDC hdc = BeginPaint(hwnd, &ps);
 
     // Copy frame to screen
-    image* frame = imp.active_scene->next_frame();
+    image* frame = get_frame();
     HBITMAP bmp = image_to_bmp(hdc, frame);
     HDC hdcMem = CreateCompatibleDC(NULL);
     HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
@@ -32,14 +27,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 
     EndPaint(hwnd, &ps);
     return 0; }
-  case WM_MOUSEMOVE: //! replace with GetCursorPos every frame
-    imp.cursor_x = GET_X_LPARAM(lParam), imp.cursor_y = GET_Y_LPARAM(lParam);
+  case WM_MOUSEMOVE:
+
+    // Update cursor position
+    POINT p;
+    GetCursorPos(&p);
+    update_cursor(p.x, p.y);
+
     return 0;
   case WM_MOUSEWHEEL:
     //!
     return 0;
   case WM_KEYDOWN:
   case WM_KEYUP:
+
+    // Send a key event (including mouse click)
     dir = (uMsg == WM_KEYDOWN);
     switch(wParam){
       case VK_LBUTTON: s = "LCLICK"; break;
@@ -72,14 +74,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
       case VK_OEM_7: s = "QUOTE"; break;
     }
     if(wParam >= '0' && wParam <= 'Z') s = (char)wParam;
-    imp.keys.push(pair<str,bool>(s, dir));
+    send_key(s, dir);
+
     return 0;
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
                     PWSTR pCmdLine, int nCmdShow) {
-  imp.init(INIT_WIN_W, INIT_WIN_H); // Initialize environment
+  init_impact(INIT_WIN_W, INIT_WIN_H); // Initialize environment
   const wchar_t CLASS[] = L"WindowClass";
   WNDCLASS wc = {};
   wc.lpfnWndProc = WindowProc;
@@ -96,6 +99,6 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
   while(GetMessage(&msg, nullptr, 0, 0)){
     TranslateMessage(&msg);
     DispatchMessage(&msg);
-    imp.update();
+    update_impact(); // Update environment
     InvalidateRect(hwnd, nullptr, FALSE); }
   return 0; }

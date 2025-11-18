@@ -31,7 +31,11 @@ struct color : thing {
   virtual void validate(){}
 
   color avg(const color& c){
-    return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); } };
+    return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); }
+
+  color random(){
+    return color((uchar)(rand() % 256), (uchar)(rand() % 256),
+        (uchar)(rand() % 256)); } };
 
 const color CLEAR = color(color::CLEAR),
             CLEAR_PEN = color(color::CLEAR_PEN),

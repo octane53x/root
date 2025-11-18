@@ -34,7 +34,7 @@ struct object : thing {
   color fill;
   movement* mov;
 
-  object(): mov(NULL) { id = new_id(); }
+  object(): fill(WHITE), mov(NULL) { id = new_id(); }
 
   llu new_id(){ return next_id++; }
 
