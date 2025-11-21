@@ -27,7 +27,7 @@ struct Planet : object {
   Planet(){}
 
   void init(){
-    size = (rand() % ((PLANET_SIZE_MAX - PLANET_SIZE_MIN) / CHUNK_SIZE + 1))
+    size = (lrand() % ((PLANET_SIZE_MAX - PLANET_SIZE_MIN) / CHUNK_SIZE + 1))
         * CHUNK_SIZE + PLANET_SIZE_MIN;
     int nchunks = size / CHUNK_SIZE;
     for(int i = 0; i < nchunks; ++i){
@@ -35,7 +35,7 @@ struct Planet : object {
       for(int j = 0; j < nchunks; ++j){
         Chunk c;
         c.size = CHUNK_SIZE;
-        c.seed = rand();
+        c.seed = (ui)lrand();
         chunks[i].pb(c); } }
     terrain.gen_planet(size); //!! Time
     earth.gen_planet(size); }
@@ -43,7 +43,7 @@ struct Planet : object {
   virtual void validate(){
     object::validate(); }
 
-  virtual point update(){ return point(0, 0); }
+  virtual point update(double ms){ return point(0, 0); }
 
   virtual void draw(image* bkgd){}
 

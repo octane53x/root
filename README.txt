@@ -52,6 +52,7 @@ TODO
 ! delete objects properly
 ! call validates
 ! scene draw time
+! root scene objs onto scene (make scene an object?)
 
 ! Comments
 ! Scene: Title Screen

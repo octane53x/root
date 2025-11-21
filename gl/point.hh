@@ -19,6 +19,8 @@ struct point : thing {
   //! double is bad to compare
   bool operator==(const point& p) const {
     return x == p.x && y == p.y && z == p.z; }
+  bool operator!=(const point& p) const {
+    return !(*this == p); }
 
   point& operator+=(const point& p){
     x += p.x, y += p.y, z += p.z;

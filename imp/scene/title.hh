@@ -12,7 +12,7 @@ struct Title : scene {
 
   clock_t last_update_1;
   label title_lbl, start_lbl;
-  button* play;
+  button* play_btn;
   polygon* rand_color_box;
 
   Title(): last_update_1(0) {}
@@ -21,14 +21,20 @@ struct Title : scene {
     scene::validate(); }
 
   void init(int w, int h){
+    bkgd_color = RED;
     scene::init(w, h);
 
-    bkgd_color = color(255,0,0);
     title_lbl.text = "IMPACT";
-    title_lbl.text_color = color(0,0,0);
+    title_lbl.text_color = BLACK;
     title_lbl.size = 40;
     title_lbl.pos = point(100, 100);
     title_lbl.font = &fonts["aldo"];
+
+    play_btn->fill = BLACK;
+    play_btn->points.pb(point(400, 300));
+    play_btn->points.pb(point(400, 400));
+    play_btn->points.pb(point(350, 350));
+
     draw_bkgd();
 
     polygon* a = new polygon();
@@ -61,8 +67,9 @@ struct Title : scene {
     objs.pb(c); }
 
   void draw_bkgd(){
-    scene::draw_bkgd();
-    title_lbl.draw(&bkgd); }
+    //scene::draw_bkgd();
+    title_lbl.draw(&bkgd);
+    play_btn->draw(&bkgd); }
 
   void update(double ms){
     clock_t now = clock();

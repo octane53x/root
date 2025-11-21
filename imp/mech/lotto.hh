@@ -19,8 +19,8 @@ struct Lotto {
   }
 
   llu gen(){
-    llu r1 = (llu)rand() * rand() + rand();
-    llu r2 = (llu)rand() * rand() + rand();
+    llu r1 = lrand();
+    llu r2 = lrand();
     llu r = (llu)floor(pow((double)r1 / r2 + 1.0, C));
     hist.pb(r);
     check();

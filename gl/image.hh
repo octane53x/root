@@ -6,7 +6,8 @@
 #include "color.hh"
 #include "object.hh"
 
-struct image : object {
+// Declared virtual so button is only one object
+struct image : virtual object {
 
   int width, height;
   point pos;
@@ -20,6 +21,9 @@ struct image : object {
     object::validate();
     assert((data.empty() && width == 0 && height == 0)
         || (!data.empty() && width > 0 && height > 0), "image broken"); }
+
+  bool empty() const {
+    return data.empty(); }
 
   // Clears contents
   void set_size(int w, int h){

@@ -47,6 +47,25 @@ struct line : object {
       return false;
     return true; }
 
+  // Returns the intersection point on another segment, NULL_POINT if not
+  point intersection(const line& o) const {
+    if(o.on_seg(a)) return a;
+    if(o.on_seg(b)) return b;
+    if(on_seg(o.a)) return o.a;
+    if(on_seg(o.b)) return o.b;
+    int side1 = o.side(a), side2 = o.side(b),
+        side3 = side(o.a), side4 = side(o.b);
+    if(side1 == 0 || side2 == 0 || side3 == 0 || side4 == 0
+        || (side1 > 0 && side2 > 0) || (side1 < 0 && side2 < 0)
+        || (side3 > 0 && side4 > 0) || (side3 < 0 && side4 < 0))
+      return NULL_POINT;
+    double a1 = b.y - a.y, b1 = a.x - b.x, c1 = b.x*a.y - a.x*b.y;
+    double a2 = o.b.y - o.a.y, b2 = o.a.x - o.b.x,
+        c2 = o.b.x*o.a.y - o.a.x*o.b.y;
+    double x = (b1*c2 - b2*c1) / (a1*b2 - a2*b1);
+    double y = (c1*a2 - c2*a1) / (a1*b2 - a2*b1);
+    return point(x, y); }
+
   virtual point update(double ms){ return point(0, 0); }
 
   void draw(image* bkgd){
@@ -62,12 +81,12 @@ struct line : object {
         i != (int)floor(xlong ? b.x : b.y);){
       int ii = i, jj = j, s;
       if(xlong) s = ii, ii = jj, jj = s;
-      //! thickness: for(int t =
+      //! thickness
       bkgd->set_pixel(jj, ii, fill);
       double dp = d;
       d += di;
       if((int)floor(d) != (int)floor(dp)) j += (xlong ? yi : xi);
       i += (xlong ? xi : yi); }
-    bkgd->data[(int)floor(b.y)][(int)floor(b.x)] = fill; } };
+    bkgd->set_pixel((int)floor(b.x), (int)floor(b.y), fill); } };
 
 #endif

@@ -21,9 +21,8 @@ struct Game : thing {
   void init(){
     last_update = 0;
     tick = (clock_t)ceil(GAME_TICK * CLOCKS_PER_SEC);
-    //! Connect to server
-    //! Generate or find planet
-  }
+    planet = new Planet();
+    planet->init(); }
 
   void update(){
     clock_t now = clock();

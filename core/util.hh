@@ -14,8 +14,18 @@ const double
 
 void pass(){}
 
+void print(str s){
+#ifdef _WIN32
+  ofstream fs("../debug.txt", ios::app);
+  fs << s;
+  fs.close();
+#else
+  printf("%s", s.c_str());
+#endif
+}
+
 void err(const char* msg){
-  printf("ERR: %s\n", msg);
+  print(str("ERR: ") + str(msg) + str("\n"));
   exit(-1); }
 
 void assert(bool b, const char* msg){
@@ -43,7 +53,14 @@ int gcd(int a, int b){
   return b ? gcd(b, a % b) : a; }
 
 llu lrand(){
-  return (llu)rand() * rand() + rand(); }
+  int bits = 1;
+  llu t = 1;
+  while(t < RAND_MAX)
+    ++bits, t <<= 1;
+  llu r = 0;
+  for(int i = 0; i < 64/bits; ++i)
+    r = r * rand() + rand();
+  return r; }
 
 //! Param
 int crand(){

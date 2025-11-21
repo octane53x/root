@@ -38,7 +38,11 @@ struct scene : thing {
   virtual void init(int w, int h){
     width = w, height = h;
     frame.set_size(w, h);
-    bkgd.set_size(w, h); }
+    bkgd.set_size(w, h);
+    scene::draw_bkgd(); }
+
+  virtual void resize(int w, int h){
+    width = w, height = h; }
 
   virtual void update(double ms) = 0;
 
@@ -73,7 +77,7 @@ struct scene : thing {
       nodes.pb(node);
       m[objs[i]->id] = (int)nodes.size() - 1; }
     for(int i = 0; i < objs.size(); ++i){
-      if(objs[i]->mov->root == NULL) continue;
+      if(objs[i]->mov == NULL || objs[i]->mov->root == NULL) continue;
       assert(m.find(objs[i]->mov->root->id) != m.end(), "obj not found");
       assert(m.find(objs[i]->id) != m.end(), "obj not found");
       int j = m[objs[i]->mov->root->id];
@@ -87,7 +91,6 @@ struct scene : thing {
   void draw_objs(){
     sort(objs.begin(), objs.end(), zcompare_obj);
     for(int i = 0; i < objs.size(); ++i)
-      objs[i]->draw(&frame);
-  } };
+      objs[i]->draw(&frame); } };
 
 #endif

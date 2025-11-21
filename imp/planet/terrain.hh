@@ -8,7 +8,7 @@
 
 const double
     LAND_RATIO_MIN = 0.2,
-    LAND_RATIO_MAX = 0.6;
+    LAND_RATIO_MAX = 0.5;
 
 struct Terrain : thing {
 
@@ -31,7 +31,8 @@ struct Terrain : thing {
       point p;
       bool found = false;
       while(!found){
-        p.x = rand() % planet_size, p.y = rand() % planet_size;
+        p.x = (double)(lrand() % planet_size);
+        p.y = (double)(lrand() % planet_size);
         bool valid = true;
         for(int i = 0; i < land.size(); ++i)
           if(land[i].inside(p)){ valid = false; break; }
@@ -43,7 +44,8 @@ struct Terrain : thing {
         poly.points.clear();
         poly.points.pb(p);
         point p2;
-        p2.x = rand() % planet_size, p2.y = rand() % planet_size;
+        p2.x = (double)(lrand() % planet_size);
+        p2.y = (double)(lrand() % planet_size);
         poly.points.pb(point(p.x, p2.y));
         poly.points.pb(p2);
         poly.points.pb(point(p2.x, p.y));

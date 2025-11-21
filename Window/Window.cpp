@@ -6,8 +6,20 @@ const int INIT_WIN_W = 500,
           INIT_WIN_H = 500;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
+
   bool dir;
   str s;
+  POINT p;
+  RECT r;
+
+  // Update cursor position
+  GetCursorPos(&p);
+  update_cursor(p.x, p.y);
+
+  // Update window position and size
+  GetWindowRect(hwnd, &r);
+  update_window(r.left, r.top, r.right - r.left, r.bottom - r.top);
+
   switch(uMsg){
   case WM_DESTROY:
     PostQuitMessage(0);
@@ -28,25 +40,40 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     EndPaint(hwnd, &ps);
     return 0; }
   case WM_MOUSEMOVE:
+    // This is handled up top
+    return 0;
 
-    // Update cursor position
-    POINT p;
-    GetCursorPos(&p);
-    update_cursor(p.x, p.y);
-
+  // Send a key event or mouse click
+  case WM_LBUTTONDOWN:
+    send_key("LCLICK", true, p.x, p.y);
+    return 0;
+  case WM_LBUTTONUP:
+    send_key("LCLICK", false, p.x, p.y);
+    return 0;
+  case WM_RBUTTONDOWN:
+    send_key("RCLICK", true, p.x, p.y);
+    return 0;
+  case WM_RBUTTONUP:
+    send_key("RCLICK", false, p.x, p.y);
+    return 0;
+  case WM_MBUTTONDOWN:
+    send_key("MCLICK", true, p.x, p.y);
+    return 0;
+  case WM_MBUTTONUP:
+    send_key("MCLICK", false, p.x, p.y);
     return 0;
   case WM_MOUSEWHEEL:
     //!
     return 0;
+
   case WM_KEYDOWN:
   case WM_KEYUP:
-
-    // Send a key event (including mouse click)
     dir = (uMsg == WM_KEYDOWN);
     switch(wParam){
-      case VK_LBUTTON: s = "LCLICK"; break;
-      case VK_RBUTTON: s = "RCLICK"; break;
-      case VK_MBUTTON: s = "MCLICK"; break;
+      // Mouse clicks not handled like this:
+      // case VK_LBUTTON: s = "LCLICK"; break;
+      // case VK_RBUTTON: s = "RCLICK"; break;
+      // case VK_MBUTTON: s = "MCLICK"; break;
       case VK_BACK: s = "BACKSPACE"; break;
       case VK_TAB: s = "TAB"; break;
       case VK_RETURN: s = "ENTER"; break;
@@ -74,7 +101,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
       case VK_OEM_7: s = "QUOTE"; break;
     }
     if(wParam >= '0' && wParam <= 'Z') s = (char)wParam;
-    send_key(s, dir);
+    GetCursorPos(&p);
+    update_cursor(p.x, p.y);
+    send_key(s, dir, p.x, p.y);
 
     return 0;
   default:
