@@ -51,6 +51,10 @@ struct point : thing {
     r /= n;
     return r; }
 
+  str to_str(){
+    return str("(") + to_string(x) + str(", ") + to_string(y) + str(", ")
+        + to_string(z) + str(")"); }
+
   double dist(const point& p) const {
     double a = x - p.x, b = y - p.y, c = z - p.z;
     return sqrt(a*a + b*b + c*c); }

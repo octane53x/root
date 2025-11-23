@@ -62,8 +62,10 @@ struct env : thing {
       if(scenes[i]->active) active_scenes.pb(scenes[i]);
     sort(active_scenes.begin(), active_scenes.end(), zcompare_scene);
     frame = bkgd;
+    viewport default_view;
+    default_view.size = min(frame.width, frame.height);
     for(int i = 0; i < active_scenes.size(); ++i)
-      active_scenes[i]->next_frame()->draw(&frame);
+      active_scenes[i]->next_frame()->draw(&frame, default_view);
     return &frame; } };
 
 #endif

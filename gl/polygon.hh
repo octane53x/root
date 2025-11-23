@@ -70,7 +70,7 @@ struct polygon : virtual object {
 
   virtual point update(double ms){ return point(0, 0); }
 
-  void draw(image* bkgd){
+  void draw(image* bkgd, viewport view){
     double xmin = INFD, xmax = -INFD, ymin = INFD, ymax = -INFD;
     for(int i = 0; i < points.size(); ++i)
       xmin = min(xmin, points[i].x+pos.x), xmax = max(xmax, points[i].x+pos.x),
@@ -79,7 +79,8 @@ struct polygon : virtual object {
     for(int i = 0; i < points.size()-1; ++i)
       edges.pb(line(points[i]+pos, points[i+1]+pos));
     edges.pb(line(points.back()+pos, points[0]+pos));
-    for(double y = ymin; y <= ymax; y += 0.5){
+    double yi = view.size / min(bkgd->width, bkgd->height) / 2.0;
+    for(double y = ymin; y <= ymax; y += yi){
       line scan(point(xmin, y), point(xmax, y));
       vec<point> inter;
       for(int i = 0; i < edges.size(); ++i){
@@ -93,6 +94,6 @@ struct polygon : virtual object {
           continue; }
         line s(inter[i], inter[i+1]);
         s.fill = fill;
-        s.draw(bkgd); } } } };
+        s.draw(bkgd, view); } } } };
 
 #endif

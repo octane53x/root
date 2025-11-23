@@ -4,6 +4,7 @@
 #define OBJECT_HH
 
 #include "point.hh"
+#include "viewport.hh"
 
 struct image;
 
@@ -25,8 +26,7 @@ struct object : thing {
     object* root;
 
     movement(mov_type t):
-        type(t), vel(0.0), path_pos(0), path_prog(0.0), root(NULL) {}
-  };
+        type(t), vel(0.0), path_pos(0), path_prog(0.0), root(NULL) {} };
 
   llu id;
   static llu next_id;
@@ -41,7 +41,7 @@ struct object : thing {
   // Returns movement
   virtual point update(double ms) = 0;
 
-  virtual void draw(image* bkgd) = 0;
+  virtual void draw(image* bkgd, viewport view) = 0;
 
   virtual void validate(){
     if(mov != NULL &&

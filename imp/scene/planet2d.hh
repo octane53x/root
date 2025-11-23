@@ -14,20 +14,17 @@ struct Planet2D : scene {
   virtual void validate(){
     scene::validate(); }
 
+  // Requires planet to be initialized
   void init(int w, int h){
     bkgd_color = BLUE;
     scene::init(w, h);
+    view.size = planet->size;
 
     // Draw land
     for(int i = 0; i < planet->terrain.land.size(); ++i){
       polygon* land = &planet->terrain.land[i];
-      polygon* land2 = new polygon();
-      for(int j = 0; j < land->points.size(); ++j){
-        point p = land->points[j];
-        double ratio = (double)height / planet->size;
-        land2->points.pb(point(p.x * ratio, p.y * ratio)); }
-      land2->fill = YELLOW;
-      objs.pb(land2); } }
+      land->fill = YELLOW;
+      objs.pb(land); } }
 
   void update(double ms){} };
 

@@ -13,7 +13,6 @@ bool zcompare_obj(const object* a, const object* b){
 struct scene : thing {
 
   struct move_node {
-
     object* obj;
     move_node* parent;
     vec<move_node*> children; };
@@ -26,6 +25,7 @@ struct scene : thing {
   image bkgd, frame;
   static umap<str, font> fonts;
   vec<object*> objs;
+  viewport view;
   camera cam;
 
   scene(): active(false), last_frame(0), z(0.0), bkgd_color(BLACK) {
@@ -37,6 +37,7 @@ struct scene : thing {
 
   virtual void init(int w, int h){
     width = w, height = h;
+    view.size = min(w, h);
     frame.set_size(w, h);
     bkgd.set_size(w, h);
     scene::draw_bkgd(); }
@@ -91,6 +92,6 @@ struct scene : thing {
   void draw_objs(){
     sort(objs.begin(), objs.end(), zcompare_obj);
     for(int i = 0; i < objs.size(); ++i)
-      objs[i]->draw(&frame); } };
+      objs[i]->draw(&frame, view); } };
 
 #endif

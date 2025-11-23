@@ -68,17 +68,24 @@ struct line : object {
 
   virtual point update(double ms){ return point(0, 0); }
 
-  void draw(image* bkgd){
-    int xi = (a.x < b.x) ? 1 : -1;
-    int yi = (a.y < b.y) ? 1 : -1;
-    int w = ((int)floor(b.x - a.x) * xi);
-    int h = ((int)floor(b.y - a.y) * yi);
+  void draw(image* bkgd, viewport view){
+    point a2 = view.translate(a + pos, bkgd->width, bkgd->height);
+    point b2 = view.translate(b + pos, bkgd->width, bkgd->height);
+    // If line outside the viewport, don't bother iterating pixels
+    if((a2.y < 0 && b2.y < 0) || (a2.y > bkgd->height && b2.y > bkgd->height)
+        || (a2.x < 0 && b2.x < 0) || (a2.x > bkgd->width && b2.x > bkgd->width))
+      return;
+    // Otherwise draw valid pixels
+    int xi = (a2.x < b2.x) ? 1 : -1;
+    int yi = (a2.y < b2.y) ? 1 : -1;
+    int w = ((int)floor(b2.x - a2.x) * xi);
+    int h = ((int)floor(b2.y - a2.y) * yi);
     bool xlong = w > h;
     double di = xlong ? ((double)h / w) : ((double)w / h);
-    int j = (int)floor(xlong ? a.y : a.x);
+    int j = (int)floor(xlong ? a2.y : a2.x);
     double d = j;
-    for(int i = (int)floor(xlong ? a.x : a.y);
-        i != (int)floor(xlong ? b.x : b.y);){
+    for(int i = (int)floor(xlong ? a2.x : a2.y);
+        i != (int)floor(xlong ? b2.x : b2.y);){
       int ii = i, jj = j, s;
       if(xlong) s = ii, ii = jj, jj = s;
       //! thickness
@@ -87,6 +94,6 @@ struct line : object {
       d += di;
       if((int)floor(d) != (int)floor(dp)) j += (xlong ? yi : xi);
       i += (xlong ? xi : yi); }
-    bkgd->set_pixel((int)floor(b.x), (int)floor(b.y), fill); } };
+    bkgd->set_pixel((int)floor(b2.x), (int)floor(b2.y), fill); } };
 
 #endif

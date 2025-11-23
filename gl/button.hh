@@ -17,7 +17,6 @@ struct button : polygon, image {
   virtual void fn() = 0;
 
   bool click(point c){
-    print(str("Clicked ")+to_string(c.x)+str(", ")+to_string(c.y)+str("\n"));
     if(inside(c)){
       fn();
       return true; }
@@ -25,8 +24,8 @@ struct button : polygon, image {
 
   virtual point update(double ms){ return point(0, 0); }
 
-  virtual void draw(image* bkgd){
-    if(fill != CLEAR) polygon::draw(bkgd);
-    else if(!image::empty()) image::draw(bkgd); } };
+  virtual void draw(image* bkgd, viewport view){
+    if(fill != CLEAR) polygon::draw(bkgd, view);
+    else if(!image::empty()) image::draw(bkgd, view); } };
 
 #endif

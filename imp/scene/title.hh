@@ -67,9 +67,8 @@ struct Title : scene {
     objs.pb(c); }
 
   void draw_bkgd(){
-    //scene::draw_bkgd();
-    title_lbl.draw(&bkgd);
-    play_btn->draw(&bkgd); }
+    title_lbl.draw(&bkgd, view);
+    play_btn->draw(&bkgd, view); }
 
   void update(double ms){
     clock_t now = clock();

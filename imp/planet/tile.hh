@@ -27,6 +27,6 @@ struct Tile : object {
 
   virtual point update(double ms){ return point(0, 0); }
 
-  virtual void draw(image* bkgd){} };
+  virtual void draw(image* bkgd, viewport view){} };
 
 #endif

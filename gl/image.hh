@@ -10,7 +10,6 @@
 struct image : virtual object {
 
   int width, height;
-  point pos;
   // Height by width, (0,0) Top-left
   vec<vec<color> > data;
 
@@ -83,6 +82,7 @@ struct image : virtual object {
 
   //! Not working for all scales
   image scale(double s){
+    if(deq(s, 1.0)) return *this;
     image r((int)ceil(s * width), (int)ceil(s * height));
     if(s < 1.0){ // Scale down
       s = 1.0 / s;
@@ -114,6 +114,7 @@ struct image : virtual object {
               r.set_pixel(dx+j, dy+i, data[y][x]);
           dx += px; }
         dy += py; } }
+    r.pos = pos;
     return r; }
 
   image rotate(double deg){
@@ -128,12 +129,19 @@ struct image : virtual object {
 
   virtual point update(double ms){ return point(0, 0); }
 
-  void draw(image* bkgd){
-    for(int y = max(0, (int)pos.y), yt = max(0, -(int)pos.y);
-        y < min(bkgd->height, (int)pos.y+height); ++y, ++yt)
-      for(int x = max(0, (int)pos.x), xt = max(0, -(int)pos.x);
-          x < min(bkgd->width, (int)pos.x+width); ++x, ++xt)
+  void draw(image* bkgd, viewport view){
+    double ratio = min(bkgd->width, bkgd->height) / view.size;
+    image img = scale(ratio);
+    img.pos = view.translate(pos, bkgd->width, bkgd->height);
+    // If image outside the viewport, don't bother iterating pixels
+    if(img.pos.y + img.height < 0 || img.pos.y > bkgd->height
+        || img.pos.x + img.width < 0 || img.pos.x > bkgd->width) return;
+    // Otherwise draw all valid pixels
+    for(int y = max(0, (int)round(pos.y)), yt = max(0, -(int)round(pos.y));
+        y < min(bkgd->height, (int)round(pos.y)+height); ++y, ++yt)
+      for(int x = max(0, (int)round(pos.x)), xt = max(0, -(int)round(pos.x));
+          x < min(bkgd->width, (int)round(pos.x)+width); ++x, ++xt)
         if(data[yt][xt] != CLEAR)
-          bkgd->set_pixel(x, y, data[yt][xt]); } };
+          bkgd->set_pixel(x, y, img.data[yt][xt]); } };
 
 #endif

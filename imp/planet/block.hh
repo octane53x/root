@@ -5,7 +5,7 @@
 
 #include "../unit/unit.hh"
 
-struct Block : thing {
+struct Block : object {
 
   //! adjust members to describe mods
   bool tunnel;
@@ -24,6 +24,10 @@ struct Block : thing {
     map<str, int>::iterator it;
     for(it = minerals.begin(); it != minerals.end(); ++it)
       r += it->second;
-    return r; } };
+    return r; }
+
+  virtual point update(double ms){ return point(0, 0); }
+
+  void draw(image* bkgd, viewport view){} };
 
 #endif
