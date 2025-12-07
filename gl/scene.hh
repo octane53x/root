@@ -7,91 +7,127 @@
 #include "font.hh"
 #include "camera.hh"
 
-bool zcompare_obj(const object* a, const object* b){
-  return a->pos.z > b->pos.z; }
+// Holds graphical elements, contained by env
+struct scene : object {
 
-struct scene : thing {
-
+  // Tree node used to move rooted objects
   struct move_node {
     object* obj;
     move_node* parent;
     vec<move_node*> children; };
 
   bool active;
-  clock_t last_frame;
   int width, height;
+  static int win_w, win_h;
   double z;
+  clock_t last_frame;
   color bkgd_color;
-  image bkgd, frame;
   static umap<str, font> fonts;
-  vec<object*> objs;
+  vec<object*> objects;
+  image bkgd, img;
   viewport view;
   camera cam;
 
-  scene(): active(false), last_frame(0), z(0.0), bkgd_color(BLACK) {
-    cam.look = uvec(0.0, 0.0, 1.0);
-    cam.up = uvec(0.0, 1.0, 0.0); }
+  scene();
 
-  virtual void validate(){
-    assert(width > 0 && height > 0, "scene size not positive"); }
+  virtual void validate(str func);
+  virtual void init();
+  virtual void update(double ms);
+  virtual void draw(image* frame, viewport view);
 
-  virtual void init(int w, int h){
-    width = w, height = h;
-    view.size = min(w, h);
-    frame.set_size(w, h);
-    bkgd.set_size(w, h);
-    scene::draw_bkgd(); }
+  void init_members();
+  void resize_window();
+  void move_rec(move_node* node, point mov, double ms);
+  void move_objects(double ms);
 
-  virtual void resize(int w, int h){
-    width = w, height = h; }
+// Set default member state
+scene(): type("scene"), active(false), last_frame(0), z(0.0),
+    bkgd_color(MAGENTA) {}
 
-  virtual void update(double ms) = 0;
+// Ensure valid state
+void validate(str func){
+  object::validate(func);
+  assert(width > 0 && height > 0, "scene size not positive"); }
 
-  image* next_frame(){
-    frame = bkgd;
-    clock_t now = clock();
-    double ms = (double)(now - last_frame) * 1000.0 / CLOCKS_PER_SEC;
-    last_frame = now;
-    update(ms);
-    move_objs(ms);
-    draw_objs();
-    return &frame; }
+// Set the scene size
+// Called by: DERIVED CLASS
+void scene::init_members(int w, int h){
+  width = w, height = h;
+  validate("scene.init_members"); }
 
-  virtual void draw_bkgd(){
-    for(int i = 0; i < height; ++i)
-      for(int j = 0; j < width; ++j)
-        bkgd.set_pixel(j, i, bkgd_color); }
+// Prepare scene for first update and draw
+// Call init_members first
+// Called by: DERIVED CLASS
+void scene::init(){
+  view.size = min(width, height);
+  bkgd.set_size(width, height);
+  for(int i = 0; i < height; ++i)
+    for(int j = 0; j < width; ++j)
+      bkgd.set_pixel(j, i, bkgd_color);
+  frame = bkgd;
+  validate("scene.init"); }
 
-  void move_rec(move_node* node, point mov, double ms){
-    node->obj->pos += mov;
-    point mov2 = node->obj->move(ms);
-    for(int i = 0; i < node->children.size(); ++i)
-      move_rec(node->children[i], mov + mov2, ms); }
+// Update and move objects
+// Called by: DERIVED CLASS
+void scene::update(double ms){
+  move_objects(ms);
+  for(object* o : objects)
+    o->update(ms);
+  validate("scene.update"); }
 
-  void move_objs(double ms){
-    vec<move_node> nodes;
-    umap<llu, int> m;
-    for(int i = 0; i < objs.size(); ++i){
-      move_node node;
-      node.obj = objs[i];
-      node.parent = NULL;
-      nodes.pb(node);
-      m[objs[i]->id] = (int)nodes.size() - 1; }
-    for(int i = 0; i < objs.size(); ++i){
-      if(objs[i]->mov == NULL || objs[i]->mov->root == NULL) continue;
-      assert(m.find(objs[i]->mov->root->id) != m.end(), "obj not found");
-      assert(m.find(objs[i]->id) != m.end(), "obj not found");
-      int j = m[objs[i]->mov->root->id];
-      int k = m[objs[i]->id];
-      nodes[j].children.pb(&nodes[k]);
-      nodes[k].parent = &nodes[j]; }
-    for(int i = 0; i < nodes.size(); ++i)
-      if(nodes[i].parent == NULL)
-        move_rec(&nodes[i], point(0, 0, 0), ms); }
+// Draw objects onto background
+// Called by: env.draw
+void scene::draw(image* frame, viewport view){
+  img = bkgd;
+  sort(objects.begin(), objects.end(),
+      [](const object* a, const object* b){ return a->pos.z > b->pos.z; });
+  for(int i = 0; i < objects.size(); ++i)
+    objects[i]->draw(&img, view);
+  for(int y = 0; y < height; ++y)
+    for(int x = 0; x < width; ++x)
+      frame->set_pixel(x + pos.x, y + pos.y, img.data[y][x]);
+  validate("scene.draw"); }
 
-  void draw_objs(){
-    sort(objs.begin(), objs.end(), zcompare_obj);
-    for(int i = 0; i < objs.size(); ++i)
-      objs[i]->draw(&frame, view); } };
+// Signal a window resize so objects can adjust on next update
+// Called by: PROJECT
+void scene::resize_window(int w, int h){
+  win_w = w, win_h = h;
+  validate("scene.resize_window"); }
+
+// Recursive helper function to move_objects
+// For objects rooted to objects that are also rooted to other objects
+// Called by: move_objects
+void scene::move_rec(move_node* node, point mov, double ms){
+  node->obj->pos += mov;
+  point mov2 = node->obj->move(ms);
+  for(int i = 0; i < node->children.size(); ++i)
+    move_rec(node->children[i], mov + mov2, ms);
+  validate("scene.move_rec"); }
+
+// Move objects along movement patterns. Custom movement done in derived class
+// Cannot be done in the object's own update because the movement depends on
+// other objects held here
+// Called by: update
+void scene::move_objects(double ms){
+  vec<move_node> nodes;
+  umap<llu, int> m;
+  for(int i = 0; i < objects.size(); ++i){
+    move_node node;
+    node.obj = objects[i];
+    node.parent = NULL;
+    nodes.pb(node);
+    m[objects[i]->id] = (int)nodes.size() - 1; }
+  for(int i = 0; i < objects.size(); ++i){
+    if(objects[i]->mov == NULL || objects[i]->mov->root == NULL) continue;
+    assert(m.find(objects[i]->mov->root->id) != m.end(), "obj not found");
+    assert(m.find(objects[i]->id) != m.end(), "obj not found");
+    int j = m[objects[i]->mov->root->id];
+    int k = m[objects[i]->id];
+    nodes[j].children.pb(&nodes[k]);
+    nodes[k].parent = &nodes[j]; }
+  for(int i = 0; i < nodes.size(); ++i)
+    if(nodes[i].parent == NULL)
+      move_rec(&nodes[i], point(0, 0, 0), ms);
+  validate("scene.move_objects"); }
 
 #endif

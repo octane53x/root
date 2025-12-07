@@ -11,12 +11,14 @@ const double
     INFD = DBL_MAX,
     SAFE_ZERO = 0.00000001,
     PI = 3.14159265358979323846;
+const str
+    DEBUG_FILE = "../../debug.txt";
 
 void pass(){}
 
 void print(str s){
 #ifdef _WIN32
-  ofstream fs("../debug.txt", ios::app);
+  ofstream fs(DEBUG_FILE.c_str(), ios::app);
   fs << s;
   fs.close();
 #else
@@ -37,6 +39,12 @@ void sleep(int ms){
     clock_t t = clock();
     int p = (int)floor((double)(t - start) / CLOCKS_PER_SEC * 1000.0);
     if(p >= ms) break; } }
+
+template <typename T>
+bool contains(vec<T> v, T item){
+  for(int i = 0; i < v.size(); ++i)
+    if(v[i] == item) return true;
+  return false; }
 
 bool deq(double a, double b){
   return fabs(a - b) < SAFE_ZERO; }

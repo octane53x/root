@@ -1,71 +1,123 @@
 // ENVIRONMENT
 
-// Load scenes before initializing
+// gl/button and gl/scene constructors defined in this file so they can
+// automatically add their pointers to the env
 
-#ifndef ENV_HH
-#define ENV_HH
+#ifndef ENVIRONMENT_HH
+#define ENVIRONMENT_HH
 
 #include "button.hh"
 #include "scene.hh"
 
-bool zcompare_btn(const button* a, const button* b){
-  return a->pos.z < b->pos.z; }
+// Window position is slightly different than frame position
+const int
+    WIN_OFFSET_X = 8,
+    WIN_OFFSET_Y = 32;
 
-bool zcompare_scene(const scene* a, const scene* b){
-  return a->z > b->z; }
+struct env;
 
-struct env : thing {
+// Set in constructor. Enables buttons and scenes to add themselves.
+env* _env;
 
+// The I/O handler to a window, which inherits this. I/O includes:
+// Mouse movement, button hover and click, pressing keys, and
+// drawing scenes into a frame of pixels to send the window
+struct env : virtual system {
+
+  // Key press or release event
   struct keypress {
     bool down;
     str key;
     point cursor; };
 
-  int win_w, win_h;
-  point cursor, winpos;
+  int fps;
+  clock_t last_update, last_frame;
   color bkgd_color;
-  queue<keypress> keys; // true = keydown
+  point cursor;
+  queue<keypress> keys;
   image bkgd, frame;
-  vec<button*> buttons;
-  vec<scene*> scenes;
+  umap<llu, button*> buttons;
+  umap<llu, scene*> scenes;
 
-  env(): bkgd_color(BLACK) {}
+  env();
 
-  virtual void validate(){
-    assert(win_w > 0 && win_h > 0, "window size not positive"); }
+  virtual void validate(str func);
+  virtual void init();
+  virtual void update(double ms);
 
-  void init(int w, int h){
-    win_w = w, win_h = h;
-    bkgd.set_size(w, h);
-    for(int i = 0; i < h; ++i)
-      for(int j = 0; j < w; ++j)
-        bkgd.set_pixel(j, i, bkgd_color);
-    for(int i = 0; i < scenes.size(); ++i)
-      scenes[i]->init(w, h); }
+  void draw();
+  void click(); };
 
-  void set_window(point pos, int w, int h){
-    if(w != win_w || h != win_h)
-      for(int i = 0; i < scenes.size(); ++i)
-        scenes[i]->resize(w, h);
-    winpos = pos, win_w = w, win_h = h; }
+// Set default member state and global env pointer
+env::env(): type("env"), bkgd_color(MAGENTA) {
+  last_update = clock();
+  last_frame = clock();
+  _env = this; }
 
-  // Try to click a button
-  void click(point p){
-    sort(buttons.begin(), buttons.end(), zcompare_btn);
-    for(int i = 0; i < buttons.size(); ++i){
-      bool clicked = buttons[i]->click(p);
-      if(clicked) break; } }
+// FOREIGN CONSTRUCTOR
+// Add itself to env automatically upon creation
+button::button(){
+  _env->buttons[id] = this; }
 
-  image* draw_scenes(){
-    vec<scene*> active_scenes;
-    for(int i = 0; i < scenes.size(); ++i)
-      if(scenes[i]->active) active_scenes.pb(scenes[i]);
-    sort(active_scenes.begin(), active_scenes.end(), zcompare_scene);
-    frame = bkgd;
-    viewport default_view;
-    default_view.size = min(frame.width, frame.height);
-    for(int i = 0; i < active_scenes.size(); ++i)
-      active_scenes[i]->next_frame()->draw(&frame, default_view);
-    return &frame; } };
+// FOREIGN CONSTRUCTOR
+// Add itself to env automatically upon creation
+scene::scene(){
+  _env->scenes[id] = this; }
+
+// Ensure valid state
+void env::validate(str func){
+  system::validate(func);
+  assert(bkgd.width == scene::win_w && bkgd.height == scene::win_h,
+      "env.bkgd image size not equal to window");
+  assert(frame.width == scene::win_w && frame.height == scene::win_h,
+      "env.frame size not equal to window"); }
+
+// Fill the background with debug color, seen if scenes are positioned wrong
+// Called by: window.init
+void env::init(){
+  system::init();
+  bkgd.set_size(w, h);
+  for(int i = 0; i < h; ++i)
+    for(int j = 0; j < w; ++j)
+      bkgd.set_pixel(j, i, bkgd_color);
+  frame = bkgd;
+  validate("env.init"); }
+
+// Update active scenes
+// Called by: PROJECT
+void env::update(double ms){
+  system::update(ms);
+  for(scene* s : scenes)
+    if(s->active)
+      s->update(ms);
+  validate("env.update"); }
+
+// Draw active scenes to frame
+// Called by: PROJECT
+void env::draw(){
+  vec<scene*> active_scenes;
+  for(int i = 0; i < scenes.size(); ++i)
+    if(scenes[i]->active) active_scenes.pb(scenes[i]);
+  sort(active_scenes.begin(), active_scenes.end(),
+      [](const scene* a, const scene* b){ return a->z > b->z; });
+  frame = bkgd;
+  viewport default_view;
+  default_view.size = min(frame.width, frame.height);
+  for(int i = 0; i < active_scenes.size(); ++i)
+    active_scenes[i]->draw(&frame, default_view);
+  clock_t now = clock();
+  fps = (int)floor(1.0 / ((double)(now - last_frame) / CLOCKS_PER_SEC));
+  last_frame = now;
+  validate("env.draw"); }
+
+// Click a button, attempted in order of z value
+// Called by: PROJECT
+void env::click(point p){
+  sort(buttons.begin(), buttons.end(),
+      [](const button* a, const button* b){ return a->pos.z < b->pos.z; });
+  for(int i = 0; i < buttons.size(); ++i){
+    bool clicked = buttons[i]->click(p);
+    if(clicked) break; }
+  validate("env.click"); }
 
 #endif

@@ -53,6 +53,7 @@ TODO
 ! call validates
 ! scene draw time
 ! root scene objs onto scene (make scene an object?)
+! Planet.move_unit around obstacles
 
 ! Comments
 ! Scene: Title Screen

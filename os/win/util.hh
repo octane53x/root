@@ -1,18 +1,21 @@
-// OS UTIL
+// WINDOWS UTIL
 
-#ifndef OS_HH
-#define OS_HH
+#ifndef WIN_UTIL_HH
+#define WIN_UTIL_HH
 
-#include "image.hh"
+#include "../../gl/image.hh"
 
-ui bmp_data[10000000]={0}; // 10 mil pixels
+// 10 mil pixel buffer for image conversion
+ui bmp_data[10000000]={0};
 
+// Convert C++ string to a specific Windows string
 LPCWSTR str_to_lpcw(str s){
   int size = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
   wchar_t* r = new wchar_t[size];
   MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, r, size);
   return r; }
 
+// Convert bitmap file to image object
 image load_bmp(str dir){
 #ifdef _WIN32
   HBITMAP hbmp = (HBITMAP)LoadImage(NULL, str_to_lpcw(dir), IMAGE_BITMAP,
@@ -33,6 +36,7 @@ image load_bmp(str dir){
         ((uchar*)b.bmBits)[k+1], ((uchar*)b.bmBits)[k+2])); }
   return img; }
 
+// Convert image object to bitmap file
 //! Saves it upside down
 void save_bmp(image f, str file){
   for(int i = 0; i < f.height; ++i)
@@ -64,6 +68,7 @@ void save_bmp(image f, str file){
   fwrite(bmp_data, 1, ih.biSizeImage, fp);
   fclose(fp); }
 
+// Convert image object to Windows bitmap
 HBITMAP image_to_bmp(HDC hdc, image* f){
   for(int i = 0; i < f->height; ++i)
     for(int j = 0; j < f->width; ++j)
