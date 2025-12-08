@@ -10,7 +10,7 @@
 
 // Play the game, leaving the title screen and loading from server
 // Called by: scenes/title button
-void PlayBtn::click(){
+void PlayBtn::fn(){
   imp.scene_title.load();
   imp.Game::init();
   scene* s = imp.select_scene();

@@ -5,37 +5,34 @@
 
 #include "../core/thing.hh"
 
-struct color : thing {
+// An RGB color, with a few other options
+struct color : virtual thing {
 
+  // Other color options
   enum Custom : uchar {
+    // Default, if RGB
     NONE,
+    // Draw through this color
     CLEAR,
+    // Draw clear onto the next thing
     CLEAR_PEN,
+    // Draw the debug color
     DEBUG };
 
+  // Red, green, blue values
   uchar r, g, b;
+  // Alternative color
   Custom custom;
 
-  color(){}
-  color(Custom c): custom(c) {}
-  color(const uchar _r, const uchar _g, const uchar _b):
-      r(_r), g(_g), b(_b), custom(NONE) {}
+  color();
+  color(const uchar _r, const uchar _g, const uchar _b);
+  color(const Custom c);
 
-  bool operator==(const color& c){
-    return (custom != NONE && custom == c.custom)
-        || (custom == NONE && c.custom == NONE
-        && r == c.r && g == c.g && b == c.b); }
-  bool operator!=(const color& c){
-    return !(*this == c); }
+  bool color::operator==(const color& c) const;
+  bool color::operator!=(const color& c) const;
 
-  virtual void validate(){}
-
-  color avg(const color& c){
-    return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); }
-
-  color random(){
-    return color((uchar)(rand() % 256), (uchar)(rand() % 256),
-        (uchar)(rand() % 256)); } };
+  color color::avg(const color& c) const;
+  color color::random() const; };
 
 const color CLEAR = color(color::CLEAR),
             CLEAR_PEN = color(color::CLEAR_PEN),
@@ -61,5 +58,36 @@ const color CLEAR = color(color::CLEAR),
             GOLD = color(255, 215, 0),
             INDIGO = color(75, 0, 130),
             PINK = color(255, 192, 203);
+const color DEFAULT_COLOR = MAGENTA;
+
+// Set default member state
+color::color(){
+  *this = DEFAULT_COLOR; }
+
+// Set to a specific RGB
+color::color(const uchar _r, const uchar _g, const uchar _b):
+    r(_r), g(_g), b(_b), custom(NONE) {}
+
+// Set to an alternative color
+color::color(const Custom c): r(0), g(0), b(0), custom(c) {}
+
+// Equals comparator
+bool color::operator==(const color& c) const {
+  return (custom != NONE && custom == c.custom)
+      || (custom == NONE && c.custom == NONE
+      && r == c.r && g == c.g && b == c.b); }
+
+// Not equals comparator
+bool color::operator!=(const color& c) const {
+  return !(*this == c); }
+
+// Return the average of this color with another
+color color::avg(const color& c) const {
+  return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); }
+
+// Return a random RGB
+color color::random() const {
+  return color((uchar)(rand() % 256), (uchar)(rand() % 256),
+      (uchar)(rand() % 256)); } };
 
 #endif

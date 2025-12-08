@@ -22,7 +22,7 @@ env* _env;
 // The I/O handler to a window, which inherits this. I/O includes:
 // Mouse movement, button hover and click, pressing keys, and
 // drawing scenes into a frame of pixels to send the window
-struct env : virtual system {
+struct env : virtual object {
 
   // Key press or release event
   struct key_event {
@@ -52,33 +52,36 @@ struct env : virtual system {
 
   env();
 
-  virtual void validate(str func);
+  virtual void validate(const str& func) const;
   virtual void init();
-  virtual void update(double ms);
+  virtual void update(const double ms);
+  virtual void draw(image* canvas, const viewport& view);
 
-  void draw();
+  void hover();
   void click(); };
 
 // Set default member state and global env pointer
-env::env(): type("env"), bkgd_color(MAGENTA) {
+env::env(): type("env"), bkgd_color(DEFAULT_COLOR) {
   last_frame = clock();
   _env = this; }
 
 // FOREIGN CONSTRUCTOR
 // Add itself to env automatically upon creation
-button::button(){
+button::button(): type("button") {
   _env->buttons[id] = this; }
 
 // FOREIGN CONSTRUCTOR
 // Add itself to env automatically upon creation
-scene::scene(){
+scene::scene(): type("scene"), z(0.0), bkgd_color(DEFAULT_COLOR) {
   _env->scenes[id] = this; }
 
 // Ensure valid state
-void env::validate(str func){
+void env::validate(const str& func) const {
   system::validate(func);
+  bkgd.validate(func);
+  frame.validate(func);
   assert(bkgd.width == scene::win_w && bkgd.height == scene::win_h,
-      "env.bkgd image size not equal to window");
+      "env.bkgd size not equal to window");
   assert(frame.width == scene::win_w && frame.height == scene::win_h,
       "env.frame size not equal to window"); }
 
@@ -93,19 +96,21 @@ void env::init(){
   frame = bkgd;
   validate("env.init"); }
 
-// Update active scenes
+// Update active scenes and hover a button if eligible
 // Called by: PROJECT
 void env::update(double ms){
   system::update(ms);
   for(scene* s : scenes)
     if(s->active)
       s->update(ms);
+  hover();
   last_update = clock();
   validate("env.update"); }
 
 // Draw active scenes to frame
-// Called by: PROJECT
-void env::draw(){
+// Parameters unused, required from inheritance
+// Called by: window.main_loop
+void env::draw(image* canvas, const viewport& view){
   vec<scene*> active_scenes;
   for(int i = 0; i < scenes.size(); ++i)
     if(scenes[i]->active) active_scenes.pb(scenes[i]);
@@ -114,12 +119,23 @@ void env::draw(){
   frame = bkgd;
   viewport default_view;
   default_view.size = min(frame.width, frame.height);
+  //! Adjust view by pos
   for(int i = 0; i < active_scenes.size(); ++i)
     active_scenes[i]->draw(&frame, default_view);
   clock_t now = clock();
   fps = (int)floor(1.0 / ((double)(now - last_frame) / CLOCKS_PER_SEC));
   last_frame = now;
   validate("env.draw"); }
+
+// Hover a button, attempted in order of z value
+// Called by: update
+void env::hover(){
+  sort(buttons.begin(), buttons.end(),
+      [](const button* a, const button* b){ return a->pos.z < b->pos.z; });
+  for(int i = 0; i < buttons.size(); ++i){
+    bool hovered = buttons[i]->hover(cursor);
+    if(hovered) break; }
+  validate("env.hover"); }
 
 // Click a button, attempted in order of z value
 // Called by: PROJECT

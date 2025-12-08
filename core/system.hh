@@ -22,13 +22,13 @@ struct system : virtual thing {
   str type;
 
   system();
-  virtual ~system() = 0; //
+  virtual ~system() = 0; // Make object abstract
 
-  virtual void validate(str func);
+  virtual void validate(const str func) const;
   virtual void init();
   virtual void run();
   virtual void stop();
-  virtual void update(double ms); };
+  virtual void update(const double ms); };
 
 // Set default member state
 system::system(): type("system"), initialized(false) {
@@ -38,8 +38,7 @@ system::system(): type("system"), initialized(false) {
 system::~system(){}
 
 // Ensure valid state
-void system::validate(str func){
-  thing::validate(func);
+void system::validate(const str& func) const {
   assert(type != "", "type is empty");
   assert(!(!initialized && active), "system unintialized but active"); }
 
@@ -65,7 +64,7 @@ void system::stop(){
 // The engine is recommended to operate a loop of (update -> output -> repeat).
 // Call at the beginning of derived class update()
 // Set last_update to clock() at the end of the update
-void system::update(){
+void system::update(const double ms){
   if(!initialized) err(str("Called ")+type+str(".update before init"));
   if(!active) err(str("Called ")+type+str(".update when not running")); }
 

@@ -5,22 +5,33 @@
 
 #include "image.hh"
 
+// A circular shape with a major and minor radius, can be a circle if equal
 struct ellipse : object {
 
+  // Major and minor radius
   double rad1, rad2;
-  point center;
 
-  circle(){}
-  circle(point c, int r){
-      center = c, radius = r, fill_color = BLACK; }
+  ellipse();
+  ellipse(const double r1, const double r2);
 
-  virtual void validate(){
-    object::validate(); }
+  virtual void validate(const str& func) const;
+  virtual void draw(image* canvas, const viewport& view); };
 
-  virtual point update(double ms){ return point(0, 0); }
+// Set default member state
+ellipse::ellipse(): type("ellipse"), rad1(1.0), rad2(1.0) {}
 
-  void draw(image* bkgd){
-    //!
-  } };
+// Construct with radii
+ellipse::ellipse(const double r1, const double r2):
+    type("ellipse"), rad1(r1), rad2(r2) {}
+
+// Ensure valid state
+void ellipse::validate(const str& func){
+  object::validate(func);
+  assert(dgt(rad1, 0.0) && dgt(rad2, 0.0), "ellipse radii not positive"); }
+
+// Draw onto an image
+void ellipse::draw(image* canvas, const viewport& view){
+  //! draw
+  validate("ellipse.draw"); }
 
 #endif

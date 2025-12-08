@@ -42,7 +42,7 @@ struct object : virtual system {
   // Returns movement
   virtual point update(double ms) = 0;
 
-  virtual void draw(image* bkgd, viewport view) = 0;
+  virtual void draw(image* canvas, viewport view) = 0;
 
   virtual void validate(){
     if(mov != NULL &&

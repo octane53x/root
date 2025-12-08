@@ -3,19 +3,23 @@
 #ifndef CAMERA_HH
 #define CAMERA_HH
 
-struct camera : object {
+// Point and direction of view into a scene
+struct camera : virtual object {
 
+  // Unit vectors used as the angle of view
   uvec look, up;
 
-  camera(): look(0.0, 0.0, 1.0), up(0.0, 1.0, 0.0) {}
+  camera();
 
-  virtual void validate(){
-    //! look/up 90 degrees apart
-  }
+  virtual void validate(const str& func) const; };
 
-  virtual point update(double ms){ return point(0, 0); }
+// Set default member state
+camera::camera(): look(0.0, 0.0, 1.0), up(0.0, 1.0, 0.0) {}
 
-  virtual void draw(image* bkgd, viewport view){}
-};
+// Ensure valid state
+void camera::validate(const str& func) const {
+  object::validate(func);
+  //! look/up 90 degrees apart
+}
 
 #endif

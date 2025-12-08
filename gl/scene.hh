@@ -37,29 +37,23 @@ struct scene : object {
 
   scene();
 
-  virtual void validate(str func);
+  virtual void validate(const str& func) const;
   virtual void init();
-  virtual void update(double ms);
-  virtual void draw(image* frame, viewport view);
+  virtual void update(const double ms);
+  virtual void draw(image* canvas, const viewport& view);
 
-  void init_members();
-  void resize_window();
-  void move_rec(move_node* node, point mov, double ms);
-  void move_objs(double ms);
-
-// Set default member state
-scene(): type("scene"), active(false), z(0.0), bkgd_color(MAGENTA) {}
+  void resize_window(const int w, const int h);
+  void move_rec(const move_node* node, const point& mov, const double ms);
+  void move_objs(const double ms);
 
 // Ensure valid state
-void validate(str func){
+void validate(const str& func) const {
   object::validate(func);
+  bkgd.validate(func);
+  img.validate(func);
+  view.validate(func);
+  cam.validate(func);
   assert(width > 0 && height > 0, "scene size not positive"); }
-
-// Set the scene size
-// Called by: DERIVED CLASS
-void scene::init_members(int w, int h){
-  width = w, height = h;
-  validate("scene.init_members"); }
 
 // Prepare scene for first update and draw
 // Call init_members first
@@ -76,7 +70,7 @@ void scene::init(){
 
 // Update and move objects
 // Called by: DERIVED CLASS
-void scene::update(double ms){
+void scene::update(const double ms){
   object::update();
   move_objs(ms);
   for(object* o : objs)
@@ -86,7 +80,7 @@ void scene::update(double ms){
 
 // Draw objects onto background
 // Called by: env.draw
-void scene::draw(image* frame, viewport view){
+void scene::draw(image* canvas, const viewport& view){
   img = bkgd;
   sort(objs.begin(), objs.end(),
       [](const object* a, const object* b){ return a->pos.z > b->pos.z; });
@@ -94,19 +88,19 @@ void scene::draw(image* frame, viewport view){
     objs[i]->draw(&img, view);
   for(int y = 0; y < height; ++y)
     for(int x = 0; x < width; ++x)
-      frame->set_pixel(x + pos.x, y + pos.y, img.data[y][x]);
+      canvas->set_pixel(x + pos.x, y + pos.y, img.data[y][x]);
   validate("scene.draw"); }
 
 // Signal a window resize so objects can adjust on next update
 // Called by: PROJECT
-void scene::resize_window(int w, int h){
+void scene::resize_window(const int w, const int h){
   win_w = w, win_h = h;
   validate("scene.resize_window"); }
 
 // Recursive helper function to move_objs
 // For objects rooted to objects that are also rooted to other objects
 // Called by: move_objs
-void scene::move_rec(move_node* node, point mov, double ms){
+void scene::move_rec(const move_node* node, const point& mov, const double ms){
   node->obj->pos += mov;
   point mov2 = node->obj->move(ms);
   for(int i = 0; i < node->children.size(); ++i)
@@ -117,7 +111,7 @@ void scene::move_rec(move_node* node, point mov, double ms){
 // Cannot be done in the object's own update because the movement depends on
 // other objects held here
 // Called by: update
-void scene::move_objs(double ms){
+void scene::move_objs(const double ms){
   vec<move_node> nodes;
   umap<llu, int> m;
   for(int i = 0; i < objs.size(); ++i){

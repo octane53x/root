@@ -51,25 +51,26 @@ struct Server : system {
 
   Server();
 
-  virtual void validate(str func);
-  virtual void update(double ms);
+  virtual void validate(const str& func) const;
+  virtual void update(const double ms);
 
-  str request(str msg);
-  void login(str user, str pass);
-  void process_msg(str msg); };
+  str request(const str& msg);
+  void login(const str& user, const str& pass);
+  void process_msg(const str& msg); };
 
 // Set default member state
 Server::Server(): user_id(0), next_request_id(1) {}
 
 // Ensure valid state
-void Server::validate(str func){
+void Server::validate(const str& func) const {
   system::validate(func);
+  player->validate(func);
   assert(!(user_id == 0 && !replies.empty()),
       "Server logged out with pending messages"); }
 
 // Process all network replies and keep contacts updated
 // Called by: Impact.update
-void Server::update(double ms){
+void Server::update(const double ms){
   system::update(ms);
   // Ping all contacts to ensure connectivity
   for(pair<str, int> contact : contacts)
@@ -106,7 +107,7 @@ void Server::update(double ms){
 
 // Send a request to the network
 // Called by: Server.*
-void Server::request(str msg){
+void Server::request(const str& msg){
   Request r;
   r.id = next_request_id++;
   r.msg = msg;
@@ -122,13 +123,13 @@ void Server::request(str msg){
 
 // Send a login request
 // Called by: Impact.init
-void Server::login(str user, str pass){
+void Server::login(const str& user, const str& pass){
   request(str("LOGIN:")+user+str(":")+pass);
   validate("Server.login"); }
 
 // Process a reply from the network
 // Called by: update
-void Server::process_msg(str msg){
+void Server::process_msg(const str& msg){
   //! Handle by msg
   //! Remove matching request from request_log
   validate("Server.process_msg"); }

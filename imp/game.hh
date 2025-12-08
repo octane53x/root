@@ -23,18 +23,19 @@ struct Game : system {
 
   Game();
 
-  virtual void validate(str func);
+  virtual void validate(const str& func) const;
   virtual void init();
   virtual void run();
-  virtual void update(double ms); };
+  virtual void update(const double ms); };
 
 // Set default member state
 // Called by: global
 Game::Game(): player(NULL) {}
 
 // Ensure valid state
-void Game::validate(str func){
+void Game::validate(const str& func) const {
   system::validate(func);
+  player->validate(func);
   assert(player != NULL, "Game.player is NULL"); }
 
 //! Temporary logic
@@ -73,7 +74,7 @@ void Game::init(){
 
 // Update the game's locations, which also updates the entities within
 // Called by: Impact.update
-void Game::update(){
+void Game::update(const double ms){
   clock_t now = clock();
   if(now - last_update >= tick){
     for(pair<llu, Location*> loc : locs)

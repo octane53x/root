@@ -24,14 +24,16 @@ struct window : virtual environment {
 
   window();
 
-  virtual void validate(str func);
+  virtual void validate(const str& func) const;
   virtual void init();
   virtual void run();
 
-  void init_members(HINSTANCE wp1, int wp2, int w, int h);
-  void update_pos(point pos, int w, int h);
-  void update_cursor(int x, int y);
-  void send_key(str key, bool down, int cursor_x, int cursor_y);
+  void init_members(const HINSTANCE wp1, const int wp2,
+      const int w, const int h);
+  void update_pos(const int x, const int y, const int w, const int h);
+  void update_cursor(const int x, const int y);
+  void send_key(const str& key, const bool down,
+      const int cursor_x, const int cursor_y);
   void display();
   void main_loop(); };
 
@@ -140,13 +142,14 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 // Ensure valid state
-void window::validate(str func){
+void window::validate(const str func) const {
   env::validate(func);
   assert(width >= 0 && height >= 0, "window size negative"); }
 
 // Load window with execution parameters
 // Called by: PROJECT
-void window::init_members(HINSTANCE wp1, int wp2, int w, int h){
+void window::init_members(const HINSTANCE wp1, const int wp2,
+    const int w, const int h){
   win_param_1 = wp1, win_param_2 = wp2, width = w, height = h;
   validate("window.init_members"); }
 
@@ -173,7 +176,7 @@ void window::run(){
 
 // Report a change in window size or position
 // Called by: _win_proc
-void window::update_pos(int x, int y, int w, int h){
+void window::update_pos(const int x, const int y, const int w, const int h){
   win_pos = point(x, y);
   width = w, height = h;
   scene::win_w = w, scene::win_h = h;
@@ -181,14 +184,15 @@ void window::update_pos(int x, int y, int w, int h){
 
 // Report a change in the cursor position
 // Called by: _win_proc
-void window::update_cursor(int x, int y){
+void window::update_cursor(const int x, const int y){
   cursor = point(x - win_pos.x - WIN_OFFSET_X,
       y - win_pos.y - WIN_OFFSET_Y);
   validate("window.update_cursor"); }
 
 // Report a key event along with the cursor position at the time
 // Called by: _win_proc
-void window::send_key(str key, bool down, int cursor_x, int cursor_y){
+void window::send_key(const str& key, const bool down,
+    const int cursor_x, const int cursor_y){
   env::key_event kp;
   kp.key = key, kp.down = down;
   kp.cursor = point((double)cursor_x - win_pos.x - WIN_OFFSET_X,
@@ -216,7 +220,7 @@ void window::main_loop(){
     clock_t now = clock();
     double ms = (double)(now - last_update) * 1000.0 / CLOCKS_PER_SEC;
     _win->update(ms);
-    _win->draw();
+    _win->draw(frame, viewport());
     InvalidateRect(hwnd, NULL, FALSE);
     validate("window.main_loop"); } }
 
