@@ -14,7 +14,8 @@ struct button : polygon, image {
     polygon::validate();
     image::validate(); }
 
-  virtual void fn() = 0;
+  virtual void fn_env(env* e) = 0;
+  virtual void fn_sys(system* s) = 0;
 
   bool click(point c){
     if(inside(c)){

@@ -23,7 +23,9 @@ enum { UI_CONSOLE, UI_WINDOW } UI_MODE;
 // Inputs route through here
 struct Impact : virtual window, virtual Console, virtual Game, virtual Server {
 
+  // Title scene displayed first upon execution
   Title scene_title;
+  // Overhead view of a planet
   Planet2D scene_planet2d;
 
   Impact();
@@ -85,21 +87,22 @@ void Impact::run(){
 // Update everything. Called continuously in a loop.
 // Called by: window.main_loop
 void Impact::update(){
-  // Handle all keypresses since last update
+  system::update();
+  // Handle all key events since last update
   while(!e.keys.empty()){
-    env::keypress kp = e.keys.front();
+    env::key_event kp = e.keys.front();
     e.keys.pop();
     process_key(kp); }
-  // Update game
-  update_camera(scene_planet.cam.pos);
+  // Update server, game, env->scenes
+  Server::update();
   Game::update();
-  // Update env which updates active scenes
   env::update();
+  last_update = clock();
   validate("impact.update"); }
 
-// Handle keypresses sent through the window
+// Handle key events sent through the window
 // Called by: update
-void Impact::process_key(env::keypress kp){
+void Impact::process_key(env::key_event kp){
   if(kp.key == "LCLICK")
     click(kp.cursor);
   else if(kp.key[0] >= '0' && kp.key[0] <= '9'){

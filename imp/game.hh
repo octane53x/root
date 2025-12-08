@@ -6,68 +6,79 @@
 #include "planet/planet.hh"
 #include "unit/bot.hh"
 
-const double GAME_TICK = 0.1;
+// How often most the game is updated, an exception being object positions
+// that need to be updated more often to be displayed properly
+const double GAME_TICK = 0.1; // seconds
 
-struct Game : thing {
+// The local game containing locations and entities, receiving data from the
+// server through the global Impact object that derives this
+struct Game : system {
 
-  clock_t last_update, tick;
-  Planet* planet; // Where the player is
+  // Time between game updates
+  clock_t tick;
+  // All locations the player can currently have information on
+  umap<llu, Location*> locs;
+  // Unit being directly controlled by the user
   Bot* player;
 
-  Game(){}
+  Game();
 
-  virtual void validate(){}
+  virtual void validate(str func);
+  virtual void init();
+  virtual void run();
+  virtual void update(double ms); };
 
-  void init(){
-    last_update = 0;
-    tick = (clock_t)ceil(GAME_TICK * CLOCKS_PER_SEC);
-    planet = new Planet();
-    planet->init(); }
+// Set default member state
+// Called by: global
+Game::Game(): player(NULL) {}
 
-  void update(){
-    clock_t now = clock();
-    if(now - last_update >= tick){
-      if(planet != NULL) planet->game_update();
-      last_update = clock(); } }
+// Ensure valid state
+void Game::validate(str func){
+  system::validate(func);
+  assert(player != NULL, "Game.player is NULL"); }
 
-  // Load planet chunks based on camera position
-  void camera_update(point pos){
-    if(planet == NULL) return;
-    //!
-  }
+//! Temporary logic
+// Called by: PlayBtn.click
+void Game::init(){
+  system::init();
+  tick = (clock_t)ceil(GAME_TICK * CLOCKS_PER_SEC);
 
-  // Player actions
-  void move(int x, int y);
-  void build(Feature* f); };
+  // Create planet
+  Planet* planet = new Planet();
+  planet->init();
 
-void Game::move(int x, int y){
-  // if(planet->surface[x][y].feature != NULL){
-  //   printf("ERR: Tile occupied\n");
-  //   return; }
-  // sleep(1000);
-  // int xp = (int)floor(player->loc.x), yp = (int)floor(player->loc.y);
-  // vec<Unit*>& u = planet->surface[xp][yp].units;
-  // //! Why am I going through all units
-  // for(int i = 0; i < u.size(); ++i){
-  //   if(u[i]->id == player->id){
-  //     Bot* b = (Bot*)u[i];
-  //     u.erase(u.begin() + i);
-  //     planet->surface[x][y].units.pb(b);
-  //     b->loc = point(x, y);
-  //     break; } }
-  // printf("Moved player from (%d,%d) to (%d,%d)\n", xp,yp,x,y);
-}
+  // Place player on land
+  player = new Bot();
+  player->loc = planet;
+  bool found = false;
+  while(!found){
+    player->pos.x = lrand() % planet->size;
+    player->pos.y = lrand() % planet->size;
+    for(int i = 0; i < planet->terrain.land.size(); ++i)
+      if(planet->terrain.land[i].inside(player->pos)){
+        found = true; break; } }
 
-void Game::build(Feature* f){
-  // for(int x = (int)floor(f->loc.x); x < (int)ceil(f->loc.x + f->size.x); ++x)
-  //   for(int y = (int)floor(f->loc.y); y < (int)ceil(f->loc.y + f->size.y); ++y)
-  //     if(planet->surface[x][y].feature != NULL){
-  //       printf("ERR: Tile occupied\n");
-  //       return; }
-  // planet->features.pb(f);
-  // for(int x = (int)floor(f->loc.x); x < (int)ceil(f->loc.x + f->size.x); ++x)
-  //   for(int y = (int)floor(f->loc.y); y < (int)ceil(f->loc.y + f->size.y); ++y)
-  //     planet->surface[x][y].feature = f;
-}
+  // Load chunks around player
+  Chunk* chunk = planet->find_chunk(player->pos);
+  planet->terrain.gen_chunk(chunk);
+  if(chunk->N != NULL) planet->terrain.gen_chunk(chunk->N);
+  if(chunk->S != NULL) planet->terrain.gen_chunk(chunk->S);
+  if(chunk->W != NULL) planet->terrain.gen_chunk(chunk->W);
+  if(chunk->E != NULL) planet->terrain.gen_chunk(chunk->E);
+  if(chunk->N->W != NULL) planet->terrain.gen_chunk(chunk->N->W);
+  if(chunk->N->E != NULL) planet->terrain.gen_chunk(chunk->N->E);
+  if(chunk->S->W != NULL) planet->terrain.gen_chunk(chunk->S->W);
+  if(chunk->S->E != NULL) planet->terrain.gen_chunk(chunk->S->E);
+  validate("Game.init"); }
+
+// Update the game's locations, which also updates the entities within
+// Called by: Impact.update
+void Game::update(){
+  clock_t now = clock();
+  if(now - last_update >= tick){
+    for(pair<llu, Location*> loc : locs)
+      loc.second->update_game();
+    last_update = clock(); }
+  validate("Game.update"); }
 
 #endif

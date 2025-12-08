@@ -17,6 +17,10 @@ struct line : object {
     object::validate();
     assert(thick > 0, "line thickness not positive"); }
 
+  double len() const {
+    return
+        sqrt((b.x-a.x)*(b.x-a.x) + (b.y-a.y)*(b.y-a.y) + (b.z-a.z)*(b.z-a.z));
+
   double slope() const {
     return deq(a.x, b.x) ? INFD : (b.y - a.y) / (b.x - a.x); }
 

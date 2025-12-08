@@ -8,7 +8,7 @@
 
 struct image;
 
-struct object : thing {
+struct object : virtual system {
 
   struct movement {
 
@@ -22,6 +22,7 @@ struct object : thing {
     int path_pos;
     double vel, path_prog; // vel = pixels/sec
     uvec axis;
+    point last_move;
     vec<point> path;
     object* root;
 

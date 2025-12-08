@@ -14,8 +14,12 @@ window* _win;
 // Physical window, sending I/O to environment
 struct window : virtual environment {
 
-  int width, height, win_param_2;
+  // Window frame size
+  int width, height;
+  // Position of the window in the OS
   point win_pos;
+  // Windows parameters coming in from wWinMain needed to display a window
+  int win_param_2;
   HINSTANCE win_param_1;
 
   window();
@@ -112,7 +116,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   case WM_MOUSEMOVE:
     // More updates with GetCursorPos
     return 0;
-  // Send a mouse click or keypress
+  // Send a mouse click or key event
   case WM_LBUTTONDOWN:
   case WM_LBUTTONUP:
     _win->send_key("LCLICK", uMsg == WM_LBUTTONDOWN, p.x, p.y);
@@ -182,10 +186,10 @@ void window::update_cursor(int x, int y){
       y - win_pos.y - WIN_OFFSET_Y);
   validate("window.update_cursor"); }
 
-// Report a keypress along with the cursor position at the time
+// Report a key event along with the cursor position at the time
 // Called by: _win_proc
 void window::send_key(str key, bool down, int cursor_x, int cursor_y){
-  env::keypress kp;
+  env::key_event kp;
   kp.key = key, kp.down = down;
   kp.cursor = point((double)cursor_x - win_pos.x - WIN_OFFSET_X,
       (double)cursor_y - win_pos.y - WIN_OFFSET_Y);

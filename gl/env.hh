@@ -25,18 +25,29 @@ env* _env;
 struct env : virtual system {
 
   // Key press or release event
-  struct keypress {
+  struct key_event {
+    // True if key press, false if key release
     bool down;
+    // Key name
     str key;
+    // Where the mouse was at the time of the event
     point cursor; };
 
+  // Current frames per second
   int fps;
-  clock_t last_update, last_frame;
+  // Last time the frame was drawn
+  clock_t last_frame;
+  // Frame reset to this color at the beginning of each draw
   color bkgd_color;
+  // Mouse cursor position
   point cursor;
-  queue<keypress> keys;
-  image bkgd, frame;
+  // All the key events received since last update
+  queue<key_event> keys;
+  // The frame image drawn to, and its background it resets to first
+  image frame, bkgd;
+  // All buttons in all scenes, adding here upon construction
   umap<llu, button*> buttons;
+  // All scenes, adding here upon construction
   umap<llu, scene*> scenes;
 
   env();
@@ -50,7 +61,6 @@ struct env : virtual system {
 
 // Set default member state and global env pointer
 env::env(): type("env"), bkgd_color(MAGENTA) {
-  last_update = clock();
   last_frame = clock();
   _env = this; }
 
@@ -90,6 +100,7 @@ void env::update(double ms){
   for(scene* s : scenes)
     if(s->active)
       s->update(ms);
+  last_update = clock();
   validate("env.update"); }
 
 // Draw active scenes to frame

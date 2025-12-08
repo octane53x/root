@@ -63,8 +63,33 @@ struct Terrain : thing {
   }
 
   void gen_chunk(Chunk* chunk){
+    assert(chunk != NULL, "terrain.gen_chunk chunk is NULL");
     srand(chunk->seed);
-    //!
-  } };
+    chunk->tiles.clear();
+    for(int i = 0; i < CHUNK_SIZE; ++i){
+      chunk->tiles.pb(vec<Tile>());
+      for(int j = 0; j < CHUNK_SIZE; ++j){
+        Tile tile;
+        tile.pos = point(chunk->pos.x + j, chunk->pos.y + i);
+        tile.type = Tile::WATER;
+        tile.chunk = chunk;
+        chunk->tiles[i].pb(tile); } }
+
+    polygon cbox;
+    cbox.points.pb(chunk->pos);
+    cbox.points.pb(point(chunk->pos.x + CHUNK_SIZE, chunk->pos.y));
+    cbox.points.pb(point(chunk->pos.x + CHUNK_SIZE, chunk->pos.y + CHUNK_SIZE));
+    cbox.points.pb(point(chunk->pos.x, chunk->pos.y + CHUNK_SIZE));
+    vec<polygon*> cland;
+    for(int i = 0; i < land.size(); ++i)
+      if(land.intersects(cbox))
+        cland.pb(&land);
+    for(int i = 0; i < chunk->tiles.size(); ++i)
+      for(int j = 0; j < chunk->tiles[i].size(); ++j)
+        for(int k = 0; k < cland.size(); ++k)
+          if(cland[k]->inside(point(chunk->pos.x + j + 0.5,
+              chunk->pos.y + i + 0.5))){
+            chunk->tiles[i][j].type = (rand() % 2) ? Tile::GRASS : Tile::SNOW;
+            break; } } };
 
 #endif

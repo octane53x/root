@@ -17,6 +17,7 @@
 // more than minimal memory. Inherit system otherwise.
 struct system : virtual thing {
 
+  clock_t last_update;
   bool initialized, active;
   str type;
 
@@ -30,7 +31,8 @@ struct system : virtual thing {
   virtual void update(double ms); };
 
 // Set default member state
-system::system(): type("system"), initialized(false) {}
+system::system(): type("system"), initialized(false) {
+  last_update = clock(); }
 
 // Implemented to avoid linker error
 system::~system(){}

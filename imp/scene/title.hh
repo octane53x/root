@@ -10,6 +10,7 @@
 
 struct Title : scene {
 
+  bool logged_in;
   clock_t last_update_1;
   label title_lbl, start_lbl;
   button* play_btn;
