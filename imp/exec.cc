@@ -6,7 +6,7 @@
 // Main function called on application execution
 // Called by: OPERATING SYSTEM
 int main(){
-  time_exec = clock();
+  imp.time_exec = time(NULL);
   UI_MODE = UI_CONSOLE;
   imp.init();
   imp.run();

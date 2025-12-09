@@ -94,6 +94,8 @@ void env::init(){
   system::init();
   int w = scene::win_w, h = scene::win_h;
   bkgd.set_size(w, h);
+  //! debug
+  print(str("env.bkgd: ")+to_string(w)+str(",")+to_string(h)+str("\n"));
   for(int i = 0; i < h; ++i)
     for(int j = 0; j < w; ++j)
       bkgd.set_pixel(j, i, bkgd_color);

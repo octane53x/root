@@ -109,7 +109,6 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   GetWindowRect(hwnd, &r);
   _win->update_pos(r.left, r.top, r.right - r.left, r.bottom - r.top);
   // Check uMsg for an event
-  bool dir;
   switch(uMsg){
   case WM_DESTROY:
     PostQuitMessage(0);
@@ -154,8 +153,7 @@ void window::init_members(const HINSTANCE wp1, const int wp2,
     const int w, const int h){
   win_param_1 = wp1, win_param_2 = wp2;
   width = w, height = h;
-  scene::win_w = w, scene::win_h = h;
-  validate("window.init_members"); }
+  scene::win_w = w, scene::win_h = h; }
 
 // Open the window and begin the main program loop
 // Called by: PROJECT

@@ -88,7 +88,8 @@ void scene::draw(image* canvas, const viewport& view){
     objs[i]->draw(&img, view);
   for(int y = 0; y < height; ++y)
     for(int x = 0; x < width; ++x)
-      canvas->set_pixel(x + pos.x, y + pos.y, img.data[y][x]);
+      canvas->set_pixel(x + (int)floor(pos.x), y + (int)floor(pos.y),
+          img.data[y][x]);
   validate("scene.draw"); }
 
 // Signal a window resize so objects can adjust on next update

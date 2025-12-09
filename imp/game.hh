@@ -51,8 +51,8 @@ void Game::init(){
   player->loc = planet;
   bool found = false;
   while(!found){
-    player->pos.x = lrand() % planet->size;
-    player->pos.y = lrand() % planet->size;
+    player->pos.x = (double)(lrand() % planet->size);
+    player->pos.y = (double)(lrand() % planet->size);
     for(int i = 0; i < planet->terrain.land.size(); ++i)
       if(planet->terrain.land[i].inside(player->pos)){
         found = true; break; } }

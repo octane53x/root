@@ -5,8 +5,6 @@
 
 #include "impact.hh"
 
-// Time execution began
-clock_t time_exec;
 // Global object to process inputs and call game and graphics functions
 Impact imp;
 

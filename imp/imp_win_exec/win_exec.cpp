@@ -12,7 +12,7 @@ const int
 // Called by: OPERATING SYSTEM
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
-  time_exec = clock();
+  imp.time_exec = time(NULL);
   UI_MODE = UI_WINDOW;
   imp.init_members(hInst, nCmdShow, INIT_WIN_W, INIT_WIN_H);
   imp.init();

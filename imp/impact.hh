@@ -12,7 +12,7 @@
 
 // Last login credentials saved in this file
 //! encrypted
-const str LOGIN_FILE = "data/login.dat";
+const str LOGIN_FILE = "../data/login.dat";
 // Font options located in gl/fonts
 const vec<str> FONTS = {"aldo"};
 
@@ -23,6 +23,8 @@ enum { UI_CONSOLE, UI_WINDOW } UI_MODE;
 // Inputs route through here
 struct Impact : virtual window, virtual Console, virtual Game, virtual Server {
 
+  // Time execution began
+  time_t time_exec;
   // Title scene displayed first upon execution
   Title scene_title;
   // Overhead view of a planet
@@ -54,6 +56,7 @@ void Impact::validate(const str& func){
 // Prepare both the game and interface to run
 // Called by: win_exec:wWinMain, exec:main
 void Impact::init(){
+  debug_init(time_exec);
   // Initialize console, otherwise window environment
   if(UI_MODE == UI_CONSOLE){
     Console::init();

@@ -33,6 +33,10 @@ void print(str s){
 #endif
 }
 
+// Print with a newline
+void printl(str s){
+  print(s+str("\n")); }
+
 // Throw an error, with message
 void err(str msg){
   print(str("ERR: ") + msg + str("\n"));
@@ -41,6 +45,18 @@ void err(str msg){
 // Check a condition and throw an error if it fails
 void assert(bool b, str msg){
   if(!b) err(str("ASSERT: ") + msg); }
+
+// Initialize debug environment
+void debug_init(time_t time){
+  remove(DEBUG_FILE.c_str());
+#ifdef _WIN32
+  char buf[32];
+  ctime_s(buf, sizeof(buf), &time);
+  str s(buf);
+#else
+  str s(ctime(&time));
+#endif
+  print(str("Executed at ")+str(s)+str("\n")); }
 
 // Wait for a duration, in milliseconds
 void sleep(int ms){
