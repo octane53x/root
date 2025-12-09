@@ -29,8 +29,8 @@ void viewport::validate(const str& func){
 
 // Translate environment coordinate to pixel coordinate
 point viewport::translate(const point& p,
-    const int frame_width, const int frame_height){
+    const int frame_width, const int frame_height) const {
   double ratio = min(frame_width, frame_height) / size;
-  return p * ratio - topleft * ratio; } };
+  return p * ratio - topleft * ratio; }
 
 #endif

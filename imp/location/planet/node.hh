@@ -5,7 +5,7 @@
 #ifndef NODE_HH
 #define NODE_HH
 
-#include "../mech/item.hh"
+#include "../../mech/item.hh"
 
 // + SOIL, SAND, STONE
 const vec<str> MINERALS = {
@@ -43,8 +43,6 @@ struct Node : object {
 
   virtual void validate(){}
 
-  virtual point update(double ms){ return point(0, 0); }
-
-  virtual void draw(image* bkgd){} };
+  virtual void draw(image* canvas, const viewport& view){} };
 
 #endif

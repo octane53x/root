@@ -5,27 +5,31 @@
 
 #include "../../gl/scene.hh"
 
-struct Planet2D : scene {
+// Overhead view of the planet surface
+struct Planet2D : virtual scene {
 
+  // Planet in view
   Planet* planet;
 
-  Planet2D(){}
+  Planet2D();
 
-  virtual void validate(){
-    scene::validate(); }
+  virtual void init(); };
 
-  // Requires planet to be initialized
-  void init(int w, int h){
-    bkgd_color = BLUE;
-    scene::init(w, h);
-    view.size = planet->size;
+// Set default member state
+Planet2D::Planet2D(){
+  type = "Planet2D"; }
 
-    // Draw land
-    for(int i = 0; i < planet->terrain.land.size(); ++i){
-      polygon* land = &planet->terrain.land[i];
-      land->fill = YELLOW;
-      objs.pb(land); } }
-
-  void update(double ms){} };
+// Display the surface around the player
+// Requires planet to be initialized
+void Planet2D::init(){
+  bkgd_color = BLUE;
+  scene::init();
+  view.size = planet->size;
+  // Draw land
+  for(int i = 0; i < planet->terrain.land.size(); ++i){
+    polygon* land = &planet->terrain.land[i];
+    land->fill = YELLOW;
+    objs.pb(land); }
+  validate("Planet2D.init"); }
 
 #endif

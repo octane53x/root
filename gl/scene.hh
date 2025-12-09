@@ -44,10 +44,10 @@ struct scene : virtual object {
 
   void resize_window(const int w, const int h);
   void move_rec(const move_node* node, const point& mov, const double ms);
-  void move_objs(const double ms);
+  void move_objs(const double ms); };
 
 // Ensure valid state
-void validate(const str& func){
+void scene::validate(const str& func){
   object::validate(func);
   bkgd.validate(func);
   img.validate(func);
@@ -56,7 +56,7 @@ void validate(const str& func){
   assert(width > 0 && height > 0, "scene size not positive"); }
 
 // Prepare scene for first update and draw
-// Call init_members first
+// Call resize_window first
 // Called by: DERIVED CLASS
 void scene::init(){
   object::init();
@@ -71,7 +71,7 @@ void scene::init(){
 // Update and move objects
 // Called by: DERIVED CLASS
 void scene::update(const double ms){
-  object::update();
+  object::update(ms);
   move_objs(ms);
   for(object* o : objs)
     o->update(ms);

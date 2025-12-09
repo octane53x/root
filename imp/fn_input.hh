@@ -8,9 +8,14 @@
 
 #include "global.hh"
 
+// Hover the play button
+void Title::PlayBtn::hover_fn(){
+  //! hover
+}
+
 // Play the game, leaving the title screen and loading from server
 // Called by: scenes/title button
-void PlayBtn::fn(){
+void Title::PlayBtn::click_fn(){
   imp.scene_title.load();
   imp.Game::init();
   scene* s = imp.select_scene();

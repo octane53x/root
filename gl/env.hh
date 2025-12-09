@@ -58,21 +58,24 @@ struct env : virtual object {
   virtual void draw(image* canvas, const viewport& view);
 
   void hover();
-  void click(); };
+  void click(const point& p); };
 
 // Set default member state and global env pointer
-env::env(): type("env"), bkgd_color(DEFAULT_COLOR) {
+env::env(): bkgd_color(DEFAULT_COLOR) {
+  type = "env";
   last_frame = clock();
   _env = this; }
 
 // FOREIGN CONSTRUCTOR
 // Add itself to env automatically upon creation
-button::button(): type("button") {
+button::button(){
+  type = "button";
   _env->buttons[id] = this; }
 
 // FOREIGN CONSTRUCTOR
 // Add itself to env automatically upon creation
-scene::scene(): type("scene"), z(0.0), bkgd_color(DEFAULT_COLOR) {
+scene::scene(): z(0.0), bkgd_color(DEFAULT_COLOR) {
+  type = "scene";
   _env->scenes[id] = this; }
 
 // Ensure valid state
@@ -89,6 +92,7 @@ void env::validate(const str& func){
 // Called by: window.init
 void env::init(){
   system::init();
+  int w = scene::win_w, h = scene::win_h;
   bkgd.set_size(w, h);
   for(int i = 0; i < h; ++i)
     for(int j = 0; j < w; ++j)
@@ -100,9 +104,9 @@ void env::init(){
 // Called by: PROJECT
 void env::update(double ms){
   system::update(ms);
-  for(scene* s : scenes)
-    if(s->active)
-      s->update(ms);
+  for(pair<llu, scene*> s : scenes)
+    if(s.second->active)
+      s.second->update(ms);
   hover();
   last_update = clock();
   validate("env.update"); }
@@ -130,20 +134,26 @@ void env::draw(image* canvas, const viewport& view){
 // Hover a button, attempted in order of z value
 // Called by: update
 void env::hover(){
-  sort(buttons.begin(), buttons.end(),
+  vec<button*> v;
+  for(pair<llu, button*> p : buttons)
+    v.pb(p.second);
+  sort(v.begin(), v.end(),
       [](const button* a, const button* b){ return a->pos.z < b->pos.z; });
-  for(int i = 0; i < buttons.size(); ++i){
-    bool hovered = buttons[i]->hover(cursor);
+  for(int i = 0; i < v.size(); ++i){
+    bool hovered = v[i]->hover(cursor);
     if(hovered) break; }
   validate("env.hover"); }
 
 // Click a button, attempted in order of z value
 // Called by: PROJECT
-void env::click(point p){
-  sort(buttons.begin(), buttons.end(),
+void env::click(const point& p){
+  vec<button*> v;
+  for(pair<llu, button*> p : buttons)
+    v.pb(p.second);
+  sort(v.begin(), v.end(),
       [](const button* a, const button* b){ return a->pos.z < b->pos.z; });
-  for(int i = 0; i < buttons.size(); ++i){
-    bool clicked = buttons[i]->click(p);
+  for(int i = 0; i < v.size(); ++i){
+    bool clicked = v[i]->click(p);
     if(clicked) break; }
   validate("env.click"); }
 

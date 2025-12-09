@@ -11,7 +11,8 @@ struct camera : virtual object {
 
   camera();
 
-  virtual void validate(const str& func); };
+  virtual void validate(const str& func);
+  virtual void draw(image* canvas, const viewport& view); };
 
 // Set default member state
 camera::camera(): look(0.0, 0.0, 1.0), up(0.0, 1.0, 0.0) {}
@@ -21,5 +22,8 @@ void camera::validate(const str& func){
   object::validate(func);
   //! look/up 90 degrees apart
 }
+
+// Implemented to remove abstraction
+void camera::draw(image* canvas, const viewport& view){}
 
 #endif

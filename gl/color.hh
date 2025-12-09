@@ -28,11 +28,13 @@ struct color : virtual thing {
   color(const uchar _r, const uchar _g, const uchar _b);
   color(const Custom c);
 
-  bool color::operator==(const color& c) const;
-  bool color::operator!=(const color& c) const;
+  bool operator==(const color& c) const;
+  bool operator!=(const color& c) const;
 
-  color color::avg(const color& c) const;
-  color color::random() const; };
+  virtual void validate(const str& func);
+
+  color avg(const color& c) const;
+  color random() const; };
 
 const color CLEAR = color(color::CLEAR),
             CLEAR_PEN = color(color::CLEAR_PEN),
@@ -81,6 +83,9 @@ bool color::operator==(const color& c) const {
 bool color::operator!=(const color& c) const {
   return !(*this == c); }
 
+// Implemented to remove abstraction
+void color::validate(const str& func){}
+
 // Return the average of this color with another
 color color::avg(const color& c) const {
   return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); }
@@ -88,6 +93,6 @@ color color::avg(const color& c) const {
 // Return a random RGB
 color color::random() const {
   return color((uchar)(rand() % 256), (uchar)(rand() % 256),
-      (uchar)(rand() % 256)); } };
+      (uchar)(rand() % 256)); }
 
 #endif

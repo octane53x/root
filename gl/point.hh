@@ -26,11 +26,12 @@ struct point : virtual thing {
   point& operator*=(const double n);
   point& operator/=(const double n);
 
+  virtual void validate(const str& func);
   virtual str to_str() const;
 
   double dist(const point& p) const;
 
-  void rotate(const point& p, const uvec uv, double deg); };
+  void rotate(const point& p, const uvec& uv, const double deg); };
 
 // Return this when the function cannot accurately return a point but needs to
 const point NULL_POINT = point(DBL_MIN, DBL_MIN, DBL_MIN);
@@ -97,6 +98,9 @@ point& point::operator/=(const double n){
   x /= n, y /= n, z /= n;
   return *this; }
 
+// Implemented to remove abstraction
+void point::validate(const str& func){}
+
 // Convert to string
 str point::to_str() const {
   return str("(") + to_string(x) + str(", ") + to_string(y) + str(", ")
@@ -109,7 +113,7 @@ double point::dist(const point& p) const {
 
 // Rotate the point around another point and a unit vector from that point,
 // by some degrees. Use uv=(0,0,-1) for 2D
-void point::rotate(const point& p, const uvec& uv, double deg){
+void point::rotate(const point& p, const uvec& uv, const double deg){
   //! deg in radians, use degrees
   //! this is 2D logic, figure out 3D
   *this -= p;

@@ -47,14 +47,14 @@ struct Server : virtual system {
   // Request log, entries cleared once they are replied to
   umap<llu, Request> request_log;
   // Player data being constantly updated
-  Bot* player;
+  Bot* update_target;
 
   Server();
 
   virtual void validate(const str& func);
   virtual void update(const double ms);
 
-  str request(const str& msg);
+  void request(const str& msg);
   void login(const str& user, const str& pass);
   void process_msg(const str& msg); };
 
@@ -64,7 +64,7 @@ Server::Server(): user_id(0), next_request_id(1) {}
 // Ensure valid state
 void Server::validate(const str& func){
   system::validate(func);
-  player->validate(func);
+  update_target->validate(func);
   assert(!(user_id == 0 && !replies.empty()),
       "Server logged out with pending messages"); }
 
@@ -81,7 +81,7 @@ void Server::update(const double ms){
   // Handle requests exceeding patience interval
   clock_t now = clock();
   umap<llu, Request>::iterator it;
-  for(it = request_log.begin(); it != request_log.end()){
+  for(it = request_log.begin(); it != request_log.end();){
     Request req = it->second;
     double sec = (double)(now - req.time) / CLOCKS_PER_SEC;
     if(sec <= REPLY_PATIENCE){ ++it; continue; }
@@ -112,8 +112,8 @@ void Server::request(const str& msg){
   r.id = next_request_id++;
   r.msg = msg;
   int found = 0;
-  for(int i = 0; i < contacts.size(); ++i){
-    r.targets.pb(contacts[i]);
+  for(pair<str, int> contact : contacts){
+    r.targets.pb(contact.first);
     ++found;
     if(found == NUM_REQUEST_TARGETS) break; }
   r.time = clock();

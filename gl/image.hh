@@ -17,6 +17,8 @@ struct image : virtual object {
   image();
   image(const int w, const int h);
 
+  image& operator=(const image& o);
+
   virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
 
@@ -33,35 +35,43 @@ struct image : virtual object {
   image flip(const uvec& axis) const; };
 
 // Set default member state
-image::image(): type("image"), width(0), height(0) {}
+image::image(): width(0), height(0) {
+  type = "image"; }
 
 // Construct at a certain size
 image::image(const int w, const int h){
   set_size(w, h); }
 
+// Assignment operator
+image& image::operator=(const image& o){
+  pos = o.pos;
+  width = o.width, height = o.height, data = o.data;
+  validate("image.operator=");
+  return *this; }
+
 // Ensure valid state
 void image::validate(const str& func){
   object::validate(func);
   assert(!(data.empty() && (width > 0 || height > 0)),
-      "image empty but positive size);
+      "image empty but positive size");
   assert(!(!data.empty() && (width <= 0 || height <= 0)),
       "image not empty but size not positive"); }
 
 // Draw onto an image
 void image::draw(image* canvas, const viewport& view){
-  double ratio = min(bkgd->width, bkgd->height) / view.size;
+  double ratio = min(canvas->width, canvas->height) / view.size;
   image img = scale(ratio);
-  img.pos = view.translate(pos, bkgd->width, bkgd->height);
+  img.pos = view.translate(pos, canvas->width, canvas->height);
   // If image outside the viewport, don't bother iterating pixels
-  if(img.pos.y + img.height < 0 || img.pos.y > bkgd->height
-      || img.pos.x + img.width < 0 || img.pos.x > bkgd->width) return;
+  if(img.pos.y + img.height < 0 || img.pos.y > canvas->height
+      || img.pos.x + img.width < 0 || img.pos.x > canvas->width) return;
   // Otherwise draw all valid pixels
   for(int y = max(0, (int)round(pos.y)), yt = max(0, -(int)round(pos.y));
-      y < min(bkgd->height, (int)round(pos.y)+height); ++y, ++yt)
+      y < min(canvas->height, (int)round(pos.y)+height); ++y, ++yt)
     for(int x = max(0, (int)round(pos.x)), xt = max(0, -(int)round(pos.x));
-        x < min(bkgd->width, (int)round(pos.x)+width); ++x, ++xt)
+        x < min(canvas->width, (int)round(pos.x)+width); ++x, ++xt)
       if(data[yt][xt] != CLEAR)
-        bkgd->set_pixel(x, y, img.data[yt][xt]);
+        canvas->set_pixel(x, y, img.data[yt][xt]);
   validate("image.draw"); }
 
 // True if no pixels stored
@@ -137,7 +147,7 @@ image image::scale(const double s) const {
   if(deq(s, 1.0)) return *this;
   image r((int)ceil(s * width), (int)ceil(s * height));
   if(s < 1.0){ // Scale down
-    s = 1.0 / s;
+    //s = 1.0 / s;
     double sx = (double)width / r.width, sy = (double)height / r.height;
     int ny = height, ry = r.height, dy = 0;
     for(int y = 0; y < r.height; ++y){
@@ -166,7 +176,6 @@ image image::scale(const double s) const {
         dx += px; }
       dy += py; } }
   r.pos = pos;
-  validate("image.scale");
   r.validate("image.scale");
   return r; }
 
@@ -174,7 +183,6 @@ image image::scale(const double s) const {
 image image::rotate(const double deg) const {
   image r(width, height);
   //! rotate
-  validate("image.rotate");
   r.validate("image.rotate");
   return r; }
 
@@ -182,7 +190,6 @@ image image::rotate(const double deg) const {
 image image::flip(const uvec& axis) const {
   image r(width, height);
   //! flip
-  validate("image.flip");
   r.validate("image.flip");
   return r; }
 

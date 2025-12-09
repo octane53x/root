@@ -34,13 +34,13 @@ void print(str s){
 }
 
 // Throw an error, with message
-void err(const char* msg){
-  print(str("ERR: ") + str(msg) + str("\n"));
+void err(str msg){
+  print(str("ERR: ") + msg + str("\n"));
   exit(-1); }
 
 // Check a condition and throw an error if it fails
-void assert(bool b, const char* msg){
-  if(!b) err((str("ASSERT: ") + str(msg)).c_str()); }
+void assert(bool b, str msg){
+  if(!b) err(str("ASSERT: ") + msg); }
 
 // Wait for a duration, in milliseconds
 void sleep(int ms){

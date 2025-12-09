@@ -6,6 +6,7 @@
 #ifndef OBJECT_HH
 #define OBJECT_HH
 
+#include "../core/system.hh"
 #include "point.hh"
 #include "viewport.hh"
 
@@ -39,8 +40,6 @@ struct object : virtual system {
     double path_prog;
     // Axis of orbit
     uvec axis;
-    // The change in position last time the object moved
-    point last_move;
     // The predetermined path of movement
     vec<point> path;
     // Object to which this object's position is rooted
@@ -50,6 +49,8 @@ struct object : virtual system {
 
   // Coordinate position in the environment
   point pos;
+  // The change in position last time the object moved
+  point last_move;
   // Fill color
   color fill;
   // Movement data, optional to not take up memory unless needed
@@ -63,7 +64,8 @@ struct object : virtual system {
   point move(const double ms); };
 
 // Set default member state
-object::object(): type("object"), fill(DEFAULT_COLOR), mov(NULL) {}
+object::object(): fill(DEFAULT_COLOR), mov(NULL) {
+  type = "object"; }
 
 // Construct with movement pattern
 object::movement::movement(mov_pattern p):
@@ -73,17 +75,17 @@ object::movement::movement(mov_pattern p):
 void object::validate(const str& func){
   system::validate(func);
   if(mov != NULL &&
-      (mov->type == movement::ROOT || mov->type == movement::ORBIT))
+      (mov->pat == movement::ROOT || mov->pat == movement::ORBIT))
     assert(mov->root != NULL, "movement.root not set"); }
 
 // Move the object along its movement pattern
 // Called by: scene.move_rec
 point object::move(const double ms){
   point move = point(0, 0);
-  if(mov == NULL || mov->type == movement::ROOT) return move;
-  if(mov->type == movement::CUSTOM) return update(ms);
+  if(mov == NULL || mov->pat == movement::ROOT) return move;
+  if(mov->pat == movement::CUSTOM) return move; //! impl
   double dist = mov->vel * (ms / 1000.0);
-  if(mov->type == movement::PATH){
+  if(mov->pat == movement::PATH){
     while(dist > 0.0){
       point p = mov->path[mov->path_pos];
       double step = p.dist(point(0, 0));
@@ -98,7 +100,7 @@ point object::move(const double ms){
         mov->path_prog = 0.0;
         ++mov->path_pos;
         if(mov->path_pos == mov->path.size()) mov->path_pos = 0; } }
-  }else if(mov->type == movement::ORBIT){
+  }else if(mov->pat == movement::ORBIT){
     double r = pos.dist(mov->root->pos);
     double deg = dist / r;
     point p = pos;

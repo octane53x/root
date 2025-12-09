@@ -26,11 +26,12 @@ struct label : virtual object {
   virtual void draw(image* canvas, const viewport& view); };
 
 // Set default memher state
-label::label(): type("label"), size(10), text("X"), font(NULL) {}
+label::label(): size(10), text("X"), font(NULL) {
+  type = "label"; }
 
 // Ensure valid state
 void label::validate(const str& func){
-  object::validate();
+  object::validate(func);
   assert(size > 0, "label text size not positive"); }
 
 // Draw label onto image

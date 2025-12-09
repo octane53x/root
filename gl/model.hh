@@ -28,7 +28,8 @@ struct model : virtual object {
   virtual void draw(image* canvas, const viewport& view); };
 
 // Set default member state
-model::model(): type("model") {}
+model::model(){
+  type = "model"; }
 
 // Construct with three points
 model::tri::tri(const point& _a, const point& _b, const point& _c):

@@ -3,12 +3,11 @@
 #ifndef FONT_INPUT_HH
 #define FONT_INPUT_HH
 
-#include "os.hh"
-
+#include "../os/win/util.hh"
 
 const str
     // Directory location of character images
-    FONT_LOC "../gl/fonts/",
+    FONT_LOC = "../gl/fonts/",
     // All the characters in each font
     SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     //! Not yet supported: .,/?:;'"+=-_\|!@#$%^&*()[]{}<>
@@ -29,10 +28,10 @@ struct font : virtual thing {
   void input(const str& fname); };
 
 // Set default member state
-font::font(): type("font") {}
+font::font(){}
 
 // Construct with a target on filesystem to load
-font::font(const str& fname): font() {
+font::font(const str& fname){
   input(fname); }
 
 // Ensure valid state

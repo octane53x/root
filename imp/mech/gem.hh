@@ -44,9 +44,6 @@ struct Gem : Item {
 
   //! Effect
 
-  Gem(){}
-
-  virtual void validate(){
-    Item::validate(); } };
+  Gem(){} };
 
 #endif

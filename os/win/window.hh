@@ -21,11 +21,12 @@ struct window : virtual env {
   // Windows parameters coming in from wWinMain needed to display a window
   int win_param_2;
   HINSTANCE win_param_1;
+  // Window handle returned by CreateWindow
+  HWND hwnd;
 
   window();
 
   virtual void validate(const str& func);
-  virtual void init();
   virtual void run();
 
   void init_members(const HINSTANCE wp1, const int wp2,
@@ -38,15 +39,16 @@ struct window : virtual env {
   void main_loop(); };
 
 // Set the global window pointer called by global functions
-window::window(): type("window") {
-  _win = *this; }
+window::window(){
+  type = "window";
+  _win = this; }
 
 // Draw the frame to the window with BitBlt
 // Called by: _win_proc
 void _win_paint(HWND hwnd){
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(hwnd, &ps);
-  image* frame = _win->frame;
+  image* frame = &_win->frame;
   assert(frame->width == _win->width && frame->height == _win->height,
       "frame size not equal to window size");
   HBITMAP bmp = image_to_bmp(hdc, frame);
@@ -142,7 +144,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 // Ensure valid state
-void window::validate(const str func){
+void window::validate(const str& func){
   env::validate(func);
   assert(width >= 0 && height >= 0, "window size negative"); }
 
@@ -150,21 +152,10 @@ void window::validate(const str func){
 // Called by: PROJECT
 void window::init_members(const HINSTANCE wp1, const int wp2,
     const int w, const int h){
-  win_param_1 = wp1, win_param_2 = wp2, width = w, height = h;
+  win_param_1 = wp1, win_param_2 = wp2;
+  width = w, height = h;
+  scene::win_w = w, scene::win_h = h;
   validate("window.init_members"); }
-
-// Prepare OS to display a window and initialize the env
-// Call init_members first
-// Called by: PROJECT
-void window::init(){
-  env::init();
-  const wchar_t CLASS[] = L"WindowClass";
-  WNDCLASS wc = {};
-  wc.lpfnWndProc = _win_proc;
-  wc.hInstance = win_param_1;
-  wc.lpszClassName = CLASS;
-  RegisterClass(&wc);
-  validate("window.init"); }
 
 // Open the window and begin the main program loop
 // Called by: PROJECT
@@ -203,11 +194,19 @@ void window::send_key(const str& key, const bool down,
 // Display the window in the OS
 // Called by: PROJECT
 void window::display(){
-  HWND hwnd = CreateWindowEx(
+#ifdef _WIN32 // Just to compile
+  const wchar_t CLASS[] = L"WindowClass";
+  WNDCLASS wc = {};
+  wc.lpfnWndProc = _win_proc;
+  wc.hInstance = win_param_1;
+  wc.lpszClassName = CLASS;
+  RegisterClass(&wc);
+  hwnd = CreateWindowEx(
       0, CLASS, L"Window", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
       _win->width, _win->height, NULL, NULL, win_param_1, NULL);
   assert(hwnd != NULL, "could not create window");
   ShowWindow(hwnd, win_param_2);
+#endif
   validate("window.display"); }
 
 // The infinite loop driving the lifetime of the application
@@ -220,7 +219,7 @@ void window::main_loop(){
     clock_t now = clock();
     double ms = (double)(now - last_update) * 1000.0 / CLOCKS_PER_SEC;
     _win->update(ms);
-    _win->draw(frame, viewport());
+    _win->draw(&frame, viewport());
     InvalidateRect(hwnd, NULL, FALSE);
     validate("window.main_loop"); } }
 

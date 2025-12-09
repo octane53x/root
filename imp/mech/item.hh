@@ -5,7 +5,7 @@
 
 #include "../../gl/image.hh"
 
-struct Item : thing {
+struct Item : virtual thing {
 
   int count;
   str name;
@@ -13,6 +13,6 @@ struct Item : thing {
 
   Item(){}
 
-  virtual void validate(){} };
+  virtual void validate(const str& func){} };
 
 #endif

@@ -16,6 +16,8 @@ struct line : virtual object {
   line();
   line(const point& _a, const point& _b);
 
+  line& operator=(const line& o);
+
   virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
 
@@ -27,10 +29,17 @@ struct line : virtual object {
   point intersection(const line& o) const; };
 
 // Set default member state
-line::line(): type("line") {}
+line::line(){
+  type = "line"; }
 
 // Construct with endpoints
-line::line(const point& _a, const point& _b): line(), a(_a), b(_b) {}
+line::line(const point& _a, const point& _b): line() {
+  a = _a, b = _b; }
+
+// Assignment operator
+line& line::operator=(const line& o){
+  a = o.a, b = o.b, thick = o.thick;
+  return *this; }
 
 // Ensure valid state
 void line::validate(const str& func){
@@ -39,11 +48,12 @@ void line::validate(const str& func){
 
 // Draw line onto image
 void line::draw(image* canvas, const viewport& view){
-  point a2 = view.translate(a + pos, bkgd->width, bkgd->height);
-  point b2 = view.translate(b + pos, bkgd->width, bkgd->height);
+  point a2 = view.translate(a + pos, canvas->width, canvas->height);
+  point b2 = view.translate(b + pos, canvas->width, canvas->height);
   // If line outside the viewport, don't bother iterating pixels
-  if((a2.y < 0 && b2.y < 0) || (a2.y > bkgd->height && b2.y > bkgd->height)
-      || (a2.x < 0 && b2.x < 0) || (a2.x > bkgd->width && b2.x > bkgd->width))
+  if((a2.y < 0 && b2.y < 0) || (a2.x < 0 && b2.x < 0)
+      || (a2.y > canvas->height && b2.y > canvas->height)
+      || (a2.x > canvas->width && b2.x > canvas->width))
     return;
   // Otherwise draw valid pixels
   int xi = (a2.x < b2.x) ? 1 : -1;
@@ -59,12 +69,12 @@ void line::draw(image* canvas, const viewport& view){
     int ii = i, jj = j, s;
     if(xlong) s = ii, ii = jj, jj = s;
     //! thickness
-    bkgd->set_pixel(jj, ii, fill);
+    canvas->set_pixel(jj, ii, fill);
     double dp = d;
     d += di;
     if((int)floor(d) != (int)floor(dp)) j += (xlong ? yi : xi);
     i += (xlong ? xi : yi); }
-  bkgd->set_pixel((int)floor(b2.x), (int)floor(b2.y), fill); }
+  canvas->set_pixel((int)floor(b2.x), (int)floor(b2.y), fill); }
 
 // Length of segment
 double line::len() const {

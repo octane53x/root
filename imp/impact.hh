@@ -12,7 +12,7 @@
 
 // Last login credentials saved in this file
 //! encrypted
-const str LOGIN_FILE = "data/login.dat"
+const str LOGIN_FILE = "data/login.dat";
 // Font options located in gl/fonts
 const vec<str> FONTS = {"aldo"};
 
@@ -36,12 +36,13 @@ struct Impact : virtual window, virtual Console, virtual Game, virtual Server {
   virtual void update(const double ms);
 
   vec<Location::LocationLevel> scene_options() const;
-  scene* select_scene() const;
 
-  void process_key(); };
+  scene* select_scene();
+  void process_key(env::key_event ke); };
 
 // Called by: global
-Impact::Impact(): type("Impact") {}
+Impact::Impact(){
+  type = "Impact"; }
 
 // Ensure valid state
 void Impact::validate(const str& func){
@@ -55,7 +56,7 @@ void Impact::validate(const str& func){
 void Impact::init(){
   // Initialize console, otherwise window environment
   if(UI_MODE == UI_CONSOLE){
-    console::init();
+    Console::init();
     return; }
   // Attempt login from saved credentials
   ifstream fs(LOGIN_FILE);
@@ -64,21 +65,21 @@ void Impact::init(){
   getline(fs, user);
   getline(fs, pass);
   fs.close();
-  scene_title.logged_in = login(user, pass);
+  login(user, pass);
   // Load fonts
   for(int i = 0; i < FONTS.size(); ++i)
     scene::fonts[FONTS[i]] = font(FONTS[i]);
-  // Initialize window, env, and title scene
+  // Initialize env and title scene
   scene_title.init();
-  window::init();
-  validate("impact.init"); }
+  env::init();
+  validate("Impact.init"); }
 
 // Start the game and interface
 // Called by: win_exec:wWinMain, exec:main
 void Impact::run(){
   // Run console
   if(UI_MODE == UI_CONSOLE){
-    console::run();
+    Console::run();
     return; }
   // Otherwise run window environment
   scene_title.run();
@@ -88,18 +89,19 @@ void Impact::run(){
 // Update everything. Called continuously in a loop.
 // Called by: window.main_loop
 void Impact::update(const double ms){
-  system::update();
-  // Handle all key events since last update
-  while(!e.keys.empty()){
-    env::key_event kp = e.keys.front();
-    e.keys.pop();
-    process_key(kp); }
-  // Update server, game, env->scenes
   Server::update(ms);
   Game::update(ms);
   env::update(ms);
+  // Handle all key events since last update
+  while(!keys.empty()){
+    env::key_event ke = keys.front();
+    keys.pop();
+    process_key(ke); }
+  // Update scene with server login status
+  if(scene_title.logged_in == false && user_id != 0)
+    scene_title.logged_in = true;
   last_update = clock();
-  validate("impact.update"); }
+  validate("Impact.update"); }
 
 // Determine all the scenes the user can view
 // Called by: select_scene
@@ -122,21 +124,20 @@ vec<Location::LocationLevel> Impact::scene_options() const {
     r.pb(Location::CLUSTER);
   if(player->stage >= 9)
     r.pb(Location::UNIVERSE);
-  validate("impact.scene_options");
   return r; }
 
 // Select the best scene to view
 // Called by: PlayBtn.click
-scene* Impact::select_scene() const {
+scene* Impact::select_scene(){
   // If no scenes are active, switch to title scene
   bool dead = true;
-  for(scene* s : scenes)
-    if(s->active == true){
+  for(pair<llu, scene*> s : scenes)
+    if(s.second->active == true){
       dead = false;
       break; }
   if(dead){
     scene_title.run();
-    return; }
+    return &scene_title; }
   // Select lowest level scene besides your ship
   vec<Location::LocationLevel> opts = scene_options();
   Location::LocationLevel dest = Location::UNIVERSE;
@@ -145,7 +146,7 @@ scene* Impact::select_scene() const {
   for(int i = 0; i < opts.size(); ++i)
     if(opts[i] < dest && opts[i] != Location::ENTITY)
       dest = opts[i];
-  scene* r;
+  scene* r = NULL;
   switch(dest){
   //! handle other scenes
   case Location::PLANET:
@@ -153,19 +154,19 @@ scene* Impact::select_scene() const {
     break;
   default:
     err("select_scene error"); }
-  validate("impact.select_scene");
+  validate("Impact.select_scene");
   return r; }
 
 // Handle key events sent through the window
 // Called by: update
-void Impact::process_key(env::key_event kp){
-  if(kp.key == "LCLICK")
-    click(kp.cursor);
-  else if(kp.key[0] >= '0' && kp.key[0] <= '9'){
+void Impact::process_key(env::key_event ke){
+  if(ke.key == "LCLICK")
+    click(ke.cursor);
+  else if(ke.key[0] >= '0' && ke.key[0] <= '9'){
     vec<Location::LocationLevel> opts = scene_options();
-    int k = kp.key[0] - '0';
+    int k = ke.key[0] - '0';
     //! switch to scenes if contains(opts, LocationLevel)
   }
-  validate("impact.process_key"); }
+  validate("Impact.process_key"); }
 
 #endif

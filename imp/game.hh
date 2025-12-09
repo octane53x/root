@@ -3,8 +3,7 @@
 #ifndef GAME_HH
 #define GAME_HH
 
-#include "planet/planet.hh"
-#include "unit/bot.hh"
+#include "entity/unit/bot.hh"
 
 // How often most the game is updated, an exception being object positions
 // that need to be updated more often to be displayed properly
@@ -25,7 +24,6 @@ struct Game : virtual system {
 
   virtual void validate(const str& func);
   virtual void init();
-  virtual void run();
   virtual void update(const double ms); };
 
 // Set default member state
@@ -77,8 +75,10 @@ void Game::init(){
 void Game::update(const double ms){
   clock_t now = clock();
   if(now - last_update >= tick){
-    for(pair<llu, Location*> loc : locs)
+    for(pair<llu, Location*> loc : locs){
       loc.second->update_game();
+      for(pair<llu, Entity*> ent : loc.second->entities)
+        ent.second->update_game(); }
     last_update = clock(); }
   validate("Game.update"); }
 

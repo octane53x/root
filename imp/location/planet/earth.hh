@@ -6,12 +6,12 @@
 #include "block.hh"
 #include "node.hh"
 
-struct Earth : thing {
+struct Earth : virtual system {
 
   vec<Node> nodes;
   vec<Block> mods;
 
-  virtual void validate(){}
+  Earth(){ type = "Earth"; }
 
   void gen_planet(int planet_size){
     //!

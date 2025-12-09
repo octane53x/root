@@ -25,13 +25,15 @@ struct system : virtual thing {
   bool active;
   // Unique id used as a map key for efficient storage
   llu id;
+  // Next id to assign to a new system
+  static llu next_id;
   // Class type name, set in derived constructors
   str type;
 
   system();
   virtual ~system() = 0; // Make object abstract
 
-  virtual void validate(const str func);
+  virtual void validate(const str& func);
   virtual str to_str() const;
   virtual void init();
   virtual void run();

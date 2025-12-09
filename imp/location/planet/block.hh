@@ -3,9 +3,11 @@
 #ifndef BLOCK_HH
 #define BLOCK_HH
 
-#include "../unit/unit.hh"
+#include "../../../gl/object.hh"
 
-struct Block : object {
+struct Unit;
+
+struct Block : virtual object {
 
   //! adjust members to describe mods
   bool tunnel;
@@ -15,19 +17,14 @@ struct Block : object {
   vec<Block*> adjacent;
   vec<Unit*> units;
 
-  Block(){}
-
-  virtual void validate(){}
+  Block(){
+    type = "Block"; }
 
   int total(){
     int r = 0;
     map<str, int>::iterator it;
     for(it = minerals.begin(); it != minerals.end(); ++it)
       r += it->second;
-    return r; }
-
-  virtual point update(double ms){ return point(0, 0); }
-
-  void draw(image* bkgd, viewport view){} };
+    return r; } };
 
 #endif

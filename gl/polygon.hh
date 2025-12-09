@@ -14,6 +14,8 @@ struct polygon : virtual object {
 
   polygon();
 
+  polygon& operator=(const polygon& o);
+
   virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
 
@@ -23,15 +25,23 @@ struct polygon : virtual object {
   double area() const; };
 
 // Set default member state
-polygon::polygon(): type("polygon") {}
+polygon::polygon(){
+  type = "polygon"; }
+
+// Assignment operator
+polygon& polygon::operator=(const polygon& o){
+  pos = o.pos;
+  points = o.points;
+  validate("polygon.operator=");
+  return *this; }
 
 // Ensure valid state
 void polygon::validate(const str& func){
-  object::validate();
-  assert(points.size > 2, "polygon does not have more than 2 points"); }
+  object::validate(func);
+  assert(points.size() > 2, "polygon does not have more than 2 points"); }
 
 // Draw polygon to image
-void polygon::draw(image* bkgd, viewport view){
+void polygon::draw(image* bkgd, const viewport& view){
   double xmin = INFD, xmax = -INFD, ymin = INFD, ymax = -INFD;
   for(int i = 0; i < points.size(); ++i)
     xmin = min(xmin, points[i].x+pos.x), xmax = max(xmax, points[i].x+pos.x),
@@ -67,7 +77,6 @@ point polygon::size() const {
     xmax = max(xmax, points[i].x),
     ymin = min(ymin, points[i].y),
     ymax = max(ymax, points[i].y);
-  validate("polygon.size");
   return point(xmax - xmin, ymax - ymin); }
 
 // Return whether the point is inside the polygon
@@ -79,7 +88,6 @@ bool polygon::inside(const point& p) const {
   if(line(points.back(), points[0]).intersects(ray)) ++n;
   for(int i = 0; i < points.size(); ++i)
     if(ray.on_seg(points[i])) --n;
-  validate("polygon.inside");
   return n & 1; }
 
 // Return whether the polygon intersects another polygon
@@ -101,7 +109,6 @@ bool polygon::intersects(const polygon& o) const {
     for(int j = 0; j < v2.size(); ++j)
       if(v1[i].intersects(v2[j])) return true;
   // Otherwise false
-  validate("polygon.intersects");
   return false; }
 
 // Return the area of the polygon
@@ -112,7 +119,6 @@ double polygon::area() const {
     p2 += points[i].y * points[i+1].x;
   p1 += points.back().x * points[0].y;
   p2 += points.back().y * points[0].x;
-  validate("polygon.area");
   return fabs(p1 - p2) / 2.0; }
 
 #endif

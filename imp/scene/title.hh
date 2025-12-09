@@ -8,74 +8,108 @@
 #include "../../gl/button.hh"
 #include "../../gl/scene.hh"
 
-struct Title : scene {
+// Title scene displayed upon window execution
+struct Title : virtual scene {
 
+  // Play button
+  struct PlayBtn : virtual button {
+    virtual void hover_fn();
+    virtual void click_fn();
+  } play_btn;
+
+  // Whether the player is logged in
   bool logged_in;
+  //! Temporary
   clock_t last_update_1;
-  label title_lbl, start_lbl;
-  button* play_btn;
+  // "IMPACT" text
+  label title_lbl;
+  //! Temporary
   polygon* rand_color_box;
 
-  Title(): last_update_1(0) {}
+  Title();
 
-  virtual void validate(){
-    scene::validate(); }
+  virtual void validate(const str& func);
+  virtual void init();
+  virtual void update(const double ms);
 
-  void init(int w, int h){
-    bkgd_color = RED;
-    scene::init(w, h);
+  void draw_bkgd();
+  void load(); };
 
-    title_lbl.text = "IMPACT";
-    title_lbl.text_color = BLACK;
-    title_lbl.size = 40;
-    title_lbl.pos = point(100, 100);
-    title_lbl.font = &fonts["aldo"];
+// Set default member state
+Title::Title(): logged_in(false), last_update_1(0) {
+  type = "Title"; }
 
-    play_btn->fill = BLACK;
-    play_btn->points.pb(point(400, 300));
-    play_btn->points.pb(point(400, 400));
-    play_btn->points.pb(point(350, 350));
+// Ensure valid state
+void Title::validate(const str& func){
+  scene::validate(func);
+  play_btn.validate(func); }
 
-    draw_bkgd();
+// Initialize objects in scene
+void Title::init(){
+  bkgd_color = RED;
+  scene::init();
 
-    polygon* a = new polygon();
-    a->points = {point(0,0), point(10,0), point(10,10), point(0,10)};
-    a->fill = BLUE;
-    a->pos = point(250,150);
-    a->mov = new object::movement(object::movement::PATH);
-    a->mov->path = {point(100,100), point(-100,100), point(-100,-100),
-        point(100,-100)};
-    a->mov->vel = 50.0;
-    objs.pb(a);
+  title_lbl.text = "IMPACT";
+  title_lbl.fill = BLACK;
+  title_lbl.size = 40;
+  title_lbl.pos = point(100, 100);
+  title_lbl.font = &fonts["aldo"];
 
-    polygon* b = new polygon();
-    b->points = a->points;
-    b->fill = YELLOW;
-    b->pos = point(250,100);
-    b->mov = new object::movement(object::movement::ORBIT);
-    b->mov->root = a;
-    b->mov->vel = 100.0;
-    objs.pb(b);
+  play_btn.fill = BLACK;
+  play_btn.points.pb(point(400, 300));
+  play_btn.points.pb(point(400, 400));
+  play_btn.points.pb(point(350, 350));
 
-    polygon* c = new polygon();
-    c->points = a->points;
-    c->fill = GREEN;
-    c->pos = point(250,125);
-    c->mov = new object::movement(object::movement::ORBIT);
-    c->mov->root = b;
-    c->mov->vel = 200.0;
-    rand_color_box = c;
-    objs.pb(c); }
+  draw_bkgd();
 
-  void draw_bkgd(){
-    title_lbl.draw(&bkgd, view);
-    play_btn->draw(&bkgd, view); }
+  polygon* a = new polygon();
+  a->points = {point(0,0), point(10,0), point(10,10), point(0,10)};
+  a->fill = BLUE;
+  a->pos = point(250,150);
+  a->mov = new object::movement(object::movement::PATH);
+  a->mov->path = {point(100,100), point(-100,100), point(-100,-100),
+      point(100,-100)};
+  a->mov->vel = 50.0;
+  objs.pb(a);
 
-  void update(double ms){
-    clock_t now = clock();
-    if((double)(now - last_update_1) / CLOCKS_PER_SEC >= 0.1){
-      rand_color_box->fill = color().random();
-      last_update_1 = now;
-    } } };
+  polygon* b = new polygon();
+  b->points = a->points;
+  b->fill = YELLOW;
+  b->pos = point(250,100);
+  b->mov = new object::movement(object::movement::ORBIT);
+  b->mov->root = a;
+  b->mov->vel = 100.0;
+  objs.pb(b);
+
+  polygon* c = new polygon();
+  c->points = a->points;
+  c->fill = GREEN;
+  c->pos = point(250,125);
+  c->mov = new object::movement(object::movement::ORBIT);
+  c->mov->root = b;
+  c->mov->vel = 200.0;
+  rand_color_box = c;
+  objs.pb(c);
+
+  validate("Title.init"); }
+
+// Move the boxes
+void Title::update(const double ms){
+  scene::update(ms);
+  clock_t now = clock();
+  if((double)(now - last_update_1) / CLOCKS_PER_SEC >= 0.1){
+    rand_color_box->fill = color().random();
+    last_update_1 = now; }
+  validate("Title.update"); }
+
+// Draw background
+void Title::draw_bkgd(){
+  title_lbl.draw(&bkgd, view);
+  play_btn.draw(&bkgd, view); }
+
+// Enter loading state
+void Title::load(){
+  //! load
+}
 
 #endif
