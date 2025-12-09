@@ -29,7 +29,7 @@ Entity::Entity(): health(100) {
 // Ensure valid state
 void Entity::validate(const str& func){
   model::validate(func);
-  assert(health > 0, "Entity.health not positive");
-  assert(loc != NULL, "Entity.Location is NULL"); }
+  assert(health > 0, func, "Entity.health not positive");
+  assert(loc != NULL, func, "Entity.Location is NULL"); }
 
 #endif

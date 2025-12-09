@@ -44,7 +44,7 @@ line& line::operator=(const line& o){
 // Ensure valid state
 void line::validate(const str& func){
   object::validate(func);
-  assert(thick > 0, "line thickness not positive"); }
+  assert(thick > 0, func, "line thickness not positive"); }
 
 // Draw line onto image
 void line::draw(image* canvas, const viewport& view){

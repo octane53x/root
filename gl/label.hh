@@ -32,7 +32,7 @@ label::label(): size(10), text("X"), font(NULL) {
 // Ensure valid state
 void label::validate(const str& func){
   object::validate(func);
-  assert(size > 0, "label text size not positive"); }
+  assert(size > 0, func, "label text size not positive"); }
 
 // Draw label onto image
 void label::draw(image* canvas, const viewport& view){

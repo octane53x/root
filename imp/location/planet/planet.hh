@@ -42,9 +42,9 @@ void Planet::validate(const str& func){
   object::validate(func);
   terrain.validate(func);
   earth.validate(func);
-  assert(size >= PLANET_SIZE_MIN && size <= PLANET_SIZE_MAX,
+  assert(size >= PLANET_SIZE_MIN && size <= PLANET_SIZE_MAX, func,
       "planet.size outside bounds");
-  assert(!chunks.empty(), "planet.chunks empty"); }
+  assert(!chunks.empty(), func, "planet.chunks empty"); }
 
 // Inititalize chunks and generate planet
 // Called by: Game.init

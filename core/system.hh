@@ -55,8 +55,8 @@ system::~system(){}
 
 // Ensure valid state
 void system::validate(const str& func){
-  assert(type != "", "type is empty");
-  assert(!(!initialized && active), "system unintialized but active"); }
+  assert(type != "", func, "type is empty");
+  assert(!(!initialized && active), func, "system unintialized but active"); }
 
 // Convert to string
 str system::to_str() const {

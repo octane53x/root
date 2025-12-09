@@ -30,6 +30,6 @@ struct Location : virtual object {
 void Location::validate(const str& func){
   object::validate(func);
   assert(!(level != Location::INSTANCE && level != Location::UNIVERSE
-      && outside == NULL), "location.outside is NULL"); }
+      && outside == NULL), func, "location.outside is NULL"); }
 
 #endif

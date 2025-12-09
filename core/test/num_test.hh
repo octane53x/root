@@ -11,34 +11,34 @@ void test1(){
   // Basic tests
   nat a(100);
   int n = a.to_int();
-  assert(n == 100, "to_int failure");
+  assert(n == 100, func, "to_int failure");
 
   nat b = 120;
   n = b.to_int();
-  assert(n == 120, "operator= failure");
+  assert(n == 120, func, "operator= failure");
 
   nat c(100);
-  assert(a == c, "operator== failure");
-  assert(!(a == b), "operator== failure");
+  assert(a == c, func, "operator== failure");
+  assert(!(a == b), func, "operator== failure");
 
-  assert(a != b, "operator!= failure");
-  assert(!(a != c), "operator!= failure");
+  assert(a != b, func, "operator!= failure");
+  assert(!(a != c), func, "operator!= failure");
 
-  assert(a < b, "operator< failure");
-  assert(!(a < c), "operator< failure");
-  assert(!(b < a), "operator< failure");
+  assert(a < b, func, "operator< failure");
+  assert(!(a < c), func, "operator< failure");
+  assert(!(b < a), func, "operator< failure");
 
-  assert(a <= b, "operator<= failure");
-  assert(a <= c, "operator<= failure");
-  assert(!(b <= a), "operator<= failure");
+  assert(a <= b, func, "operator<= failure");
+  assert(a <= c, func, "operator<= failure");
+  assert(!(b <= a), func, "operator<= failure");
 
-  assert(b > a, "operator> failure");
-  assert(!(a > b), "operator> failure");
-  assert(!(a > c), "operator> failure");
+  assert(b > a, func, "operator> failure");
+  assert(!(a > b), func, "operator> failure");
+  assert(!(a > c), func, "operator> failure");
 
-  assert(b >= a, "operator>= failure");
-  assert(!(a >= b), "operator>= failure");
-  assert(a >= c, "operator>= failure");
+  assert(b >= a, func, "operator>= failure");
+  assert(!(a >= b), func, "operator>= failure");
+  assert(a >= c, func, "operator>= failure");
 
   // Small numbers
   int T = 10000;
@@ -46,19 +46,19 @@ void test1(){
     int ni1 = rand(), ni2 = rand();
     nat n1 = ni1, n2 = ni2;
     if(ni1 < ni2){
-      assert(!(n1 == n2), "operator== failure");
-      assert(n1 != n2, "operator!= failure");
-      assert(n1 < n2, "operator< failure");
-      assert(n1 <= n2, "operator<= failure");
-      assert(!(n1 > n2), "operator> failure");
-      assert(!(n1 >= n2), "operator>= failure");
+      assert(!(n1 == n2), func, "operator== failure");
+      assert(n1 != n2, func, "operator!= failure");
+      assert(n1 < n2, func, "operator< failure");
+      assert(n1 <= n2, func, "operator<= failure");
+      assert(!(n1 > n2), func, "operator> failure");
+      assert(!(n1 >= n2), func, "operator>= failure");
     }else if(ni1 > ni2){
-      assert(!(n1 == n2), "operator== failure");
-      assert(n1 != n2, "operator!= failure");
-      assert(n1 > n2, "operator> failure");
-      assert(n1 >= n2, "operator>= failure");
-      assert(!(n1 < n2), "operator< failure");
-      assert(!(n1 <= n2), "operator<= failure"); } } }
+      assert(!(n1 == n2), func, "operator== failure");
+      assert(n1 != n2, func, "operator!= failure");
+      assert(n1 > n2, func, "operator> failure");
+      assert(n1 >= n2, func, "operator>= failure");
+      assert(!(n1 < n2), func, "operator< failure");
+      assert(!(n1 <= n2), func, "operator<= failure"); } } }
 
 // Bitwise
 void test2(){
@@ -67,15 +67,15 @@ void test2(){
   // Basic tests
   nat a(100);
   a <<= 64;
-  assert(a.data.size() == 2, "operator<< failure");
+  assert(a.data.size() == 2, func, "operator<< failure");
   a >>= 64;
-  assert(a == 100, "operator>> failure");
+  assert(a == 100, func, "operator>> failure");
 
   a = 100;
   a <<= 1000;
-  assert(a.data.size() == 16, "operator<< failure");
+  assert(a.data.size() == 16, func, "operator<< failure");
   a >>= 500;
-  assert(a.data.size() == 8, "operator>> failure");
+  assert(a.data.size() == 8, func, "operator>> failure");
 
   // Small numbers
   int T = 10000;
@@ -84,10 +84,10 @@ void test2(){
     int s = rand() % 20;
     nat n = ni;
     ni <<= s, n <<= s;
-    assert(ni == n.to_int(), "operator<< failure");
+    assert(ni == n.to_int(), func, "operator<< failure");
     s = rand() % 20;
     ni >>= s, n >>= s;
-    assert(ni == n.to_int(), "operator>> failure"); }
+    assert(ni == n.to_int(), func, "operator>> failure"); }
 
   // Shift up and back by the same amount and see if the number changes
   T = 10000;
@@ -96,7 +96,7 @@ void test2(){
     int s = rand() % 1000;
     nat n = ni;
     n <<= s, n >>= s;
-    assert(n.to_int() == ni, "operator<< or operator>> failure"); } }
+    assert(n.to_int() == ni, func, "operator<< or operator>> failure"); } }
 
 // Addition
 void test3(){
@@ -104,16 +104,16 @@ void test3(){
 
   // Basic tests
   nat a(100), b(200);
-  assert(a + b == 300, "operator+ failure");
+  assert(a + b == 300, func, "operator+ failure");
 
   llu n = 0;
   a = b = ~n;
   nat c = a + b;
-  assert(c.data.size() == 2, "operator+ failure");
+  assert(c.data.size() == 2, func, "operator+ failure");
 
   a = 100, b = 200, c = 300;
   a <<= 1000, b <<= 1000, c <<= 1000;
-  assert(a + b == c, "operator+ failure"); }
+  assert(a + b == c, func, "operator+ failure"); }
 
 // Subtraction
 void test4(){
@@ -121,14 +121,14 @@ void test4(){
 
   // Basic tests
   nat a(300), b(100);
-  assert(a - b == 200, "operator- failure");
+  assert(a - b == 200, func, "operator- failure");
 
   a = 1;
   a <<= 64;
   llu n = 0;
   b = ~n;
   nat c = a - b;
-  assert(a - b == 1, "operator- failure"); }
+  assert(a - b == 1, func, "operator- failure"); }
 
 // Multiplication
 void test5(){
@@ -136,14 +136,14 @@ void test5(){
 
   // Basic tests
   nat a(100), b(100);
-  assert(a * b == 10000, "operator* failure");
+  assert(a * b == 10000, func, "operator* failure");
 
   a = 1;
   a <<= 32;
   b = a * a;
-  assert(b.data.size() == 2, "operator* failure");
+  assert(b.data.size() == 2, func, "operator* failure");
   b >>= 32;
-  assert(a == b, "operator* failure"); }
+  assert(a == b, func, "operator* failure"); }
 
 // Division & modulus
 void test6(){
@@ -151,18 +151,18 @@ void test6(){
 
   // Basic tests
   nat a(200), b(10);
-  assert(a / b == 20, "operator/ failure");
+  assert(a / b == 20, func, "operator/ failure");
 
   b = 12;
-  assert(a / b == 16, "operator/ failure");
+  assert(a / b == 16, func, "operator/ failure");
 
   a = b = 1;
   a <<= 64;
   b <<= 32;
-  assert(a / b == b, "operator/ failure");
+  assert(a / b == b, func, "operator/ failure");
 
   a = 64, b = 10;
-  assert(a % b == 4, "operator% failure");
+  assert(a % b == 4, func, "operator% failure");
 
   // Check small numbers against native int division
   int T = 10000;
@@ -171,7 +171,7 @@ void test6(){
     nat n = ni, d = di;
     int ri = ni / di;
     nat r = n / d;
-    assert(r.to_int() == ri, "operator/ failure"); }
+    assert(r.to_int() == ri, func, "operator/ failure"); }
 
   // Multiply then divide by the same amount and see if the number changes
   T = 10000;
@@ -193,7 +193,7 @@ void test6(){
     n2 *= d;
     n2 += rand() % di;
     n2 /= d;
-    assert(n == n2, "operator/ failure"); }
+    assert(n == n2, func, "operator/ failure"); }
 }
 
 // Test all
@@ -218,7 +218,7 @@ void super_test(){
     else n /= r, nr = n2 / r;
     if(n > INT_MAX) check = false;
     if(check) n3 = n.to_int();
-    if(check) assert(n3 == nr, "super_test failure"); } }
+    if(check) assert(n3 == nr, func, "super_test failure"); } }
 
 void test_all(){
   printf("\nTesting num:\n");

@@ -76,7 +76,7 @@ void object::validate(const str& func){
   system::validate(func);
   if(mov != NULL &&
       (mov->pat == movement::ROOT || mov->pat == movement::ORBIT))
-    assert(mov->root != NULL, "movement.root not set"); }
+    assert(mov->root != NULL, func, "movement.root not set"); }
 
 // Move the object along its movement pattern
 // Called by: scene.move_rec

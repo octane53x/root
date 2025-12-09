@@ -38,7 +38,7 @@ Unit::Unit(): speed(1.0), ship(NULL) {
 // Ensure valid state
 void Unit::validate(const str& func){
   Entity::validate(func);
-  assert(dgeq(speed, 0.0), "Unit.speed negative"); }
+  assert(dgeq(speed, 0.0), func, "Unit.speed negative"); }
 
 // Update to the next frame
 // Called by: scene.update -> virtual object.update

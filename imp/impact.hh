@@ -63,7 +63,7 @@ void Impact::init(){
     return; }
   // Attempt login from saved credentials
   ifstream fs(LOGIN_FILE);
-  assert(fs.is_open(), "login file couldn't open");
+  assert(fs.is_open(), "Impact.init", "login file couldn't open");
   str user, pass;
   getline(fs, user);
   getline(fs, pass);

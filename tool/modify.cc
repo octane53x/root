@@ -18,7 +18,7 @@ const vec<str> FILE_SUFFIXES = {".hh", ".cc", ".cpp"};
 
 // Custom operation
 void op(){
-  m.replace_after(".", "assert", ",", ", func,");
+  m.replace_after(".", "assert(", func, ",", ", func,");
 }
 
 // --------------------------------
@@ -29,7 +29,7 @@ bool ends_with(const str& s, const str& suf){
   if(suf.size() > s.size()) return false;
   bool good = true;
   for(int i = s.size()-1, j = suf.size()-1; j >= 0; --i, --j)
-    if(s[i] != s[j]){ good = false; break; }
+    if(s[i] != suf[j]){ good = false; break; }
   return good; }
 
 // Return the index of the first occurrence of substring in s, -1 if not found
@@ -45,26 +45,25 @@ int find(const str& s, const str& sub){
 // For all occurrences of "after", replace the next occurrence of src with dest
 void mod::replace_after(const str& dir, const str& after,
     const str& src, const str& dest){
-  print("Entering "+dir+str("\n"));
+  printl("Entering "+dir);
 
   // Look into the current directory
   vec<str> dirs, files;
-  for(const auto& entry : directory_iterator(".")){
+  for(const auto& entry : directory_iterator(dir)){
     str s = entry.path().string();
     if(is_directory(entry.status())){
       dirs.pb(s);
     }else{
       bool target = false;
       for(str suf : FILE_SUFFIXES)
-        if(ends_with(s, suf))
-          target = true;
+        if(ends_with(s, suf)){
+          target = true; break; }
       if(target)
         files.pb(s); } }
 
   for(const str& f : files){
     // Read the file
-    str path = dir + str("/") + f;
-    ifstream input(path);
+    ifstream input(f);
     vec<str> lines;
     str line;
     while(getline(input, line))
@@ -72,10 +71,11 @@ void mod::replace_after(const str& dir, const str& after,
     input.close();
 
     // Replace and write
-    remove(path);
-    ofstream output(path);
+    remove(f);
+    ofstream output(f);
+    int count = 0;
     for(str s : lines){
-      int count = 0;
+      str repl = "";
       while(1){
         int i = find(s, after);
         if(i == -1) break;
@@ -86,14 +86,16 @@ void mod::replace_after(const str& dir, const str& after,
         str mid = rest.substr(0, j);
         str end = rest.substr(j + src.size());
         ++count;
-        s = begin + mid + dest + end; }
-      print("  Made "+to_string(count)+" changes to "+path+"\n");
-      output << s << endl; }
+        repl += begin + mid + dest;
+        s = end; }
+      repl += s;
+      output << repl << endl; }
+    printl(str("  Made ")+to_string(count)+str(" changes to ")+f);
     output.close(); }
 
   // Recurse each subdirectory
   for(const str& d : dirs)
-    replace_after(dir + str("/") + d, after, src, dest); }
+    replace_after(d, after, src, dest); }
 
 int main(){
   op();

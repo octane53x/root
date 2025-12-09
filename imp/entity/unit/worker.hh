@@ -39,7 +39,7 @@ struct Worker : Unit {
     // if(activity == Activity::IDLE) pass();
 
     // else if(activity == Activity::DIG){ //! not digging current block
-    //   assert(target != NULL, "Worker target not set");
+    //   assert(target != NULL, func, "Worker target not set");
     //   target->progress += GAME_TICK / DIG_TIME;
     //   if(target->progress >= 100.0){
     //     target->tunnel = true;
@@ -57,7 +57,7 @@ struct Worker : Unit {
     // else if(activity == Activity::OFFLOAD) pass();
 
     // else if(activity == Activity::MINE){
-    //   assert(target != NULL, "Worker target not set");
+    //   assert(target != NULL, func, "Worker target not set");
     //   target->progress +=
     //       GAME_TICK / (BASE_MINING_TIME + MINING_SCALE * block->loc.z);
     //   if(target->progress >= 100.0){

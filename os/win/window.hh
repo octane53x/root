@@ -50,7 +50,7 @@ void _win_paint(HWND hwnd){
   HDC hdc = BeginPaint(hwnd, &ps);
   image* frame = &_win->frame;
   assert(frame->width == _win->width && frame->height == _win->height,
-      "frame size not equal to window size");
+      "_win_paint", "frame size not equal to window size");
   HBITMAP bmp = image_to_bmp(hdc, frame);
   HDC hdcMem = CreateCompatibleDC(NULL);
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
@@ -145,7 +145,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 // Ensure valid state
 void window::validate(const str& func){
   env::validate(func);
-  assert(width >= 0 && height >= 0, "window size negative"); }
+  assert(width >= 0 && height >= 0, func, "window size negative"); }
 
 // Load window with execution parameters
 // Called by: PROJECT
@@ -202,7 +202,7 @@ void window::display(){
   hwnd = CreateWindowEx(
       0, CLASS, L"Window", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
       _win->width, _win->height, NULL, NULL, win_param_1, NULL);
-  assert(hwnd != NULL, "could not create window");
+  assert(hwnd != NULL, "window.display", "could not create window");
   ShowWindow(hwnd, win_param_2);
 #endif
   validate("window.display"); }

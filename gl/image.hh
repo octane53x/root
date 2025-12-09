@@ -52,9 +52,9 @@ image& image::operator=(const image& o){
 // Ensure valid state
 void image::validate(const str& func){
   object::validate(func);
-  assert(!(data.empty() && (width > 0 || height > 0)),
+  assert(!(data.empty() && (width > 0 || height > 0)), func,
       "image empty but positive size");
-  assert(!(!data.empty() && (width <= 0 || height <= 0)),
+  assert(!(!data.empty() && (width <= 0 || height <= 0)), func,
       "image not empty but size not positive"); }
 
 // Draw onto an image
@@ -80,7 +80,8 @@ bool image::empty() const {
 
 // Clears contents and sets to a certain size with default pixel color
 void image::set_size(const int w, const int h){
-  assert(w > 0 && h > 0, "image.setsize width/height params must be positive");
+  assert(w > 0 && h > 0, "image.set_size",
+      "image.setsize width/height params must be positive");
   width = w, height = h;
   data.clear();
   for(int i = 0; i < height; ++i){

@@ -20,20 +20,20 @@ struct Bot : virtual Unit {
     str msg("bot stage and location incompatible");
     switch(stage){
     case 1:
-      assert(loc->level == Location::INSTANCE, msg); break;
+      assert(loc->level == Location::INSTANCE, func, msg); break;
     case 2:
-      assert(loc->level == Location::ENTITY, msg); break;
+      assert(loc->level == Location::ENTITY, func, msg); break;
     case 3:
     case 4:
-      assert(loc->level <= Location::PLANET, msg); break;
+      assert(loc->level <= Location::PLANET, func, msg); break;
     case 5:
-      assert(loc->level <= Location::SYSTEM, msg); break;
+      assert(loc->level <= Location::SYSTEM, func, msg); break;
     case 6:
-      assert(loc->level <= Location::SECTOR, msg); break;
+      assert(loc->level <= Location::SECTOR, func, msg); break;
     case 7:
-      assert(loc->level <= Location::GALAXY, msg); break;
+      assert(loc->level <= Location::GALAXY, func, msg); break;
     case 8:
-      assert(loc->level <= Location::CLUSTER, msg); break;
+      assert(loc->level <= Location::CLUSTER, func, msg); break;
     case 9:
     case 10:
       break;

@@ -38,7 +38,7 @@ polygon& polygon::operator=(const polygon& o){
 // Ensure valid state
 void polygon::validate(const str& func){
   object::validate(func);
-  assert(points.size() > 2, "polygon does not have more than 2 points"); }
+  assert(points.size() > 2, func, "polygon does not have more than 2 points"); }
 
 // Draw polygon to image
 void polygon::draw(image* bkgd, const viewport& view){

@@ -27,7 +27,7 @@ ellipse::ellipse(const double r1, const double r2):
 // Ensure valid state
 void ellipse::validate(const str& func){
   object::validate(func);
-  assert(dgt(rad1, 0.0) && dgt(rad2, 0.0), "ellipse radii not positive"); }
+  assert(dgt(rad1, func, 0.0) && dgt(rad2, 0.0), "ellipse radii not positive"); }
 
 // Draw onto an image
 void ellipse::draw(image* canvas, const viewport& view){

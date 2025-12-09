@@ -24,7 +24,7 @@ struct nat : thing {
     if(data.empty()) data.pb(0); }
 
   int to_int() const {
-    assert(*this <= INT_MAX, "Number too large to convert");
+    assert(*this <= INT_MAX, func, "Number too large to convert");
     return data[0]; }
 
   void print_bits() const {
@@ -129,7 +129,7 @@ struct nat : thing {
     return *this; }
 
   nat& operator<<=(const nat& n){
-    assert(n < SHIFT_MAX, "Shift too large");
+    assert(n < SHIFT_MAX, func, "Shift too large");
     int sh = n.to_int();
     int S = sh / BITS_PER_BLOCK, s = sh % BITS_PER_BLOCK;
     vec<llu> data2;
@@ -191,7 +191,7 @@ struct nat : thing {
     return *this; }
 
   nat& operator-=(const nat& n){
-    assert(*this >= n, "Subtraction results in negative");
+    assert(*this >= n, func, "Subtraction results in negative");
     nat n2 = n;
     while(n2.data.size() < data.size())
       n2.data.pb(0);
@@ -213,7 +213,7 @@ struct nat : thing {
           }else{
             if(pull) data[i] |= b;
             else pass(); } } } }
-    assert(pull == false, "Subtraction pull bit set");
+    assert(pull == false, func, "Subtraction pull bit set");
     validate();
     return *this; }
 
@@ -252,7 +252,7 @@ struct nat : thing {
     return *this; }
 
   nat& operator/=(const nat& n){
-    assert(n != 0, "Divide by zero");
+    assert(n != 0, func, "Divide by zero");
     if(n > *this){
       *this = 0;
       return *this; }

@@ -25,7 +25,7 @@ viewport::viewport(): size(100.0), topleft(point(0, 0)) {}
 
 // Ensure valid state
 void viewport::validate(const str& func){
-  assert(size > 0.0, "viewport size not positive"); }
+  assert(size > 0.0, func, "viewport size not positive"); }
 
 // Translate environment coordinate to pixel coordinate
 point viewport::translate(const point& p,

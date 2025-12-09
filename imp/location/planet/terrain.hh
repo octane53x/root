@@ -77,7 +77,7 @@ void Terrain::gen_planet(const int planet_size){
 // Generate chunk tiles
 // Called by: Game.init
 void Terrain::gen_chunk(Chunk* chunk){
-  assert(chunk != NULL, "terrain.gen_chunk chunk is NULL");
+  assert(chunk != NULL, "Terrain.gen_chunk", "terrain.gen_chunk chunk is NULL");
   srand(chunk->seed);
   // Create all tiles as water
   chunk->tiles.clear();

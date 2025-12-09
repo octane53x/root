@@ -83,9 +83,9 @@ void env::validate(const str& func){
   system::validate(func);
   bkgd.validate(func);
   frame.validate(func);
-  assert(bkgd.width == scene::win_w && bkgd.height == scene::win_h,
+  assert(bkgd.width == scene::win_w && bkgd.height == scene::win_h, func,
       "env.bkgd size not equal to window");
-  assert(frame.width == scene::win_w && frame.height == scene::win_h,
+  assert(frame.width == scene::win_w && frame.height == scene::win_h, func,
       "env.frame size not equal to window"); }
 
 // Fill the background with debug color, seen if scenes are positioned wrong

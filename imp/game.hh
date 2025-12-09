@@ -34,7 +34,7 @@ Game::Game(): player(NULL) {}
 void Game::validate(const str& func){
   system::validate(func);
   player->validate(func);
-  assert(player != NULL, "Game.player is NULL"); }
+  assert(player != NULL, func, "Game.player is NULL"); }
 
 //! Temporary logic
 // Called by: PlayBtn.click

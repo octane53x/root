@@ -46,9 +46,9 @@ Chunk& Chunk::operator=(const Chunk& o){
 // Ensure valid state
 void Chunk::validate(const str& func){
   object::validate(func);
-  assert(size > 0, "chunk.size is zero");
-  assert(seed != 0, "chunk.seed is zero");
-  assert(!(N == NULL && S == NULL && E == NULL && W == NULL),
+  assert(size > 0, func, "chunk.size is zero");
+  assert(seed != 0, func, "chunk.seed is zero");
+  assert(!(N == NULL && S == NULL && E == NULL && W == NULL), func,
       "All linked chunks are NULL"); }
 
 // Draw onto an image
@@ -61,7 +61,7 @@ void Chunk::draw(image* canvas, const viewport& view){
 Tile::Type Chunk::find_tile(const point& p){
   assert(p.x >= pos.x && p.x <= pos.x + size
       && p.y >= pos.y && p.y <= pos.y + size,
-      "Chunk.find_tile point not in chunk");
+      "Chunk.find_tile", "Chunk.find_tile point not in chunk");
   int i = (int)floor(p.y - pos.y), j = (int)floor(p.x - pos.x);
   return tiles[i][j]; }
 

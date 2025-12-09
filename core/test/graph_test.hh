@@ -36,7 +36,7 @@ void test2(){
   g.link(5, 1, 1);
 
   vec<int> p = g.path(0, 1);
-  assert(p.size() == 2 && p[0] == 0 && p[1] == 1, "Graph test 2 failed"); }
+  assert(p.size() == 2 && p[0] == 0 && p[1] == 1, func, "Graph test 2 failed"); }
 
 void test3(){
   graph<int> g;

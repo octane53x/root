@@ -35,7 +35,7 @@ void print(str s){
 
 // Print with a newline
 void printl(str s){
-  print(s+str("\n")); }
+  print(s + str("\n")); }
 
 // Throw an error, with message
 void err(str msg){
@@ -43,8 +43,8 @@ void err(str msg){
   exit(-1); }
 
 // Check a condition and throw an error if it fails
-void assert(bool b, str msg){
-  if(!b) err(str("ASSERT: ") + msg); }
+void assert(bool b, str func, str msg){
+  if(!b) err(str("ASSERT ") + func + str(": ") + msg); }
 
 // Initialize debug environment
 void debug_init(time_t time){

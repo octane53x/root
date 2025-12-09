@@ -39,7 +39,7 @@ model::tri::tri(const point& _a, const point& _b, const point& _c):
 void model::validate(const str& func){
   object::validate(func);
   assert(dgt(hitbox_size.x, 0.0) && dgt(hitbox_size.y, 0.0)
-      && dgt(hitbox_size.z, 0.0), "model hitbox size not positive"); }
+      && dgt(hitbox_size.z, 0.0), func, "model hitbox size not positive"); }
 
 // Draw 3D model onto 2D image
 void model::draw(image* canvas, const viewport& view){

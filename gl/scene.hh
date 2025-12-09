@@ -53,7 +53,7 @@ void scene::validate(const str& func){
   img.validate(func);
   view.validate(func);
   cam.validate(func);
-  assert(width > 0 && height > 0, "scene size not positive"); }
+  assert(width > 0 && height > 0, func, "scene size not positive"); }
 
 // Prepare scene for first update and draw
 // Call resize_window first
@@ -123,8 +123,9 @@ void scene::move_objs(const double ms){
     m[objs[i]->id] = (int)nodes.size() - 1; }
   for(int i = 0; i < objs.size(); ++i){
     if(objs[i]->mov == NULL || objs[i]->mov->root == NULL) continue;
-    assert(m.find(objs[i]->mov->root->id) != m.end(), "obj not found");
-    assert(m.find(objs[i]->id) != m.end(), "obj not found");
+    assert(m.find(objs[i]->mov->root->id) != m.end(), "scene.move_objs",
+        "obj not found");
+    assert(m.find(objs[i]->id) != m.end(), "scene.move_objs", "obj not found");
     int j = m[objs[i]->mov->root->id];
     int k = m[objs[i]->id];
     nodes[j].children.pb(&nodes[k]);

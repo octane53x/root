@@ -36,8 +36,8 @@ font::font(const str& fname){
 
 // Ensure valid state
 void font::validate(const str& func){
-  assert(name != "", "font.name is empty");
-  assert(!syms.empty(), "font.syms is empty"); }
+  assert(name != "", func, "font.name is empty");
+  assert(!syms.empty(), func, "font.syms is empty"); }
 
 // Load character images off filesystem
 void font::input(const str& fname){

@@ -65,7 +65,7 @@ Server::Server(): user_id(0), next_request_id(1) {}
 void Server::validate(const str& func){
   system::validate(func);
   update_target->validate(func);
-  assert(!(user_id == 0 && !replies.empty()),
+  assert(!(user_id == 0 && !replies.empty()), func,
       "Server logged out with pending messages"); }
 
 // Process all network replies and keep contacts updated
