@@ -8,7 +8,11 @@
 // Base class for everything
 struct thing {
 
-  // Ensure valid state
-  virtual void validate(str func) = 0; };
+  virtual void validate(const str func) = 0; // Ensure valid state
+  virtual str to_str(); };
+
+// Convert to string
+str thing::to_str() const {
+  return str("thing"); }
 
 #endif

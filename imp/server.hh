@@ -18,7 +18,7 @@ const double
     REPLY_PATIENCE = 0.1; // seconds
 
 // The connection to the network that acts as a server, sending game updates
-struct Server : system {
+struct Server : virtual system {
 
   // A network request
   struct Request {
@@ -51,7 +51,7 @@ struct Server : system {
 
   Server();
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void update(const double ms);
 
   str request(const str& msg);
@@ -62,7 +62,7 @@ struct Server : system {
 Server::Server(): user_id(0), next_request_id(1) {}
 
 // Ensure valid state
-void Server::validate(const str& func) const {
+void Server::validate(const str& func){
   system::validate(func);
   player->validate(func);
   assert(!(user_id == 0 && !replies.empty()),

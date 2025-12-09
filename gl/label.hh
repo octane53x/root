@@ -11,7 +11,7 @@ const int SMALL_SPACING = 2,
           LARGE_SPACING = 5;
 
 // Object that displays text from font images
-struct label : object {
+struct label : virtual object {
 
   // Pixel height of characters
   int size;
@@ -22,14 +22,14 @@ struct label : object {
 
   label();
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view); };
 
 // Set default memher state
 label::label(): type("label"), size(10), text("X"), font(NULL) {}
 
 // Ensure valid state
-void label::validate(const str& func) const {
+void label::validate(const str& func){
   object::validate();
   assert(size > 0, "label text size not positive"); }
 
@@ -40,7 +40,7 @@ void label::draw(image* canvas, const viewport& view){
     image orig = font->syms[text[k]];
     image img = orig.scale((double)size / orig.height);
     img.pos = point(x, pos.y);
-    img.replace_except(CLEAR, text_color);
+    img.replace_except(CLEAR, fill);
     img.draw(canvas, view);
     x += img.width + ((size >= 100) ? LARGE_SPACING : SMALL_SPACING); }
   validate("label.draw"); }

@@ -5,72 +5,120 @@
 
 #include "uvec.hh"
 
-struct point : thing {
+// A 2D or 3D coordinate point
+struct point : virtual thing {
 
+  // (x,y,z) coordinates
   double x, y, z;
 
-  point(): x(0.0), y(0.0), z(0.0) {}
-  point(const double _x, const double _y): x(_x), y(_y), z(0.0) {}
-  point(const double _x, const double _y, const double _z):
-      x(_x), y(_y), z(_z) {}
+  point();
+  point(const double _x, const double _y);
+  point(const double _x, const double _y, const double _z);
 
-  virtual void validate(){}
+  bool operator==(const point& p) const;
+  bool operator!=(const point& p) const;
+  point operator+(const point& p) const;
+  point operator-(const point& p) const;
+  point operator*(const double n) const;
+  point operator/(const double n) const;
+  point& operator+=(const point& p);
+  point& operator-=(const point& p);
+  point& operator*=(const double n);
+  point& operator/=(const double n);
 
-  //! double is bad to compare
-  bool operator==(const point& p) const {
-    return x == p.x && y == p.y && z == p.z; }
-  bool operator!=(const point& p) const {
-    return !(*this == p); }
+  virtual str to_str() const;
 
-  point& operator+=(const point& p){
-    x += p.x, y += p.y, z += p.z;
-    return *this; }
-  point operator+(const point& p) const {
-    point r = *this;
-    r += p;
-    return r; }
-  point& operator-=(const point& p){
-    x -= p.x, y -= p.y, z -= p.z;
-    return *this; }
-  point operator-(const point& p) const {
-    point r = *this;
-    r -= p;
-    return r; }
-  point& operator*=(const double n){
-    x *= n, y *= n, z *= n;
-    return *this; }
-  point operator*(const double n) const {
-    point r = *this;
-    r *= n;
-    return r; }
-  point& operator/=(const double n){
-    x /= n, y /= n, z /= n;
-    return *this; }
-  point operator/(const double n) const {
-    point r = *this;
-    r /= n;
-    return r; }
+  double dist(const point& p) const;
 
-  str to_str(){
-    return str("(") + to_string(x) + str(", ") + to_string(y) + str(", ")
-        + to_string(z) + str(")"); }
+  void rotate(const point& p, const uvec uv, double deg); };
 
-  double dist(const point& p) const {
-    double a = x - p.x, b = y - p.y, c = z - p.z;
-    return sqrt(a*a + b*b + c*c); }
+// Return this when the function cannot accurately return a point but needs to
+const point NULL_POINT = point(DBL_MIN, DBL_MIN, DBL_MIN);
 
-  //! Remove and use uv=(0,0,-1)
-  void rotate(const point& p, double deg){ // deg in radians
-    *this -= p;
-    point p2 = *this;
-    x = p2.x * cos(deg) - p2.y * sin(deg);
-    y = p2.x * sin(deg) + p2.y * cos(deg);
-    *this += p; }
+// Set default member state
+point::point(): x(0.0), y(0.0), z(0.0) {}
 
-  void rotate(const point& p, const uvec uv, double deg){
-    //!
-  }};
+// Construct as a 2D point with (x,y)
+point::point(const double _x, const double _y): x(_x), y(_y), z(0.0) {}
 
+// Construct as a 3D point with (x,y,z)
+point::point(const double _x, const double _y, const double _z):
+    x(_x), y(_y), z(_z) {}
+
+// Equals comparator
+bool point::operator==(const point& p) const {
+  return deq(x, p.x) && deq(y, p.y) && deq(z, p.z); }
+
+// Not equals comparator
+bool point::operator!=(const point& p) const {
+  return !(*this == p); }
+
+// Add
+point point::operator+(const point& p) const {
+  point r = *this;
+  r += p;
+  return r; }
+
+// Subtract
+point point::operator-(const point& p) const {
+  point r = *this;
+  r -= p;
+  return r; }
+
+// Multiply
+point point::operator*(const double n) const {
+  point r = *this;
+  r *= n;
+  return r; }
+
+// Divide
+point point::operator/(const double n) const {
+  point r = *this;
+  r /= n;
+  return r; }
+
+// Add to self
+point& point::operator+=(const point& p){
+  x += p.x, y += p.y, z += p.z;
+  return *this; }
+
+// Subtract from self
+point& point::operator-=(const point& p){
+  x -= p.x, y -= p.y, z -= p.z;
+  return *this; }
+
+// Multiply self
+point& point::operator*=(const double n){
+  x *= n, y *= n, z *= n;
+  return *this; }
+
+// Divide self
+point& point::operator/=(const double n){
+  x /= n, y /= n, z /= n;
+  return *this; }
+
+// Convert to string
+str point::to_str() const {
+  return str("(") + to_string(x) + str(", ") + to_string(y) + str(", ")
+      + to_string(z) + str(")"); }
+
+// Distance from this point to another
+double point::dist(const point& p) const {
+  double a = x - p.x, b = y - p.y, c = z - p.z;
+  return sqrt(a*a + b*b + c*c); }
+
+// Rotate the point around another point and a unit vector from that point,
+// by some degrees. Use uv=(0,0,-1) for 2D
+void point::rotate(const point& p, const uvec& uv, double deg){
+  //! deg in radians, use degrees
+  //! this is 2D logic, figure out 3D
+  *this -= p;
+  point p2 = *this;
+  x = p2.x * cos(deg) - p2.y * sin(deg);
+  y = p2.x * sin(deg) + p2.y * cos(deg);
+  *this += p; }
+
+// Allow point to be hashed as a map key
 namespace std {
   template <>
   struct hash<point> {
@@ -79,7 +127,5 @@ namespace std {
       size_t h2 = hash<double>()(p.y);
       size_t h3 = hash<double>()(p.z);
       return h1 ^ (h2 << 1) ^ (h3 << 2); } }; }
-
-const point NULL_POINT = point(DBL_MIN, DBL_MIN, DBL_MIN);
 
 #endif

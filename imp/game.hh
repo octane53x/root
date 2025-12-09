@@ -12,7 +12,7 @@ const double GAME_TICK = 0.1; // seconds
 
 // The local game containing locations and entities, receiving data from the
 // server through the global Impact object that derives this
-struct Game : system {
+struct Game : virtual system {
 
   // Time between game updates
   clock_t tick;
@@ -23,7 +23,7 @@ struct Game : system {
 
   Game();
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void init();
   virtual void run();
   virtual void update(const double ms); };
@@ -33,7 +33,7 @@ struct Game : system {
 Game::Game(): player(NULL) {}
 
 // Ensure valid state
-void Game::validate(const str& func) const {
+void Game::validate(const str& func){
   system::validate(func);
   player->validate(func);
   assert(player != NULL, "Game.player is NULL"); }

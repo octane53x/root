@@ -5,27 +5,44 @@
 
 #include "image.hh"
 
-struct model : object {
+// 3D collection of triangles
+struct model : virtual object {
 
+  // Triangle
   struct tri {
-
+    // Triangle points
     point a,b,c;
-    color fill; //? textures
+    // Fill color
+    color fill;
 
-    tri(){}
-    tri(const point _a, const point _b, const point _c):
-        a(_a), b(_b), c(_c) {} };
+    tri(const point& _a, const point& _b, const point& _c); };
 
-  point hitbox;
+  // Hit box used to estimate ray collision without checking all triangles
+  point hitbox_corner, hitbox_size;
+  // The triangles in the model
   vec<tri> triangles;
 
-  model(){}
+  model();
 
-  virtual void validate(){
-    object::validate(); }
+  virtual void validate(const str& func);
+  virtual void draw(image* canvas, const viewport& view); };
 
-  void draw(image* bkgd){
-    //! assume camera looking +z
-  } };
+// Set default member state
+model::model(): type("model") {}
+
+// Construct with three points
+model::tri::tri(const point& _a, const point& _b, const point& _c):
+    a(_a), b(_b), c(_c) {}
+
+// Ensure valid state
+void model::validate(const str& func){
+  object::validate(func);
+  assert(dgt(hitbox_size.x, 0.0) && dgt(hitbox_size.y, 0.0)
+      && dgt(hitbox_size.z, 0.0), "model hitbox size not positive"); }
+
+// Draw 3D model onto 2D image
+void model::draw(image* canvas, const viewport& view){
+  //! draw
+}
 
 #endif

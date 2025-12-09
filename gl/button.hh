@@ -14,7 +14,7 @@ struct button : virtual polygon, virtual image {
 
   button();
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
   virtual void hover_fn() = 0;
   virtual void click_fn() = 0;
@@ -23,7 +23,7 @@ struct button : virtual polygon, virtual image {
   bool click(const point& c); };
 
 // Ensure valid state
-void button::validate(const str& func) const {
+void button::validate(const str& func){
   polygon::validate(func);
   image::validate(func); }
 

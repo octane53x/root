@@ -6,16 +6,23 @@
 #include "def.hh"
 
 const int
+    // Infinity
     INF = INT_MAX;
 const double
+    // Infinity for double
     INFD = DBL_MAX,
+    // Margin of error for comparing doubles
     SAFE_ZERO = 0.00000001,
+    // Mathematical pi
     PI = 3.14159265358979323846;
 const str
+    // Debug log file location, print goes here when there's no console
     DEBUG_FILE = "../../debug.txt";
 
+// Do nothing, used to follow if/else when the condition just needs to be seen
 void pass(){}
 
+// Print to either console or debug log file
 void print(str s){
 #ifdef _WIN32
   ofstream fs(DEBUG_FILE.c_str(), ios::app);
@@ -26,13 +33,16 @@ void print(str s){
 #endif
 }
 
+// Throw an error, with message
 void err(const char* msg){
   print(str("ERR: ") + str(msg) + str("\n"));
   exit(-1); }
 
+// Check a condition and throw an error if it fails
 void assert(bool b, const char* msg){
   if(!b) err((str("ASSERT: ") + str(msg)).c_str()); }
 
+// Wait for a duration, in milliseconds
 void sleep(int ms){
   clock_t start = clock();
   while(1){
@@ -40,26 +50,38 @@ void sleep(int ms){
     int p = (int)floor((double)(t - start) / CLOCKS_PER_SEC * 1000.0);
     if(p >= ms) break; } }
 
+// Return whether a vector contains an element O(N)
 template <typename T>
 bool contains(vec<T> v, T item){
   for(int i = 0; i < v.size(); ++i)
     if(v[i] == item) return true;
   return false; }
 
+// Double equals comparator
 bool deq(double a, double b){
   return fabs(a - b) < SAFE_ZERO; }
+
+// Double less than or equals comparator
 bool dleq(double a, double b){
   return a < b || deq(a, b); }
+
+// Double greater than or equals comparator
 bool dgeq(double a, double b){
   return a > b || deq(a, b); }
+
+// Double less than comparator
 bool dlt(double a, double b){
   return a < b && !deq(a, b); }
+
+// Double greater than comparator
 bool dgt(double a, double b){
   return a > b && !deq(a, b); }
 
+// Greatest common denominator
 int gcd(int a, int b){
   return b ? gcd(b, a % b) : a; }
 
+// Random number generator, but up to a 64 bit value (default RAND_MAX is less)
 llu lrand(){
   int bits = 1;
   llu t = 1;
@@ -70,7 +92,8 @@ llu lrand(){
     r = r * rand() + rand();
   return r; }
 
-//! Param
+// Curved random number generator, favoring smaller numbers
+//! Curve param
 int crand(){
   const int RMAX = 1000000;
   int r = 1;

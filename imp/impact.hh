@@ -30,7 +30,7 @@ struct Impact : virtual window, virtual Console, virtual Game, virtual Server {
 
   Impact();
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void init();
   virtual void run();
   virtual void update(const double ms);
@@ -44,7 +44,7 @@ struct Impact : virtual window, virtual Console, virtual Game, virtual Server {
 Impact::Impact(): type("Impact") {}
 
 // Ensure valid state
-void Impact::validate(const str& func) const {
+void Impact::validate(const str& func){
   if(UI_MODE == UI_CONSOLE) Console::validate(func);
   else window::validate(func);
   Game::validate(func);

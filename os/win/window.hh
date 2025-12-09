@@ -12,7 +12,7 @@ struct window;
 window* _win;
 
 // Physical window, sending I/O to environment
-struct window : virtual environment {
+struct window : virtual env {
 
   // Window frame size
   int width, height;
@@ -24,7 +24,7 @@ struct window : virtual environment {
 
   window();
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void init();
   virtual void run();
 
@@ -142,7 +142,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 // Ensure valid state
-void window::validate(const str func) const {
+void window::validate(const str func){
   env::validate(func);
   assert(width >= 0 && height >= 0, "window size negative"); }
 

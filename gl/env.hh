@@ -52,7 +52,7 @@ struct env : virtual object {
 
   env();
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void init();
   virtual void update(const double ms);
   virtual void draw(image* canvas, const viewport& view);
@@ -76,7 +76,7 @@ scene::scene(): type("scene"), z(0.0), bkgd_color(DEFAULT_COLOR) {
   _env->scenes[id] = this; }
 
 // Ensure valid state
-void env::validate(const str& func) const {
+void env::validate(const str& func){
   system::validate(func);
   bkgd.validate(func);
   frame.validate(func);

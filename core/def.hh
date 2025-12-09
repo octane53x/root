@@ -5,6 +5,7 @@
 
 #include "incl.hh"
 
+// Types
 #define uchar unsigned char
 #define ui unsigned int
 #define ll long long
@@ -15,6 +16,7 @@
 #define umap unordered_map
 #define mmap multimap
 
+// Functions
 #define pb push_back
 #define popb pop_back
 

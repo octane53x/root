@@ -17,30 +17,48 @@
 // more than minimal memory. Inherit system otherwise.
 struct system : virtual thing {
 
+  // Last time the system was updated
   clock_t last_update;
-  bool initialized, active;
+  // Whether init has been called
+  bool initialized;
+  // Whether it is running
+  bool active;
+  // Unique id used as a map key for efficient storage
+  llu id;
+  // Class type name, set in derived constructors
   str type;
 
   system();
   virtual ~system() = 0; // Make object abstract
 
-  virtual void validate(const str func) const;
+  virtual void validate(const str func);
+  virtual str to_str() const;
   virtual void init();
   virtual void run();
   virtual void stop();
-  virtual void update(const double ms); };
+  virtual void update(const double ms);
+
+  llu new_id(); };
+
+// Start the id numbering at 1
+llu system::next_id = 1;
 
 // Set default member state
 system::system(): type("system"), initialized(false) {
+  id = new_id();
   last_update = clock(); }
 
 // Implemented to avoid linker error
 system::~system(){}
 
 // Ensure valid state
-void system::validate(const str& func) const {
+void system::validate(const str& func){
   assert(type != "", "type is empty");
   assert(!(!initialized && active), "system unintialized but active"); }
+
+// Convert to string
+str system::to_str() const {
+  return type; }
 
 // Call at the beginning of derived class init()
 // Usually create and call init_members first, passing needed parameters
@@ -67,5 +85,9 @@ void system::stop(){
 void system::update(const double ms){
   if(!initialized) err(str("Called ")+type+str(".update before init"));
   if(!active) err(str("Called ")+type+str(".update when not running")); }
+
+// Return a unique object id
+llu system::new_id(){
+  return next_id++; }
 
 #endif

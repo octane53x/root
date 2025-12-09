@@ -8,7 +8,7 @@
 #include "camera.hh"
 
 // Holds graphical elements, contained by env
-struct scene : object {
+struct scene : virtual object {
 
   // Tree node used to move rooted objects
   struct move_node {
@@ -37,7 +37,7 @@ struct scene : object {
 
   scene();
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void init();
   virtual void update(const double ms);
   virtual void draw(image* canvas, const viewport& view);
@@ -47,7 +47,7 @@ struct scene : object {
   void move_objs(const double ms);
 
 // Ensure valid state
-void validate(const str& func) const {
+void validate(const str& func){
   object::validate(func);
   bkgd.validate(func);
   img.validate(func);

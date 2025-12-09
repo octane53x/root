@@ -14,7 +14,7 @@ const str
     //! Not yet supported: .,/?:;'"+=-_\|!@#$%^&*()[]{}<>
 
 // A font that displays label text
-struct font : thing {
+struct font : virtual thing {
 
   // Name on filesystem
   str name;
@@ -24,7 +24,7 @@ struct font : thing {
   font();
   font(const str& fname);
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
 
   void input(const str& fname); };
 
@@ -36,7 +36,7 @@ font::font(const str& fname): font() {
   input(fname); }
 
 // Ensure valid state
-void font::validate(const str& func) const {
+void font::validate(const str& func){
   assert(name != "", "font.name is empty");
   assert(!syms.empty(), "font.syms is empty"); }
 

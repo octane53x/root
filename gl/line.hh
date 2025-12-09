@@ -6,7 +6,7 @@
 #include "image.hh"
 
 // Line segment between two points
-struct line : object {
+struct line : virtual object {
 
   // Pixel thickness of line
   int thick;
@@ -16,7 +16,7 @@ struct line : object {
   line();
   line(const point& _a, const point& _b);
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
 
   double len() const;
@@ -33,7 +33,7 @@ line::line(): type("line") {}
 line::line(const point& _a, const point& _b): line(), a(_a), b(_b) {}
 
 // Ensure valid state
-void line::validate(const str& func) const {
+void line::validate(const str& func){
   object::validate(func);
   assert(thick > 0, "line thickness not positive"); }
 

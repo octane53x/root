@@ -6,7 +6,7 @@
 #include "image.hh"
 
 // A circular shape with a major and minor radius, can be a circle if equal
-struct ellipse : object {
+struct ellipse : virtual object {
 
   // Major and minor radius
   double rad1, rad2;
@@ -14,7 +14,7 @@ struct ellipse : object {
   ellipse();
   ellipse(const double r1, const double r2);
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view); };
 
 // Set default member state

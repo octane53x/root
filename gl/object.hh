@@ -1,5 +1,8 @@
 // ABSTRACT OBJECT
 
+// update does not call move as one could expect, because the container (scene)
+// needs to move objects in rooted order, information the object does not have
+
 #ifndef OBJECT_HH
 #define OBJECT_HH
 
@@ -8,77 +11,101 @@
 
 struct image;
 
+// Object with position, inherited by something with an image to draw
+// Held by a 2D or 3D scene, which updates and draws the objects
 struct object : virtual system {
 
+  // Holds movement data, used to automatically move an object
   struct movement {
 
-    enum mov_type {
+    // Style of movement
+    enum mov_pattern : uchar {
+      // If the root moves, the object moves equally
       ROOT,
+      // Follow a predetermined path loop
       PATH,
+      // Circle around the root
       ORBIT,
+      // Function called during movement so that roots can be handled
       CUSTOM };
 
-    mov_type type;
+    // Style of movement
+    mov_pattern pat;
+    // Current position index in path
     int path_pos;
-    double vel, path_prog; // vel = pixels/sec
+    // Movement velocity
+    double vel; // pixels/sec
+    // Progress toward next path index
+    double path_prog;
+    // Axis of orbit
     uvec axis;
+    // The change in position last time the object moved
     point last_move;
+    // The predetermined path of movement
     vec<point> path;
+    // Object to which this object's position is rooted
     object* root;
 
-    movement(mov_type t):
-        type(t), vel(0.0), path_pos(0), path_prog(0.0), root(NULL) {} };
+    movement(mov_pattern p); };
 
-  llu id;
-  static llu next_id;
+  // Coordinate position in the environment
   point pos;
+  // Fill color
   color fill;
+  // Movement data, optional to not take up memory unless needed
   movement* mov;
 
-  object(): fill(WHITE), mov(NULL) { id = new_id(); }
+  object();
 
-  llu new_id(){ return next_id++; }
+  virtual void validate(const str& func);
+  virtual void draw(image* canvas, const viewport& view) = 0;
 
-  // Returns movement
-  virtual point update(double ms) = 0;
+  point move(const double ms); };
 
-  virtual void draw(image* canvas, viewport view) = 0;
+// Set default member state
+object::object(): type("object"), fill(DEFAULT_COLOR), mov(NULL) {}
 
-  virtual void validate(){
-    if(mov != NULL &&
-        (mov->type == movement::ROOT || mov->type == movement::ORBIT))
-      assert(mov->root != NULL, "movement.root not set"); }
+// Construct with movement pattern
+object::movement::movement(mov_pattern p):
+    pat(p), vel(0.0), path_pos(0), path_prog(0.0), root(NULL) {}
 
-  // mov_type::ROOT handled by scene
-  point move(double ms){
-    point move = point(0, 0);
-    if(mov == NULL || mov->type == movement::ROOT) return move;
-    if(mov->type == movement::CUSTOM) return update(ms);
-    double dist = mov->vel * (ms / 1000.0);
-    if(mov->type == movement::PATH){
-      while(dist > 0.0){
-        point p = mov->path[mov->path_pos];
-        double step = p.dist(point(0, 0));
-        double next = step - mov->path_prog;
-        if(dist < next){
-          move += p * (dist / step);
-          mov->path_prog += dist;
-          dist = 0.0;
-        }else{
-          move += p * (next / step);
-          dist -= next;
-          mov->path_prog = 0.0;
-          ++mov->path_pos;
-          if(mov->path_pos == mov->path.size()) mov->path_pos = 0; } }
-    }else if(mov->type == movement::ORBIT){
-      double r = pos.dist(mov->root->pos);
-      double deg = dist / r;
-      point p = pos;
-      p.rotate(mov->root->pos, deg);
-      move = p - pos; }
-    pos += move;
-    return move; } };
+// Ensure valid state
+void object::validate(const str& func){
+  system::validate(func);
+  if(mov != NULL &&
+      (mov->type == movement::ROOT || mov->type == movement::ORBIT))
+    assert(mov->root != NULL, "movement.root not set"); }
 
-llu object::next_id = 1;
+// Move the object along its movement pattern
+// Called by: scene.move_rec
+point object::move(const double ms){
+  point move = point(0, 0);
+  if(mov == NULL || mov->type == movement::ROOT) return move;
+  if(mov->type == movement::CUSTOM) return update(ms);
+  double dist = mov->vel * (ms / 1000.0);
+  if(mov->type == movement::PATH){
+    while(dist > 0.0){
+      point p = mov->path[mov->path_pos];
+      double step = p.dist(point(0, 0));
+      double next = step - mov->path_prog;
+      if(dist < next){
+        move += p * (dist / step);
+        mov->path_prog += dist;
+        dist = 0.0;
+      }else{
+        move += p * (next / step);
+        dist -= next;
+        mov->path_prog = 0.0;
+        ++mov->path_pos;
+        if(mov->path_pos == mov->path.size()) mov->path_pos = 0; } }
+  }else if(mov->type == movement::ORBIT){
+    double r = pos.dist(mov->root->pos);
+    double deg = dist / r;
+    point p = pos;
+    p.rotate(mov->root->pos, uvec(0, 0, -1), deg);
+    move = p - pos; }
+  pos += move;
+  validate("object.move");
+  return move; }
 
 #endif

@@ -17,7 +17,7 @@ struct image : virtual object {
   image();
   image(const int w, const int h);
 
-  virtual void validate(const str& func) const;
+  virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
 
   bool empty() const;
@@ -40,7 +40,7 @@ image::image(const int w, const int h){
   set_size(w, h); }
 
 // Ensure valid state
-void image::validate(const str& func) const {
+void image::validate(const str& func){
   object::validate(func);
   assert(!(data.empty() && (width > 0 || height > 0)),
       "image empty but positive size);
