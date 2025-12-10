@@ -29,7 +29,6 @@ void Planet2D::init(){
   for(int i = 0; i < planet->terrain.land.size(); ++i){
     polygon* land = &planet->terrain.land[i];
     land->fill = YELLOW;
-    objs.pb(land); }
-  validate("Planet2D.init"); }
+    objs.pb(land); } }
 
 #endif

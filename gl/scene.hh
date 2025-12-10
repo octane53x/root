@@ -42,7 +42,6 @@ struct scene : virtual object {
   virtual void update(const double ms);
   virtual void draw(image* canvas, const viewport& view);
 
-  void resize_window(const int w, const int h);
   void move_rec(const move_node* node, const point& mov, const double ms);
   void move_objs(const double ms); };
 
@@ -56,7 +55,6 @@ void scene::validate(const str& func){
   assert(width > 0 && height > 0, func, "scene size not positive"); }
 
 // Prepare scene for first update and draw
-// Call resize_window first
 // Called by: DERIVED CLASS
 void scene::init(){
   object::init();
@@ -65,8 +63,7 @@ void scene::init(){
   for(int i = 0; i < height; ++i)
     for(int j = 0; j < width; ++j)
       bkgd.set_pixel(j, i, bkgd_color);
-  img = bkgd;
-  validate("scene.init"); }
+  img = bkgd; }
 
 // Update and move objects
 // Called by: DERIVED CLASS
@@ -91,12 +88,6 @@ void scene::draw(image* canvas, const viewport& view){
       canvas->set_pixel(x + (int)floor(pos.x), y + (int)floor(pos.y),
           img.data[y][x]);
   validate("scene.draw"); }
-
-// Signal a window resize so objects can adjust on next update
-// Called by: PROJECT
-void scene::resize_window(const int w, const int h){
-  win_w = w, win_h = h;
-  validate("scene.resize_window"); }
 
 // Recursive helper function to move_objs
 // For objects rooted to objects that are also rooted to other objects

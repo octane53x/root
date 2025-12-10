@@ -46,6 +46,7 @@ void Title::validate(const str& func){
 
 // Initialize objects in scene
 void Title::init(){
+  width = win_w, height = win_h;
   bkgd_color = RED;
   scene::init();
 
@@ -89,9 +90,7 @@ void Title::init(){
   c->mov->root = b;
   c->mov->vel = 200.0;
   rand_color_box = c;
-  objs.pb(c);
-
-  validate("Title.init"); }
+  objs.pb(c); }
 
 // Move the boxes
 void Title::update(const double ms){

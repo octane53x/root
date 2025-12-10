@@ -17,10 +17,10 @@ void Title::PlayBtn::hover_fn(){
 // Called by: scenes/title button
 void Title::PlayBtn::click_fn(){
   imp.scene_title.load();
-  imp.Game::init();
+  imp.game.init();
   scene* s = imp.select_scene();
   s->init();
-  imp.Game::run();
+  imp.game.run();
   imp.scene_title.stop();
   s->run(); }
 

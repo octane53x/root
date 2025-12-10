@@ -46,7 +46,7 @@ struct system : virtual thing {
 llu system::next_id = 1;
 
 // Set default member state
-system::system(): type("system"), initialized(false) {
+system::system(): type("system"), initialized(false), active(false) {
   id = new_id();
   last_update = clock(); }
 

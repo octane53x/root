@@ -74,8 +74,7 @@ void Planet::init(){
       if(j < nchunks-1) chunks[i][j].E = &chunks[i][j+1]; }
   // Generate planet
   terrain.gen_planet(size); //!! Time
-  earth.gen_planet(size);
-  validate("Planet.init"); }
+  earth.gen_planet(size); }
 
 // Draw onto image
 void Planet::draw(image* canvas, const viewport& view){

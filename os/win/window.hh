@@ -104,10 +104,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   POINT p;
   GetCursorPos(&p);
   _win->update_cursor(p.x, p.y);
-  // Update window position and size
   RECT r;
-  GetWindowRect(hwnd, &r);
-  _win->update_pos(r.left, r.top, r.right - r.left, r.bottom - r.top);
   // Check uMsg for an event
   switch(uMsg){
   case WM_DESTROY:
@@ -115,6 +112,11 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     return 0;
   case WM_PAINT:
     _win_paint(hwnd);
+    return 0;
+  case WM_MOVE:
+  case WM_SIZE:
+    GetWindowRect(hwnd, &r);
+    _win->update_pos(r.left, r.top, r.right - r.left, r.bottom - r.top);
     return 0;
   case WM_MOUSEMOVE:
     // More updates with GetCursorPos
@@ -160,8 +162,7 @@ void window::init_members(const HINSTANCE wp1, const int wp2,
 void window::run(){
   system::run();
   display();
-  main_loop();
-  validate("window.run"); }
+  main_loop(); }
 
 // Report a change in window size or position
 // Called by: _win_proc
@@ -169,6 +170,7 @@ void window::update_pos(const int x, const int y, const int w, const int h){
   win_pos = point(x, y);
   width = w, height = h;
   scene::win_w = w, scene::win_h = h;
+  draw_bkgd();
   validate("window.update_pos"); }
 
 // Report a change in the cursor position

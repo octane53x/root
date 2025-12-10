@@ -21,10 +21,16 @@ enum { UI_CONSOLE, UI_WINDOW } UI_MODE;
 
 // Global object that keeps the game, interface, and network in sync.
 // Inputs route through here
-struct Impact : virtual window, virtual Console, virtual Game, virtual Server {
+struct Impact : virtual window, virtual Console {
 
   // Time execution began
   time_t time_exec;
+
+  // Impact game
+  Game game;
+  // Network
+  Server serv;
+
   // Title scene displayed first upon execution
   Title scene_title;
   // Overhead view of a planet
@@ -50,17 +56,13 @@ Impact::Impact(){
 void Impact::validate(const str& func){
   if(UI_MODE == UI_CONSOLE) Console::validate(func);
   else window::validate(func);
-  Game::validate(func);
-  Server::validate(func); }
+  game.validate(func);
+  serv.validate(func); }
 
 // Prepare both the game and interface to run
 // Called by: win_exec:wWinMain, exec:main
 void Impact::init(){
   debug_init(time_exec);
-  // Initialize console, otherwise window environment
-  if(UI_MODE == UI_CONSOLE){
-    Console::init();
-    return; }
   // Attempt login from saved credentials
   ifstream fs(LOGIN_FILE);
   assert(fs.is_open(), "Impact.init", "login file couldn't open");
@@ -68,14 +70,17 @@ void Impact::init(){
   getline(fs, user);
   getline(fs, pass);
   fs.close();
-  login(user, pass);
+  serv.login(user, pass);
+  // Initialize console, otherwise window environment
+  if(UI_MODE == UI_CONSOLE){
+    Console::init();
+    return; }
   // Load fonts
   for(int i = 0; i < FONTS.size(); ++i)
     scene::fonts[FONTS[i]] = font(FONTS[i]);
   // Initialize env and title scene
   scene_title.init();
-  env::init();
-  validate("Impact.init"); }
+  window::init(); }
 
 // Start the game and interface
 // Called by: win_exec:wWinMain, exec:main
@@ -86,22 +91,21 @@ void Impact::run(){
     return; }
   // Otherwise run window environment
   scene_title.run();
-  window::run();
-  validate("impact.run"); }
+  window::run(); }
 
 // Update everything. Called continuously in a loop.
 // Called by: window.main_loop
 void Impact::update(const double ms){
-  Server::update(ms);
-  Game::update(ms);
-  env::update(ms);
+  serv.update(ms);
+  game.update(ms);
+  window::update(ms);
   // Handle all key events since last update
   while(!keys.empty()){
     env::key_event ke = keys.front();
     keys.pop();
     process_key(ke); }
   // Update scene with server login status
-  if(scene_title.logged_in == false && user_id != 0)
+  if(scene_title.logged_in == false && serv.user_id != 0)
     scene_title.logged_in = true;
   last_update = clock();
   validate("Impact.update"); }
@@ -110,22 +114,22 @@ void Impact::update(const double ms){
 // Called by: select_scene
 vec<Location::LocationLevel> Impact::scene_options() const {
   vec<Location::LocationLevel> r;
-  if(player->loc->level == Location::INSTANCE){
+  if(game.player->loc->level == Location::INSTANCE){
     r.pb(Location::INSTANCE);
     return r; }
-  if(player->loc->level == Location::ENTITY || player->ship != NULL)
+  if(game.player->loc->level == Location::ENTITY || game.player->ship != NULL)
     r.pb(Location::ENTITY);
-  if(player->loc->level == Location::PLANET)
+  if(game.player->loc->level == Location::PLANET)
     r.pb(Location::PLANET);
-  if(player->loc->level <= Location::SYSTEM && player->stage >= 5)
+  if(game.player->loc->level <= Location::SYSTEM && game.player->stage >= 5)
     r.pb(Location::SYSTEM);
-  if(player->loc->level <= Location::SECTOR && player->stage >= 6)
+  if(game.player->loc->level <= Location::SECTOR && game.player->stage >= 6)
     r.pb(Location::SECTOR);
-  if(player->loc->level <= Location::GALAXY && player->stage >= 7)
+  if(game.player->loc->level <= Location::GALAXY && game.player->stage >= 7)
     r.pb(Location::GALAXY);
-  if(player->loc->level <= Location::CLUSTER && player->stage >= 8)
+  if(game.player->loc->level <= Location::CLUSTER && game.player->stage >= 8)
     r.pb(Location::CLUSTER);
-  if(player->stage >= 9)
+  if(game.player->stage >= 9)
     r.pb(Location::UNIVERSE);
   return r; }
 

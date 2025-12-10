@@ -33,8 +33,9 @@ Game::Game(): player(NULL) {}
 // Ensure valid state
 void Game::validate(const str& func){
   system::validate(func);
-  player->validate(func);
-  assert(player != NULL, func, "Game.player is NULL"); }
+      if(active){
+    assert(player != NULL, func, "Game.player is NULL");
+    player->validate(func); } }
 
 //! Temporary logic
 // Called by: PlayBtn.click
@@ -67,8 +68,7 @@ void Game::init(){
   if(chunk->N->W != NULL) planet->terrain.gen_chunk(chunk->N->W);
   if(chunk->N->E != NULL) planet->terrain.gen_chunk(chunk->N->E);
   if(chunk->S->W != NULL) planet->terrain.gen_chunk(chunk->S->W);
-  if(chunk->S->E != NULL) planet->terrain.gen_chunk(chunk->S->E);
-  validate("Game.init"); }
+  if(chunk->S->E != NULL) planet->terrain.gen_chunk(chunk->S->E); }
 
 // Update the game's locations, which also updates the entities within
 // Called by: Impact.update

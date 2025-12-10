@@ -64,7 +64,8 @@ Server::Server(): user_id(0), next_request_id(1) {}
 // Ensure valid state
 void Server::validate(const str& func){
   system::validate(func);
-  update_target->validate(func);
+  if(update_target != NULL)
+    update_target->validate(func);
   assert(!(user_id == 0 && !replies.empty()), func,
       "Server logged out with pending messages"); }
 

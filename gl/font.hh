@@ -7,7 +7,7 @@
 
 const str
     // Directory location of character images
-    FONT_LOC = "../gl/fonts/",
+    FONT_LOC = "../../gl/fonts/",
     // All the characters in each font
     SYMBOLS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     //! Not yet supported: .,/?:;'"+=-_\|!@#$%^&*()[]{}<>

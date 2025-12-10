@@ -57,6 +57,7 @@ struct env : virtual object {
   virtual void update(const double ms);
   virtual void draw(image* canvas, const viewport& view);
 
+  void draw_bkgd();
   void hover();
   void click(const point& p); };
 
@@ -92,15 +93,8 @@ void env::validate(const str& func){
 // Called by: window.init
 void env::init(){
   system::init();
-  int w = scene::win_w, h = scene::win_h;
-  bkgd.set_size(w, h);
-  //! debug
-  print(str("env.bkgd: ")+to_string(w)+str(",")+to_string(h)+str("\n"));
-  for(int i = 0; i < h; ++i)
-    for(int j = 0; j < w; ++j)
-      bkgd.set_pixel(j, i, bkgd_color);
-  frame = bkgd;
-  validate("env.init"); }
+  draw_bkgd();
+  frame = bkgd; }
 
 // Update active scenes and hover a button if eligible
 // Called by: PROJECT
@@ -132,6 +126,15 @@ void env::draw(image* canvas, const viewport& view){
   fps = (int)floor(1.0 / ((double)(now - last_frame) / CLOCKS_PER_SEC));
   last_frame = now;
   validate("env.draw"); }
+
+// Draw the background image
+// Called by: env.init, window.update_pos
+void env::draw_bkgd(){
+  int w = scene::win_w, h = scene::win_h;
+  bkgd.set_size(w, h);
+  for(int i = 0; i < h; ++i)
+    for(int j = 0; j < w; ++j)
+      bkgd.set_pixel(j, i, bkgd_color); }
 
 // Hover a button, attempted in order of z value
 // Called by: update
