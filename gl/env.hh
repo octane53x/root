@@ -33,6 +33,8 @@ struct env : virtual object {
     // Where the mouse was at the time of the event
     point cursor; };
 
+  // Whether the frame has been updated since last draw
+  bool frame_updated;
   // Current frames per second
   int fps;
   // Last time the frame was drawn
@@ -62,7 +64,7 @@ struct env : virtual object {
   void click(const point& p); };
 
 // Set default member state and global env pointer
-env::env(): bkgd_color(DEFAULT_COLOR) {
+env::env(): frame_updated(false), bkgd_color(DEFAULT_COLOR) {
   type = "env";
   last_frame = clock();
   _env = this; }
@@ -119,12 +121,15 @@ void env::draw(image* canvas, const viewport& view){
   frame = bkgd;
   viewport default_view;
   default_view.size = min(frame.width, frame.height);
+  default_view.frame_width = scene::win_w;
+  default_view.frame_height = scene::win_h;
   //! Adjust view by pos
   for(int i = 0; i < active_scenes.size(); ++i)
     active_scenes[i]->draw(&frame, default_view);
   clock_t now = clock();
   fps = (int)floor(1.0 / ((double)(now - last_frame) / CLOCKS_PER_SEC));
   last_frame = now;
+  frame_updated = true;
   validate("env.draw"); }
 
 // Draw the background image
@@ -154,7 +159,8 @@ void env::hover(){
 void env::click(const point& p){
   vec<button*> v;
   for(pair<llu, button*> p : buttons)
-    v.pb(p.second);
+    if(p.second->active)
+      v.pb(p.second);
   sort(v.begin(), v.end(),
       [](const button* a, const button* b){ return a->pos.z < b->pos.z; });
   for(int i = 0; i < v.size(); ++i){

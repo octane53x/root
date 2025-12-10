@@ -60,6 +60,7 @@ void scene::validate(const str& func){
 void scene::init(){
   object::init();
   view.size = min(width, height);
+  view.frame_width = width, view.frame_height = height;
   bkgd.set_size(width, height);
   for(int i = 0; i < height; ++i)
     for(int j = 0; j < width; ++j)
@@ -70,8 +71,10 @@ void scene::init(){
 
 // Activate objects
 void scene::run(){
+  object::run();
   for(pair<llu, object*> p : objs)
-    p.second->run(); }
+    p.second->run();
+  validate("scene.run"); }
 
 // Update and move objects
 // Called by: DERIVED CLASS
@@ -85,19 +88,17 @@ void scene::update(const double ms){
 
 // Draw objects onto background
 // Called by: env.draw
-void scene::draw(image* canvas, const viewport& view){
+void scene::draw(image* canvas, const viewport& env_view){
   img = bkgd;
   vec<object*> v;
   for(pair<llu, object*> p : objs)
-    v.pb(p.second);
+    if(p.second->active)
+      v.pb(p.second);
   sort(v.begin(), v.end(),
       [](const object* a, const object* b){ return a->pos.z > b->pos.z; });
   for(int i = 0; i < v.size(); ++i)
     v[i]->draw(&img, view);
-  for(int y = 0; y < height; ++y)
-    for(int x = 0; x < width; ++x)
-      canvas->set_pixel(x + (int)floor(pos.x), y + (int)floor(pos.y),
-          img.data[y][x]);
+  img.draw(canvas, env_view);
   validate("scene.draw"); }
 
 // Recursive helper function to move_objs
@@ -117,19 +118,19 @@ void scene::move_rec(const move_node* node, const point& mov, const double ms){
 void scene::move_objs(const double ms){
   vec<move_node> nodes;
   umap<llu, int> m;
-  for(int i = 0; i < objs.size(); ++i){
+  for(pair<llu, object*> p : objs){
     move_node node;
-    node.obj = objs[i];
+    node.obj = p.second;
     node.parent = NULL;
     nodes.pb(node);
-    m[objs[i]->id] = (int)nodes.size() - 1; }
-  for(int i = 0; i < objs.size(); ++i){
-    if(objs[i]->mov == NULL || objs[i]->mov->root == NULL) continue;
-    assert(m.find(objs[i]->mov->root->id) != m.end(), "scene.move_objs",
+    m[p.second->id] = (int)nodes.size() - 1; }
+  for(pair<llu, object*> p : objs){
+    if(p.second->mov == NULL || p.second->mov->root == NULL) continue;
+    assert(m.find(p.second->mov->root->id) != m.end(), "scene.move_objs",
         "obj not found");
-    assert(m.find(objs[i]->id) != m.end(), "scene.move_objs", "obj not found");
-    int j = m[objs[i]->mov->root->id];
-    int k = m[objs[i]->id];
+    assert(m.find(p.second->id) != m.end(), "scene.move_objs", "obj not found");
+    int j = m[p.second->mov->root->id];
+    int k = m[p.second->id];
     nodes[j].children.pb(&nodes[k]);
     nodes[k].parent = &nodes[j]; }
   for(int i = 0; i < nodes.size(); ++i)

@@ -54,11 +54,13 @@ void Title::init(){
   title_lbl.size = 40;
   title_lbl.pos = point(100, 100);
   title_lbl.font = &fonts["aldo"];
+  // Static, part of bkgd, does not need to be added to objs
 
   play_btn.fill = BLACK;
   play_btn.points.pb(point(400, 300));
   play_btn.points.pb(point(400, 400));
   play_btn.points.pb(point(350, 350));
+  objs[play_btn.id] = &play_btn;
 
   polygon* a = new polygon();
   a->points = {point(0,0), point(10,0), point(10,10), point(0,10)};
@@ -103,12 +105,10 @@ void Title::update(const double ms){
 
 // Draw background
 void Title::draw_bkgd(){
-  title_lbl.draw(&bkgd, view);
-  play_btn.draw(&bkgd, view); }
+  title_lbl.draw(&bkgd, view); }
 
 // Enter loading state
 void Title::load(){
-  //! load
-}
+  play_btn.stop(); }
 
 #endif

@@ -16,9 +16,13 @@ void Title::PlayBtn::hover_fn(){
 // Play the game, leaving the title screen and loading from server
 // Called by: scenes/title button
 void Title::PlayBtn::click_fn(){
+  debug("clicked play");
   imp.scene_title.load();
   imp.game.init();
   scene* s = imp.select_scene();
+  if(s->type == "Planet2D")
+    dynamic_cast<Planet2D*>(s)->planet =
+        dynamic_cast<Planet*>(imp.game.player->loc);
   s->init();
   imp.game.run();
   imp.scene_title.stop();

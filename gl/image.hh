@@ -61,7 +61,7 @@ void image::validate(const str& func){
 void image::draw(image* canvas, const viewport& view){
   double ratio = min(canvas->width, canvas->height) / view.size;
   image img = scale(ratio);
-  img.pos = view.translate(pos, canvas->width, canvas->height);
+  img.pos = view.translate(pos);
   // If image outside the viewport, don't bother iterating pixels
   if(img.pos.y + img.height < 0 || img.pos.y > canvas->height
       || img.pos.x + img.width < 0 || img.pos.x > canvas->width) return;
@@ -91,10 +91,9 @@ void image::set_size(const int w, const int h){
   validate("image.set_size"); }
 
 // Set pixel at (x,y) to color
-void image::set_pixel(const int x, const int y, const color& c){
+inline void image::set_pixel(const int x, const int y, const color& c){
   if(x >= 0 && x < width && y >= 0 && y < height)
-    data[y][x] = c;
-  validate("image.set_pixel"); }
+    data[y][x] = c; }
 
 // Delete margins of color
 void image::fix(const color& c){

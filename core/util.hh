@@ -23,7 +23,7 @@ const str
 void pass(){}
 
 // Print to either console or debug log file
-void print(str s){
+void print(const str& s){
 #ifdef _WIN32
   ofstream fs(DEBUG_FILE.c_str(), ios::app);
   fs << s;
@@ -34,21 +34,20 @@ void print(str s){
 }
 
 // Print with a newline
-void printl(str s){
+void printl(const str& s){
   print(s + str("\n")); }
 
 // Throw an error, with message
-void err(str msg){
+void err(const str& msg){
   print(str("ERR: ") + msg + str("\n"));
   exit(-1); }
 
 // Check a condition and throw an error if it fails
-void assert(bool b, str func, str msg){
+void assert(bool b, const str& func, const str& msg){
   if(!b) err(str("ASSERT ") + func + str(": ") + msg); }
 
-// Initialize debug environment
-void debug_init(time_t time){
-  remove(DEBUG_FILE.c_str());
+// Print a given time
+void print_time(time_t time){
 #ifdef _WIN32
   char buf[32];
   ctime_s(buf, sizeof(buf), &time);
@@ -56,7 +55,22 @@ void debug_init(time_t time){
 #else
   str s(ctime(&time));
 #endif
-  print(str("Executed at ")+str(s)+str("\n")); }
+  printl(s); }
+
+// Print the time
+void print_time(){
+  print_time(time(NULL)); }
+
+// Print debug message
+void debug(const str& msg){
+  printl(msg);
+  print_time(); }
+
+// Initialize debug environment
+void debug_init(time_t time){
+  remove(DEBUG_FILE.c_str());
+  print(str("Executed at "));
+  print_time(time); }
 
 // Wait for a duration, in milliseconds
 void sleep(int ms){

@@ -13,7 +13,8 @@ struct Bot : virtual Unit {
 
   Bot(): stage(3) {
     type = "Bot";
-    speed = 0.5; }
+    speed = 0.5;
+    hitbox_size = point(1.0, 1.0, 1.0); }
 
   virtual void validate(const str& func){
     Unit::validate(func);

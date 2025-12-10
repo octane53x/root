@@ -48,8 +48,8 @@ void line::validate(const str& func){
 
 // Draw line onto image
 void line::draw(image* canvas, const viewport& view){
-  point a2 = view.translate(a + pos, canvas->width, canvas->height);
-  point b2 = view.translate(b + pos, canvas->width, canvas->height);
+  point a2 = view.translate(a + pos);
+  point b2 = view.translate(b + pos);
   // If line outside the viewport, don't bother iterating pixels
   if((a2.y < 0 && b2.y < 0) || (a2.x < 0 && b2.x < 0)
       || (a2.y > canvas->height && b2.y > canvas->height)

@@ -35,7 +35,7 @@ struct Planet : virtual Location {
 
 // Set default member state
 Planet::Planet(){
-  type = "Planet"; }
+  type = "Planet", level = Location::PLANET; }
 
 // Ensure valid state
 void Planet::validate(const str& func){

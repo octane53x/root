@@ -46,6 +46,7 @@ window::window(){
 // Draw the frame to the window with BitBlt
 // Called by: _win_proc
 void _win_paint(HWND hwnd){
+  if(!_win->frame_updated) return;
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(hwnd, &ps);
   image* frame = &_win->frame;
@@ -57,7 +58,8 @@ void _win_paint(HWND hwnd){
   BitBlt(hdc, 0, 0, frame->width, frame->height, hdcMem, 0, 0, SRCCOPY);
   SelectObject(hdcMem, bmpPrev);
   DeleteDC(hdcMem);
-  EndPaint(hwnd, &ps); }
+  EndPaint(hwnd, &ps);
+  _win->frame_updated = false; }
 
 // Translate the key code into a string message
 // Called by: _win_proc
@@ -100,10 +102,11 @@ str _win_key(WPARAM wParam){
 // Sent to Windows for window message processing
 // Called by: OPERATING SYSTEM
 LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
-  // Update cursor position
+  // Update cursor position and draw
   POINT p;
   GetCursorPos(&p);
   _win->update_cursor(p.x, p.y);
+  _win_paint(hwnd);
   RECT r;
   // Check uMsg for an event
   switch(uMsg){
@@ -111,7 +114,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     PostQuitMessage(0);
     return 0;
   case WM_PAINT:
-    _win_paint(hwnd);
+    // Draw no matter what the uMsg since mouse movement is stopping WM_PAINT
     return 0;
   case WM_MOVE:
   case WM_SIZE:
@@ -119,7 +122,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     _win->update_pos(r.left, r.top, r.right - r.left, r.bottom - r.top);
     return 0;
   case WM_MOUSEMOVE:
-    // More updates with GetCursorPos
+    // Rarely called for some reason, prefer to update cursor each draw
     return 0;
   // Send a mouse click or key event
   case WM_LBUTTONDOWN:
@@ -202,7 +205,7 @@ void window::display(){
   wc.lpszClassName = CLASS;
   RegisterClass(&wc);
   hwnd = CreateWindowEx(
-      0, CLASS, L"Window", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+      0, CLASS, L"Window", WS_OVERLAPPEDWINDOW, 1000, 200,
       _win->width, _win->height, NULL, NULL, win_param_1, NULL);
   assert(hwnd != NULL, "window.display", "could not create window");
   ShowWindow(hwnd, win_param_2);

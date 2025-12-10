@@ -33,7 +33,7 @@ Game::Game(): player(NULL) {}
 // Ensure valid state
 void Game::validate(const str& func){
   system::validate(func);
-      if(active){
+  if(active){
     assert(player != NULL, func, "Game.player is NULL");
     player->validate(func); } }
 
@@ -42,11 +42,9 @@ void Game::validate(const str& func){
 void Game::init(){
   system::init();
   tick = (clock_t)ceil(GAME_TICK * CLOCKS_PER_SEC);
-
   // Create planet
   Planet* planet = new Planet();
   planet->init();
-
   // Place player on land
   player = new Bot();
   player->loc = planet;
@@ -57,7 +55,6 @@ void Game::init(){
     for(int i = 0; i < planet->terrain.land.size(); ++i)
       if(planet->terrain.land[i].inside(player->pos)){
         found = true; break; } }
-
   // Load chunks around player
   Chunk* chunk = planet->find_chunk(player->pos);
   planet->terrain.gen_chunk(chunk);

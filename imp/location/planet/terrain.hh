@@ -7,7 +7,7 @@
 #include "chunk.hh"
 
 // Side length of square chunk in tiles
-int CHUNK_SIZE = 1000;
+const int CHUNK_SIZE = 1000;
 const double
     // Bounds for how much of the surface will be land
     LAND_RATIO_MIN = 0.2,
@@ -96,13 +96,15 @@ void Terrain::gen_chunk(Chunk* chunk){
   for(int i = 0; i < land.size(); ++i)
     if(land[i].intersects(cbox))
       cland.pb(&land[i]);
-  for(int i = 0; i < chunk->tiles.size(); ++i)
-    for(int j = 0; j < chunk->tiles[i].size(); ++j)
-      for(int k = 0; k < cland.size(); ++k)
-        if(cland[k]->inside(point(chunk->pos.x + j + 0.5,
-            chunk->pos.y + i + 0.5))){
-          chunk->tiles[i][j] = (rand() % 2) ? Tile::GRASS : Tile::SNOW;
-          break; }
+  //! too much time
+  // for(int i = 0; i < chunk->tiles.size(); ++i)
+  //   for(int j = 0; j < chunk->tiles[i].size(); ++j)
+  //     for(int k = 0; k < cland.size(); ++k)
+  //       if(cland[k]->inside(point(chunk->pos.x + j + 0.5,
+  //           chunk->pos.y + i + 0.5))){
+  //         chunk->tiles[i][j] = (rand() % 2) ? Tile::GRASS : Tile::SNOW;
+  //         break; }
+
   validate("Terrain.gen_chunk"); }
 
 #endif
