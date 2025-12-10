@@ -27,7 +27,7 @@ struct scene : virtual object {
   // Available fonts for label text
   static umap<str, font> fonts;
   // ALL OBJECTS IN THE SCENE - TO MOVE, UPDATE, DRAW
-  vec<object*> objs;
+  umap<llu, object*> objs;
   // Canvas to draw to, and its background it resets to first
   image bkgd, img;
   // Translation window that displays the desired part of the scene
@@ -39,6 +39,7 @@ struct scene : virtual object {
 
   virtual void validate(const str& func);
   virtual void init();
+  virtual void run();
   virtual void update(const double ms);
   virtual void draw(image* canvas, const viewport& view);
 
@@ -63,15 +64,22 @@ void scene::init(){
   for(int i = 0; i < height; ++i)
     for(int j = 0; j < width; ++j)
       bkgd.set_pixel(j, i, bkgd_color);
-  img = bkgd; }
+  img = bkgd;
+  for(pair<llu, object*> p : objs)
+    p.second->init(); }
+
+// Activate objects
+void scene::run(){
+  for(pair<llu, object*> p : objs)
+    p.second->run(); }
 
 // Update and move objects
 // Called by: DERIVED CLASS
 void scene::update(const double ms){
   object::update(ms);
   move_objs(ms);
-  for(object* o : objs)
-    o->update(ms);
+  for(pair<llu, object*> p : objs)
+    p.second->update(ms);
   last_update = clock();
   validate("scene.update"); }
 
@@ -79,10 +87,13 @@ void scene::update(const double ms){
 // Called by: env.draw
 void scene::draw(image* canvas, const viewport& view){
   img = bkgd;
-  sort(objs.begin(), objs.end(),
+  vec<object*> v;
+  for(pair<llu, object*> p : objs)
+    v.pb(p.second);
+  sort(v.begin(), v.end(),
       [](const object* a, const object* b){ return a->pos.z > b->pos.z; });
-  for(int i = 0; i < objs.size(); ++i)
-    objs[i]->draw(&img, view);
+  for(int i = 0; i < v.size(); ++i)
+    v[i]->draw(&img, view);
   for(int y = 0; y < height; ++y)
     for(int x = 0; x < width; ++x)
       canvas->set_pixel(x + (int)floor(pos.x), y + (int)floor(pos.y),

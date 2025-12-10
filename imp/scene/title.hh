@@ -48,7 +48,6 @@ void Title::validate(const str& func){
 void Title::init(){
   width = win_w, height = win_h;
   bkgd_color = RED;
-  scene::init();
 
   title_lbl.text = "IMPACT";
   title_lbl.fill = BLACK;
@@ -61,8 +60,6 @@ void Title::init(){
   play_btn.points.pb(point(400, 400));
   play_btn.points.pb(point(350, 350));
 
-  draw_bkgd();
-
   polygon* a = new polygon();
   a->points = {point(0,0), point(10,0), point(10,10), point(0,10)};
   a->fill = BLUE;
@@ -71,7 +68,7 @@ void Title::init(){
   a->mov->path = {point(100,100), point(-100,100), point(-100,-100),
       point(100,-100)};
   a->mov->vel = 50.0;
-  objs.pb(a);
+  objs[a->id] = a;
 
   polygon* b = new polygon();
   b->points = a->points;
@@ -80,7 +77,7 @@ void Title::init(){
   b->mov = new object::movement(object::movement::ORBIT);
   b->mov->root = a;
   b->mov->vel = 100.0;
-  objs.pb(b);
+  objs[b->id] = b;
 
   polygon* c = new polygon();
   c->points = a->points;
@@ -90,7 +87,10 @@ void Title::init(){
   c->mov->root = b;
   c->mov->vel = 200.0;
   rand_color_box = c;
-  objs.pb(c); }
+  objs[c->id] = c;
+
+  scene::init();
+  draw_bkgd(); }
 
 // Move the boxes
 void Title::update(const double ms){

@@ -112,8 +112,8 @@ void env::update(double ms){
 // Called by: window.main_loop
 void env::draw(image* canvas, const viewport& view){
   vec<scene*> active_scenes;
-  for(int i = 0; i < scenes.size(); ++i)
-    if(scenes[i]->active) active_scenes.pb(scenes[i]);
+  for(pair<llu, scene*> p : scenes)
+    if(p.second->active) active_scenes.pb(p.second);
   sort(active_scenes.begin(), active_scenes.end(),
       [](const scene* a, const scene* b){ return a->z > b->z; });
   frame = bkgd;

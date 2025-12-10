@@ -63,14 +63,7 @@ void Impact::validate(const str& func){
 // Called by: win_exec:wWinMain, exec:main
 void Impact::init(){
   debug_init(time_exec);
-  // Attempt login from saved credentials
-  ifstream fs(LOGIN_FILE);
-  assert(fs.is_open(), "Impact.init", "login file couldn't open");
-  str user, pass;
-  getline(fs, user);
-  getline(fs, pass);
-  fs.close();
-  serv.login(user, pass);
+  serv.init();
   // Initialize console, otherwise window environment
   if(UI_MODE == UI_CONSOLE){
     Console::init();
@@ -85,6 +78,15 @@ void Impact::init(){
 // Start the game and interface
 // Called by: win_exec:wWinMain, exec:main
 void Impact::run(){
+  serv.run();
+  // Attempt login from saved credentials
+  ifstream fs(LOGIN_FILE);
+  assert(fs.is_open(), "Impact.init", "login file couldn't open");
+  str user, pass;
+  getline(fs, user);
+  getline(fs, pass);
+  fs.close();
+  serv.login(user, pass);
   // Run console
   if(UI_MODE == UI_CONSOLE){
     Console::run();
