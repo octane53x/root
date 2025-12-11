@@ -144,7 +144,8 @@ void env::draw_bkgd(){
 void env::hover(){
   vec<button*> v;
   for(pair<llu, button*> p : buttons)
-    v.pb(p.second);
+    if(p.second->active)
+      v.pb(p.second);
   sort(v.begin(), v.end(),
       [](const button* a, const button* b){ return a->pos.z < b->pos.z; });
   for(int i = 0; i < v.size(); ++i){

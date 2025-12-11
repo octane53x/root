@@ -62,7 +62,9 @@ void Unit::move_dist(const double dist_able){
       continue; }
     double dist = min(dist_avail, dist_next);
     double ratio = dist / dist_next;
-    prog += (next - pos) * ratio;
+    point p = (next - pos) * ratio;
+    pos += p;
+    prog += p;
     dist_avail -= dist; }
 
   // Load/unload chunks

@@ -170,7 +170,7 @@ scene* Impact::select_scene(){
 // Handle key events sent through the window
 // Called by: update
 void Impact::process_key(env::key_event ke){
-  if(ke.key == "LCLICK")
+  if(ke.key == "LCLICK" && ke.down)
     click(ke.cursor);
   else if(ke.key[0] >= '0' && ke.key[0] <= '9'){
     vec<Location::LocationLevel> opts = scene_options();

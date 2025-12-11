@@ -24,7 +24,7 @@ struct Bot : virtual Unit {
 // Set default member state
 Bot::Bot(): stage(3) {
   type = "Bot";
-  speed = 0.5;
+  speed = 2.0;
   hitbox_size = point(1.0, 1.0, 1.0); }
 
 // Ensure valid state

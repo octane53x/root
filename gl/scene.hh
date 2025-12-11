@@ -40,6 +40,7 @@ struct scene : virtual object {
   virtual void validate(const str& func);
   virtual void init();
   virtual void run();
+  virtual void stop();
   virtual void update(const double ms);
   virtual void draw(image* canvas, const viewport& view);
 
@@ -74,6 +75,13 @@ void scene::run(){
   for(pair<llu, object*> p : objs)
     p.second->run();
   validate("scene.run"); }
+
+// Deactivate objects
+void scene::stop(){
+  object::stop();
+  for(pair<llu, object*> p : objs)
+    p.second->stop();
+  validate("scene.stop"); }
 
 // Update and move objects
 // Called by: DERIVED CLASS

@@ -11,6 +11,7 @@ struct button : virtual polygon, virtual image {
 
   // Whether the button is currently being hovered over by the cursor
   bool hovered;
+  point click_pix;
 
   button();
 
@@ -53,6 +54,7 @@ bool button::hover(const point& c){
 // Called by: env.click
 bool button::click(const point& c){
   if(inside(c)){
+    click_pix = c;
     click_fn();
     validate("button.click");
     return true; }

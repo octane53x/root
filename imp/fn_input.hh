@@ -30,4 +30,14 @@ void Title::PlayBtn::click_fn(){
   imp.scene_title.stop();
   s->run(); }
 
+// Hover the terrain
+void Planet2D::TerrainBtn::hover_fn(){
+  //! move the target reticule
+}
+
+// Click the terrain to move the player or target a position
+void Planet2D::TerrainBtn::click_fn(){
+  point p = imp.scene_planet2d.vp.translate_in(click_pix);
+  imp.scene_planet2d.player->move(p); }
+
 #endif

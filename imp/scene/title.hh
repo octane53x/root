@@ -109,6 +109,7 @@ void Title::draw_bkgd(){
 
 // Enter loading state
 void Title::load(){
-  play_btn.stop(); }
+  play_btn.stop();
+  objs.erase(play_btn.id); }
 
 #endif

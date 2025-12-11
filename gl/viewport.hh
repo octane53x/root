@@ -19,7 +19,8 @@ struct viewport : virtual thing {
 
   virtual void validate(const str& func);
 
-  point translate(const point& p) const; };
+  point translate_in(const point& p) const;
+  point translate_out(const point& p) const; };
 
 // Set default member state
 viewport::viewport(): size_in(100.0), size_out(100.0), top_left(point(0, 0)) {}
@@ -28,8 +29,13 @@ viewport::viewport(): size_in(100.0), size_out(100.0), top_left(point(0, 0)) {}
 void viewport::validate(const str& func){
   assert(size_in > 0.0 && size_out > 0.0, func, "viewport size not positive"); }
 
+// Translate pixel coordinate to environment coordinate
+point viewport::translate_in(const point& p) const {
+  double ratio = size_in / size_out;
+  return p * ratio + top_left; }
+
 // Translate environment coordinate to pixel coordinate
-point viewport::translate(const point& p) const {
+point viewport::translate_out(const point& p) const {
   double ratio = size_out / size_in;
   return p * ratio - top_left * ratio; }
 
