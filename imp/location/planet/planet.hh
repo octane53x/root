@@ -89,8 +89,8 @@ void Planet::update_game(){
 // Return a chunk given an environment coordinate
 // Called by: Game.init
 Chunk* Planet::find_chunk(const point& p){
-  int i = (int)floor(p.y / CHUNK_SIZE);
-  int j = (int)floor(p.x / CHUNK_SIZE);
+  int i = (int)floor(p.x / CHUNK_SIZE);
+  int j = (int)floor(p.y / CHUNK_SIZE);
   return &chunks[i][j]; }
 
 #endif

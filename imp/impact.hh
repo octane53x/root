@@ -98,14 +98,15 @@ void Impact::run(){
 // Update everything. Called continuously in a loop.
 // Called by: window.main_loop
 void Impact::update(const double ms){
-  serv.update(ms);
-  game.update(ms);
-  window::update(ms);
   // Handle all key events since last update
   while(!keys.empty()){
     env::key_event ke = keys.front();
     keys.pop();
     process_key(ke); }
+  // Update server, game, env -> scenes
+  serv.update(ms);
+  game.update(ms);
+  window::update(ms);
   // Update scene with server login status
   if(scene_title.logged_in == false && serv.user_id != 0)
     scene_title.logged_in = true;

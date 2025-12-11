@@ -32,6 +32,7 @@ struct color : virtual thing {
   bool operator!=(const color& c) const;
 
   virtual void validate(const str& func);
+  virtual str to_str() const;
 
   color avg(const color& c) const;
   color random() const; };
@@ -85,6 +86,10 @@ bool color::operator!=(const color& c) const {
 
 // Implemented to remove abstraction
 void color::validate(const str& func){}
+
+// Convert to text
+str color::to_str() const {
+  return "(" + to_string(r) + ", " + to_string(g) + ", " + to_string(b) + ")"; }
 
 // Return the average of this color with another
 color color::avg(const color& c) const {

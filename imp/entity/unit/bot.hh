@@ -54,8 +54,16 @@ void Bot::validate(const str& func){
     err("player stage outside bounds"); } }
 
 // Draw onto image
-// Currently done by the scene
-void Bot::draw(image* canvas, const viewport& view){}
+void Bot::draw(image* canvas, const viewport& view){
+  polygon poly;
+  double x = pos.x - 1.0;
+  double y = pos.y - 1.0;
+  poly.add(point(x, y));
+  poly.add(point(x + 2.0, y));
+  poly.add(point(x + 2.0, y + 2.0));
+  poly.add(point(x, y + 2.0));
+  poly.fill = RED;
+  poly.draw(canvas, view); }
 
 // Update game elements
 void Bot::update_game(){

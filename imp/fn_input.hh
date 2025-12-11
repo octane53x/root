@@ -19,10 +19,12 @@ void Title::PlayBtn::click_fn(){
   imp.scene_title.load();
   imp.game.init();
   scene* s = imp.select_scene();
-  if(s->type == "Planet2D")
-    dynamic_cast<Planet2D*>(s)->planet =
-        dynamic_cast<Planet*>(imp.game.player->loc);
-  dynamic_cast<Planet2D*>(s)->player = imp.game.player;
+  if(s->type == "Planet2D"){
+    Planet2D* ss = dynamic_cast<Planet2D*>(s);
+    ss->planet = dynamic_cast<Planet*>(imp.game.player->loc);
+    ss->player = imp.game.player;
+  }else
+    err("PlayBtn.click_fn: scene not handled");
   s->init();
   imp.game.run();
   imp.scene_title.stop();

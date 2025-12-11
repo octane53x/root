@@ -105,7 +105,7 @@ void Title::update(const double ms){
 
 // Draw background
 void Title::draw_bkgd(){
-  title_lbl.draw(&bkgd, view); }
+  title_lbl.draw(&bkgd, vp); }
 
 // Enter loading state
 void Title::load(){

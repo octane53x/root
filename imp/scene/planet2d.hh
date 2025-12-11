@@ -5,6 +5,10 @@
 
 #include "../../gl/scene.hh"
 
+const double
+    // Coordinate size of viewport over player
+    VIEW_SIZE = 100.0;
+
 // Overhead view of the planet surface
 struct Planet2D : virtual scene {
 
@@ -16,6 +20,7 @@ struct Planet2D : virtual scene {
   Planet2D();
 
   virtual void init();
+  virtual void update(const double ms);
   virtual void draw(image* canvas, const viewport& view); };
 
 // Set default member state
@@ -28,30 +33,38 @@ Planet2D::Planet2D(){
 void Planet2D::init(){
   width = win_w, height = win_h;
   bkgd_color = BLUE;
-  // Draw land
-  for(int i = 0; i < planet->terrain.land.size(); ++i){
-    polygon* land = &planet->terrain.land[i];
-    land->fill = YELLOW;
-    objs[land->id] = land; }
+  objs[player->id] = player;
   scene::init();
-  view.size_in = planet->size; }
+  vp.size_in = VIEW_SIZE; }
+
+// Adjust the viewport to follow player
+void Planet2D::update(const double ms){
+  vp.top_left =
+      point(player->pos.x - VIEW_SIZE/2.0, player->pos.y - VIEW_SIZE/2.0); }
 
 // Draw onto image
 void Planet2D::draw(image* canvas, const viewport& view){
+  img = bkgd;
+
+  // Draw tiles in view
+  vec<Chunk*> chunks = planet->find_chunk(player->pos)->neighbors();
+  for(double x = vp.top_left.x; x <= vp.top_left.x + vp.size_in; x += 1.0)
+    for(double y = vp.top_left.y; y <= vp.top_left.y + vp.size_in; y += 1.0)
+      for(int i = 0; i < chunks.size(); ++i)
+        if(chunks[i]->in_chunk(point(x, y))){
+          point tl(floor(x), floor(y));
+          point br(tl.x + 1.0, tl.y + 1.0);
+          int x0 = (int)floor(vp.translate(tl).x);
+          int xf = (int)floor(vp.translate(br).x);
+          int y0 = (int)floor(vp.translate(tl).y);
+          int yf = (int)floor(vp.translate(br).y);
+          color c = TILE_TEX[*chunks[i]->find_tile(point(x, y))];
+          for(int xx = x0; xx <= xf; ++xx)
+            for(int yy = y0; yy <= yf; ++yy)
+              bkgd.set_pixel(xx, yy, c);
+          break; }
+
   scene::draw(canvas, view);
-  // Draw player here so it's the same size no matter the planet zoom
-  polygon poly;
-  double ratio = (double)min(canvas->width, canvas->height) / planet->size;
-  int x = (int)floor(player->pos.x * ratio);
-  int y = (int)floor(player->pos.y * ratio);
-  poly.add(point(x - 10, y - 10));
-  poly.add(point(x + 10, y - 10));
-  poly.add(point(x + 10, y + 10));
-  poly.add(point(x - 10, y + 10));
-  poly.fill = RED;
-  viewport default_view;
-  default_view.size_in = default_view.size_out =
-      min(canvas->width, canvas->height);
-  poly.draw(canvas, default_view); }
+  validate("Planet2D.draw"); }
 
 #endif

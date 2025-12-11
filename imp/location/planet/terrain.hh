@@ -111,11 +111,9 @@ void Terrain::gen_chunk(Chunk* chunk){
     for(double x = max(topleft.x, chunk->pos.x);
         dlt(x, min(botright.x, chunk->pos.x + chunk->size)); x += 1.0)
       for(double y = max(topleft.y, chunk->pos.y);
-          dlt(y, min(botright.y, chunk->pos.y)); y += 1.0){
-        assert(chunk->in_chunk(point(x, y)), "terrain.gen_chunk",
-            "point not in chunk");
+          dlt(y, min(botright.y, chunk->pos.y + chunk->size)); y += 1.0)
         *chunk->find_tile(point(x, y)) =
-            (rand() % 2) ? Tile::GRASS : Tile::SNOW; } }
+            (rand() % 2) ? Tile::GRASS : Tile::SNOW; }
   validate("Terrain.gen_chunk"); }
 
 #endif

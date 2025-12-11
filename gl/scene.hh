@@ -31,7 +31,7 @@ struct scene : virtual object {
   // Canvas to draw to, and its background it resets to first
   image bkgd, img;
   // Translation window that displays the desired part of the scene
-  viewport view;
+  viewport vp;
   // Point and direction of view into the scene
   camera cam;
 
@@ -51,7 +51,7 @@ void scene::validate(const str& func){
   object::validate(func);
   bkgd.validate(func);
   img.validate(func);
-  view.validate(func);
+  vp.validate(func);
   cam.validate(func);
   assert(width > 0 && height > 0, func, "scene size not positive"); }
 
@@ -59,7 +59,7 @@ void scene::validate(const str& func){
 // Called by: DERIVED CLASS
 void scene::init(){
   object::init();
-  view.size_in = view.size_out = min(width, height);
+  vp.size_in = vp.size_out = min(width, height);
   bkgd.set_size(width, height);
   for(int i = 0; i < height; ++i)
     for(int j = 0; j < width; ++j)
@@ -87,7 +87,7 @@ void scene::update(const double ms){
 
 // Draw objects onto background
 // Called by: env.draw
-void scene::draw(image* canvas, const viewport& env_view){
+void scene::draw(image* canvas, const viewport& view){
   img = bkgd;
   vec<object*> v;
   for(pair<llu, object*> p : objs)
@@ -96,8 +96,8 @@ void scene::draw(image* canvas, const viewport& env_view){
   sort(v.begin(), v.end(),
       [](const object* a, const object* b){ return a->pos.z > b->pos.z; });
   for(int i = 0; i < v.size(); ++i)
-    v[i]->draw(&img, view);
-  img.draw(canvas, env_view);
+    v[i]->draw(&img, vp);
+  img.draw(canvas, view);
   validate("scene.draw"); }
 
 // Recursive helper function to move_objs

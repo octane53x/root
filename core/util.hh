@@ -43,7 +43,8 @@ void err(const str& msg){
   exit(-1); }
 
 // Check a condition and throw an error if it fails
-void assert(bool b, const str& func, const str& msg){
+//! Takes a lot more time than it should, don't use in critical loops
+inline void assert(bool b, const str& func, const str& msg){
   if(!b) err(str("ASSERT ") + func + str(": ") + msg); }
 
 // Print a given time

@@ -13,7 +13,7 @@ struct viewport : virtual thing {
   // Size in output coordinates
   double size_out;
   // Position of the top left corner in the environment
-  point topleft;
+  point top_left;
 
   viewport();
 
@@ -22,7 +22,7 @@ struct viewport : virtual thing {
   point translate(const point& p) const; };
 
 // Set default member state
-viewport::viewport(): size_in(100.0), size_out(100.0), topleft(point(0, 0)) {}
+viewport::viewport(): size_in(100.0), size_out(100.0), top_left(point(0, 0)) {}
 
 // Ensure valid state
 void viewport::validate(const str& func){
@@ -31,6 +31,6 @@ void viewport::validate(const str& func){
 // Translate environment coordinate to pixel coordinate
 point viewport::translate(const point& p) const {
   double ratio = size_out / size_in;
-  return p * ratio - topleft * ratio; }
+  return p * ratio - top_left * ratio; }
 
 #endif
