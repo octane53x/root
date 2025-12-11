@@ -1,7 +1,6 @@
 // Execute graphical Impact on Windows
 
-#include "../global.hh"
-#include "../fn_input.hh" // Leaf file, not used here
+#include "../fn_input.hh"
 
 // Initial window size
 const int
@@ -12,8 +11,8 @@ const int
 // Called by: OPERATING SYSTEM
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
-  imp.time_exec = time(NULL);
-  UI_MODE = UI_WINDOW;
+  debug_init(time_exec = time(NULL));
+  imp.UI_MODE = Impact::UI_WINDOW;
   imp.init_members(hInst, nCmdShow, INIT_WIN_W, INIT_WIN_H);
   imp.init();
   imp.run();

@@ -9,6 +9,7 @@
 #include "server.hh"
 #include "scene/title.hh"
 #include "scene/planet2d.hh"
+#include "entity/mine.hh"
 
 // Last login credentials saved in this file
 //! encrypted
@@ -16,15 +17,12 @@ const str LOGIN_FILE = "../data/login.dat";
 // Font options located in gl/fonts
 const vec<str> FONTS = {"aldo"};
 
-// Set in execution file to select the interface
-enum { UI_CONSOLE, UI_WINDOW } UI_MODE;
-
 // Global object that keeps the game, interface, and network in sync.
 // Inputs route through here
 struct Impact : virtual window, virtual Console {
 
-  // Time execution began
-  time_t time_exec;
+  // Set in execution file to select the interface
+  enum { UI_CONSOLE, UI_WINDOW } UI_MODE;
 
   // Impact game
   Game game;
@@ -35,6 +33,9 @@ struct Impact : virtual window, virtual Console {
   Title scene_title;
   // Overhead view of a planet
   Planet2D scene_planet2d;
+
+  // If not NULL, signals an entity can be placed
+  Entity* build_pending;
 
   Impact();
 
@@ -48,8 +49,8 @@ struct Impact : virtual window, virtual Console {
   scene* select_scene();
   void process_key(env::key_event ke); };
 
-// Called by: global
-Impact::Impact(){
+// Set default member state
+Impact::Impact(): build_pending(NULL) {
   type = "Impact"; }
 
 // Ensure valid state
@@ -62,7 +63,6 @@ void Impact::validate(const str& func){
 // Prepare both the game and interface to run
 // Called by: win_exec:wWinMain, exec:main
 void Impact::init(){
-  debug_init(time_exec);
   serv.init();
   // Initialize console, otherwise window environment
   if(UI_MODE == UI_CONSOLE){
@@ -172,6 +172,8 @@ scene* Impact::select_scene(){
 void Impact::process_key(env::key_event ke){
   if(ke.key == "LCLICK" && ke.down)
     click(ke.cursor);
+  else if(ke.key == "M" && ke.down && build_pending == NULL)
+    build_pending = new Mine();
   else if(ke.key[0] >= '0' && ke.key[0] <= '9'){
     vec<Location::LocationLevel> opts = scene_options();
     int k = ke.key[0] - '0';

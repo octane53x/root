@@ -72,6 +72,8 @@ void Planet2D::draw(image* canvas, const viewport& view){
           int xf = (int)floor(vp.translate_out(br).x);
           int y0 = (int)floor(vp.translate_out(tl).y);
           int yf = (int)floor(vp.translate_out(br).y);
+          if(!chunks[i]->in_chunk(point(x, y))) //! remove
+            err("planet2d.draw find_tile");
           color c = TILE_TEX[*chunks[i]->find_tile(point(x, y))];
           for(int xx = x0; xx <= xf; ++xx)
             for(int yy = y0; yy <= yf; ++yy)

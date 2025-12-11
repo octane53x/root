@@ -38,6 +38,14 @@ void Planet2D::TerrainBtn::hover_fn(){
 // Click the terrain to move the player or target a position
 void Planet2D::TerrainBtn::click_fn(){
   point p = imp.scene_planet2d.vp.translate_in(click_pix);
-  imp.scene_planet2d.player->move(p); }
+  if(imp.build_pending == NULL)
+    imp.scene_planet2d.player->move(p);
+  else{
+    Entity* e = imp.build_pending;
+    e->pos = p;
+    e->init();
+    e->run();
+    imp.scene_planet2d.objs[e->id] = e;
+    imp.build_pending = NULL; } }
 
 #endif

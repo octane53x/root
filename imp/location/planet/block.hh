@@ -1,30 +1,26 @@
-// PLANET BLOCK
+// UNDERGROUND BLOCK
 
 #ifndef BLOCK_HH
 #define BLOCK_HH
 
 #include "../../../gl/object.hh"
 
-struct Unit;
-
+// Underground 1x1x1 block of minerals
 struct Block : virtual object {
 
-  //! adjust members to describe mods
+  // Whether a tunnel has been dug through the block
   bool tunnel;
-  double progress;
-  point loc;
+  // Progress 0.0-1.0 on mining the next mineral or digging a tunnel
+  double prog_mine, prog_tunnel;
+  // Remaining minerals from overlapping nodes
   map<str, int> minerals;
+  // Adjacent blocks, attached if this has a tunnel
   vec<Block*> adjacent;
-  vec<Unit*> units;
 
-  Block(){
-    type = "Block"; }
+  Block(); };
 
-  int total(){
-    int r = 0;
-    map<str, int>::iterator it;
-    for(it = minerals.begin(); it != minerals.end(); ++it)
-      r += it->second;
-    return r; } };
+// Set default member state
+Block::Block(): tunnel(false), prog_mine(0.0), prog_tunnel(0.0) {
+  type = "Block"; }
 
 #endif

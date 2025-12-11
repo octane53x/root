@@ -1,50 +1,41 @@
-// MINE FEATURE
+// MINE ENTITY
 
 #ifndef MINE_HH
 #define MINE_HH
 
-#include "../planet/planet.hh"
+#include "../location/planet/planet.hh"
 
-struct Mine : Feature {
+struct Worker;
 
+// A mine to harvest minerals found on a planet
+struct Mine : virtual Entity {
+
+  // Entry block to the tunnels beneath
   Block* top;
-  vec<Worker*> workers; //?
+  // All workers currently within the mine
+  vec<Worker*> workers;
 
-  Mine(){ type = MINE; }
+  Mine();
 
-  virtual void validate(){
-    Feature::validate(); }
+  virtual void draw(image* canvas, const viewport& view);
+  virtual void update_game(); };
 
-  virtual void game_update(Planet* planet){
-    // for(Worker* worker : workers){
-    //   if(worker->activity == Activity::IDLE){
-    //     worker->target = nodes.front();
-    //     nodes.pop();
-    //     graph<Block*> g;
-    //     queue<Block*> q;
-    //     uset<Block*> v; //? remove?
-    //     point p = worker->loc;
-    //     Block* b0 = &planet->earth[(int)p.x][(int)p.y][(int)p.z];
-    //     g.insert(b0);
-    //     q.push(b0);
-    //     v.insert(b0);
+// Set default member state
+Mine::Mine(): top(NULL) {
+  type = "Mine"; }
 
-    //     // Construct mine graph
-    //     while(!q.empty()){
-    //       Block* bt = q.front();
-    //       q.pop();
-    //       for(Block* b : bt->adjacent){
-    //         if(!b->tunnel || v.find(b) != v.end()) continue;
-    //         g.insert(b);
-    //         g.link(bt, b, 1);
-    //         q.push(b);
-    //         v.insert(b); } }
+// Draw onto image
+void Mine::draw(image* canvas, const viewport& view){
+  polygon poly;
+  point p(pos.x - 1.0, pos.y - 1.0);
+  poly.add(p);
+  poly.add(point(p.x + 2.0, p.y));
+  poly.add(point(p.x + 2.0, p.y + 2.0));
+  poly.add(point(p.x, p.y + 2.0));
+  poly.fill = PURPLE;
+  poly.draw(canvas, view); }
 
-    //     // Shortest path to target
-
-    //     worker->activity = Activity::TRAVEL; } }
-  }
-
-  virtual point update(double ms){ return point(0, 0); } };
+// Mine operations
+void Mine::update_game(){}
 
 #endif

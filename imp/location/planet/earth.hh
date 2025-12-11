@@ -6,15 +6,21 @@
 #include "block.hh"
 #include "node.hh"
 
+// Underground of a planet
 struct Earth : virtual system {
 
+  // Mineral nodes
   vec<Node> nodes;
-  vec<Block> mods;
 
-  Earth(){ type = "Earth"; }
+  Earth();
 
-  void gen_planet(int planet_size){
-    //!
-  } };
+  void gen_planet(const int planet_size); };
+
+// Set default member state
+Earth::Earth(){
+  type = "Earth"; }
+
+// Create mineral nodes
+void Earth::gen_planet(const int planet_size){}
 
 #endif

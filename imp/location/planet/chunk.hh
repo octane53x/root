@@ -57,8 +57,8 @@ void Chunk::draw(image* canvas, const viewport& view){
 
 // Is coordinate in chunk
 bool Chunk::in_chunk(const point& p) const {
-  return p.x >= pos.x && p.x <= pos.x + size
-      && p.y >= pos.y && p.y <= pos.y + size; }
+  return dgeq(p.x, pos.x) && dlt(p.x, pos.x + size)
+      && dgeq(p.y, pos.y) && dlt(p.y, pos.y + size); }
 
 // Return this chunk and the 8 chunks around it
 vec<Chunk*> Chunk::neighbors(){
@@ -71,7 +71,8 @@ vec<Chunk*> Chunk::neighbors(){
 // Return the tile type at the given coordinate
 // Recommend calling in_chunk first
 Tile::Type* Chunk::find_tile(const point& p){
-  int i = (int)floor(p.x - pos.x), j = (int)floor(p.y - pos.y);
+  int i = (int)floor(p.x - pos.x);
+  int j = (int)floor(p.y - pos.y);
   return &tiles[i][j]; }
 
 #endif
