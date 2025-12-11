@@ -22,7 +22,9 @@ struct polygon : virtual object {
   point size() const;
   bool inside(const point& p) const;
   bool intersects(const polygon& o) const;
-  double area() const; };
+  double area() const;
+
+  void add(const point& p); };
 
 // Set default member state
 polygon::polygon(){
@@ -41,7 +43,7 @@ void polygon::validate(const str& func){
   assert(points.size() > 2, func, "polygon does not have more than 2 points"); }
 
 // Draw polygon to image
-void polygon::draw(image* bkgd, const viewport& view){
+void polygon::draw(image* canvas, const viewport& view){
   double xmin = INFD, xmax = -INFD, ymin = INFD, ymax = -INFD;
   for(int i = 0; i < points.size(); ++i)
     xmin = min(xmin, points[i].x+pos.x), xmax = max(xmax, points[i].x+pos.x),
@@ -50,7 +52,7 @@ void polygon::draw(image* bkgd, const viewport& view){
   for(int i = 0; i < points.size()-1; ++i)
     edges.pb(line(points[i]+pos, points[i+1]+pos));
   edges.pb(line(points.back()+pos, points[0]+pos));
-  double yi = view.size / min(bkgd->width, bkgd->height) / 2.0;
+  double yi = view.size_in / view.size_out / 2.0;
   for(double y = ymin; y <= ymax; y += yi){
     line scan(point(xmin, y), point(xmax, y));
     vec<point> inter;
@@ -66,7 +68,7 @@ void polygon::draw(image* bkgd, const viewport& view){
         continue; }
       line s(inter[i], inter[i+1]);
       s.fill = fill;
-      s.draw(bkgd, view); } }
+      s.draw(canvas, view); } }
   validate("polygon.draw"); }
 
 // Return width and height of box around the polygon
@@ -80,6 +82,7 @@ point polygon::size() const {
   return point(xmax - xmin, ymax - ymin); }
 
 // Return whether the point is inside the polygon
+//! broken
 bool polygon::inside(const point& p) const {
   line ray(p, point(p.x, p.y + size().y));
   int n = 0;
@@ -120,5 +123,9 @@ double polygon::area() const {
   p1 += points.back().x * points[0].y;
   p2 += points.back().y * points[0].x;
   return fabs(p1 - p2) / 2.0; }
+
+// Add a point to the polygon
+void polygon::add(const point& p){
+  points.pb(p); }
 
 #endif

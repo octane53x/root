@@ -54,13 +54,13 @@ void Terrain::gen_planet(const int planet_size){
     bool valid = false;
     while(!valid){
       poly.points.clear();
-      poly.points.pb(p);
+      poly.add(p);
       point p2;
       p2.x = (double)(lrand() % planet_size);
       p2.y = (double)(lrand() % planet_size);
-      poly.points.pb(point(p.x, p2.y));
-      poly.points.pb(p2);
-      poly.points.pb(point(p2.x, p.y));
+      poly.add(point(p.x, p2.y));
+      poly.add(p2);
+      poly.add(point(p2.x, p.y));
       bool valid2 = true;
       for(int i = 0; i < land.size(); ++i)
         if(land[i].intersects(poly)){
@@ -86,25 +86,36 @@ void Terrain::gen_chunk(Chunk* chunk){
     for(int j = 0; j < CHUNK_SIZE; ++j)
       chunk->tiles[i].pb(Tile::WATER); }
 
-  // Set land tiles
+  // Find land appearing in this chunk
   polygon cbox;
-  cbox.points.pb(chunk->pos);
-  cbox.points.pb(point(chunk->pos.x + CHUNK_SIZE, chunk->pos.y));
-  cbox.points.pb(point(chunk->pos.x + CHUNK_SIZE, chunk->pos.y + CHUNK_SIZE));
-  cbox.points.pb(point(chunk->pos.x, chunk->pos.y + CHUNK_SIZE));
+  cbox.add(chunk->pos);
+  cbox.add(point(chunk->pos.x + CHUNK_SIZE, chunk->pos.y));
+  cbox.add(point(chunk->pos.x + CHUNK_SIZE, chunk->pos.y + CHUNK_SIZE));
+  cbox.add(point(chunk->pos.x, chunk->pos.y + CHUNK_SIZE));
   vec<polygon*> cland;
   for(int i = 0; i < land.size(); ++i)
     if(land[i].intersects(cbox))
       cland.pb(&land[i]);
-  //! too much time
-  // for(int i = 0; i < chunk->tiles.size(); ++i)
-  //   for(int j = 0; j < chunk->tiles[i].size(); ++j)
-  //     for(int k = 0; k < cland.size(); ++k)
-  //       if(cland[k]->inside(point(chunk->pos.x + j + 0.5,
-  //           chunk->pos.y + i + 0.5))){
-  //         chunk->tiles[i][j] = (rand() % 2) ? Tile::GRASS : Tile::SNOW;
-  //         break; }
 
+  // Set land tiles
+  //! only works for box land
+  for(int i = 0; i < cland.size(); ++i){
+    point topleft, botright;
+    topleft = botright = cland[i]->points[0];
+    for(int j = 1; j < cland[i]->points.size(); ++j){
+      point p = cland[i]->points[j];
+      if(p.x < topleft.x || p.y < topleft.y)
+        topleft = p;
+      if(p.x > botright.x || p.y > botright.y)
+        botright = p; }
+    for(double x = max(topleft.x, chunk->pos.x);
+        dlt(x, min(botright.x, chunk->pos.x + chunk->size)); x += 1.0)
+      for(double y = max(topleft.y, chunk->pos.y);
+          dlt(y, min(botright.y, chunk->pos.y)); y += 1.0){
+        assert(chunk->in_chunk(point(x, y)), "terrain.gen_chunk",
+            "point not in chunk");
+        *chunk->find_tile(point(x, y)) =
+            (rand() % 2) ? Tile::GRASS : Tile::SNOW; } }
   validate("Terrain.gen_chunk"); }
 
 #endif

@@ -59,7 +59,7 @@ void image::validate(const str& func){
 
 // Draw onto an image
 void image::draw(image* canvas, const viewport& view){
-  double ratio = min(canvas->width, canvas->height) / view.size;
+  double ratio = view.size_out / view.size_in;
   image img = scale(ratio);
   img.pos = view.translate(pos);
   // If image outside the viewport, don't bother iterating pixels

@@ -10,10 +10,13 @@ struct Planet2D : virtual scene {
 
   // Planet in view
   Planet* planet;
+  // Player unit
+  Bot* player;
 
   Planet2D();
 
-  virtual void init(); };
+  virtual void init();
+  virtual void draw(image* canvas, const viewport& view); };
 
 // Set default member state
 Planet2D::Planet2D(){
@@ -31,6 +34,24 @@ void Planet2D::init(){
     land->fill = YELLOW;
     objs[land->id] = land; }
   scene::init();
-  view.size = planet->size; }
+  view.size_in = planet->size; }
+
+// Draw onto image
+void Planet2D::draw(image* canvas, const viewport& view){
+  scene::draw(canvas, view);
+  // Draw player here so it's the same size no matter the planet zoom
+  polygon poly;
+  double ratio = (double)min(canvas->width, canvas->height) / planet->size;
+  int x = (int)floor(player->pos.x * ratio);
+  int y = (int)floor(player->pos.y * ratio);
+  poly.add(point(x - 10, y - 10));
+  poly.add(point(x + 10, y - 10));
+  poly.add(point(x + 10, y + 10));
+  poly.add(point(x - 10, y + 10));
+  poly.fill = RED;
+  viewport default_view;
+  default_view.size_in = default_view.size_out =
+      min(canvas->width, canvas->height);
+  poly.draw(canvas, default_view); }
 
 #endif

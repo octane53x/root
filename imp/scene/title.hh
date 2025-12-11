@@ -57,9 +57,9 @@ void Title::init(){
   // Static, part of bkgd, does not need to be added to objs
 
   play_btn.fill = BLACK;
-  play_btn.points.pb(point(400, 300));
-  play_btn.points.pb(point(400, 400));
-  play_btn.points.pb(point(350, 350));
+  play_btn.add(point(400, 300));
+  play_btn.add(point(400, 400));
+  play_btn.add(point(350, 350));
   objs[play_btn.id] = &play_btn;
 
   polygon* a = new polygon();

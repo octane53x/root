@@ -42,19 +42,33 @@ void Game::validate(const str& func){
 void Game::init(){
   system::init();
   tick = (clock_t)ceil(GAME_TICK * CLOCKS_PER_SEC);
+
   // Create planet
   Planet* planet = new Planet();
   planet->init();
+
   // Place player on land
+  //! only works for box land
   player = new Bot();
   player->loc = planet;
   bool found = false;
   while(!found){
     player->pos.x = (double)(lrand() % planet->size);
     player->pos.y = (double)(lrand() % planet->size);
-    for(int i = 0; i < planet->terrain.land.size(); ++i)
-      if(planet->terrain.land[i].inside(player->pos)){
-        found = true; break; } }
+    for(int i = 0; i < planet->terrain.land.size(); ++i){
+      point topleft, botright;
+      topleft = botright = planet->terrain.land[i].points[0];
+      for(int j = 1; j < planet->terrain.land[i].points.size(); ++j){
+        point p = planet->terrain.land[i].points[j];
+        if(p.x < topleft.x || p.y < topleft.y)
+          topleft = p;
+        if(p.x > botright.x || p.y > botright.y)
+          botright = p; }
+      if(player->pos.x >= topleft.x && player->pos.x <= botright.x
+          && player->pos.y >= topleft.y && player->pos.y <= botright.y){
+        found = true; break; } } }
+  debug("Player spawned at "+player->pos.to_str());
+
   // Load chunks around player
   Chunk* chunk = planet->find_chunk(player->pos);
   planet->terrain.gen_chunk(chunk);

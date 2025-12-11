@@ -29,7 +29,9 @@ struct Chunk : virtual object {
   virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
 
-  Tile::Type find_tile(const point& p); };
+  bool in_chunk(const point& p) const;
+
+  Tile::Type* find_tile(const point& p); };
 
 // Set default member state
 Chunk::Chunk(): N(NULL), S(NULL), E(NULL), W(NULL) {
@@ -56,13 +58,15 @@ void Chunk::draw(image* canvas, const viewport& view){
   //! draw
 }
 
+// Is coordinate in chunk
+bool Chunk::in_chunk(const point& p) const {
+  return p.x >= pos.x && p.x <= pos.x + size
+      && p.y >= pos.y && p.y <= pos.y + size; }
+
 // Return the tile type at the given coordinate
-//! Called by: ?
-Tile::Type Chunk::find_tile(const point& p){
-  assert(p.x >= pos.x && p.x <= pos.x + size
-      && p.y >= pos.y && p.y <= pos.y + size,
-      "Chunk.find_tile", "Chunk.find_tile point not in chunk");
+Tile::Type* Chunk::find_tile(const point& p){
+  assert(in_chunk(p), "Chunk.find_tile", "Chunk.find_tile point not in chunk");
   int i = (int)floor(p.y - pos.y), j = (int)floor(p.x - pos.x);
-  return tiles[i][j]; }
+  return &tiles[i][j]; }
 
 #endif

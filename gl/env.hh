@@ -120,9 +120,7 @@ void env::draw(image* canvas, const viewport& view){
       [](const scene* a, const scene* b){ return a->z > b->z; });
   frame = bkgd;
   viewport default_view;
-  default_view.size = min(frame.width, frame.height);
-  default_view.frame_width = scene::win_w;
-  default_view.frame_height = scene::win_h;
+  default_view.size_in = default_view.size_out = min(frame.width, frame.height);
   //! Adjust view by pos
   for(int i = 0; i < active_scenes.size(); ++i)
     active_scenes[i]->draw(&frame, default_view);

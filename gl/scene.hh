@@ -59,8 +59,7 @@ void scene::validate(const str& func){
 // Called by: DERIVED CLASS
 void scene::init(){
   object::init();
-  view.size = min(width, height);
-  view.frame_width = width, view.frame_height = height;
+  view.size_in = view.size_out = min(width, height);
   bkgd.set_size(width, height);
   for(int i = 0; i < height; ++i)
     for(int j = 0; j < width; ++j)
