@@ -24,7 +24,7 @@ void Title::PlayBtn::click_fn(){
     ss->planet = dynamic_cast<Planet*>(imp.game.player->loc);
     ss->player = imp.game.player;
   }else
-    err("PlayBtn.click_fn: scene not handled");
+    err("PlayBtn.click_fn", "unhandled scene");
   s->init();
   imp.game.run();
   imp.scene_title.stop();

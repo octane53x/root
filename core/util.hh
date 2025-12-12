@@ -38,17 +38,17 @@ void printl(const str& s){
   print(s + str("\n")); }
 
 // Throw an error, with message
-void err(const str& msg){
-  print(str("ERR: ") + msg + str("\n"));
+void err(const str& func, const str& msg){
+  print(str("ERR: ") + func + str(": ") + msg + str("\n"));
   exit(-1); }
 
 // Check a condition and throw an error if it fails
 //! Takes a lot more time than it should, don't use in critical loops
-inline void assert(bool b, const str& func, const str& msg){
-  if(!b) err(str("ASSERT ") + func + str(": ") + msg); }
+inline void assert(const bool b, const str& func, const str& msg){
+  if(!b) err(func, msg); }
 
 // Print a given time
-void print_time(time_t time){
+void print_time(const time_t time){
 #ifdef _WIN32
   char buf[32];
   ctime_s(buf, sizeof(buf), &time);
@@ -68,13 +68,13 @@ void debug(const str& msg){
   print_time(); }
 
 // Initialize debug environment
-void debug_init(time_t time){
+void debug_init(const time_t time){
   remove(DEBUG_FILE.c_str());
   print(str("Executed at "));
   print_time(time); }
 
 // Wait for a duration, in milliseconds
-void sleep(int ms){
+void sleep(const int ms){
   clock_t start = clock();
   while(1){
     clock_t t = clock();
@@ -83,33 +83,38 @@ void sleep(int ms){
 
 // Return whether a vector contains an element O(N)
 template <typename T>
-bool contains(vec<T> v, T item){
+bool contains(const vec<T>& v, const T& item){
   for(int i = 0; i < v.size(); ++i)
     if(v[i] == item) return true;
   return false; }
 
+// Return whether an unordered set contains an element
+template <typename T>
+bool contains(const uset<T>& u, const T& item){
+  return u.find(item) != u.end(); }
+
 // Double equals comparator
-bool deq(double a, double b){
+bool deq(const double a, const double b){
   return fabs(a - b) < SAFE_ZERO; }
 
 // Double less than or equals comparator
-bool dleq(double a, double b){
+bool dleq(const double a, const double b){
   return a < b || deq(a, b); }
 
 // Double greater than or equals comparator
-bool dgeq(double a, double b){
+bool dgeq(const double a, const double b){
   return a > b || deq(a, b); }
 
 // Double less than comparator
-bool dlt(double a, double b){
+bool dlt(const double a, const double b){
   return a < b && !deq(a, b); }
 
 // Double greater than comparator
-bool dgt(double a, double b){
+bool dgt(const double a, const double b){
   return a > b && !deq(a, b); }
 
 // Greatest common denominator
-int gcd(int a, int b){
+int gcd(const int a, const int b){
   return b ? gcd(b, a % b) : a; }
 
 // Random number generator, but up to a 64 bit value (default RAND_MAX is less)

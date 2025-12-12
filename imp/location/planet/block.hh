@@ -15,12 +15,25 @@ struct Block : virtual object {
   // Remaining minerals from overlapping nodes
   map<str, int> minerals;
   // Adjacent blocks, attached if this has a tunnel
-  vec<Block*> adjacent;
+  vec<Block*> adj;
 
-  Block(); };
+  Block();
+
+  virtual void draw(image* canvas, const viewport& view);
+
+  bool in_block(const point& p); };
 
 // Set default member state
 Block::Block(): tunnel(false), prog_mine(0.0), prog_tunnel(0.0) {
   type = "Block"; }
+
+// Implemented to remove abstraction
+void Block::draw(image* canvas, const viewport& view){}
+
+// Is a coordinate in this block
+bool Block::in_block(const point& p){
+  return dgeq(p.x, pos.x) && dlt(p.x, pos.x + 1.0)
+      && dgeq(p.y, pos.y) && dlt(p.y, pos.y + 1.0)
+      && dgeq(p.z, pos.z) && dlt(p.z, pos.z + 1.0); }
 
 #endif

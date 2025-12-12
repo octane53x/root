@@ -1,5 +1,7 @@
 // ABSTRACT LOCATION
 
+// Constructor defined in Game so that locations add to it automatically
+
 #ifndef LOCATION_HH
 #define LOCATION_HH
 
@@ -22,6 +24,8 @@ struct Location : virtual object {
   umap<llu, Location*> inside;
   // Entities directly within this location
   umap<llu, Entity*> entities;
+
+  Location();
 
   virtual void validate(const str& func);
   virtual void update_game() = 0; };

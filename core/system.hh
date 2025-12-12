@@ -65,19 +65,19 @@ str system::to_str() const {
 // Call at the beginning of derived class init()
 // Usually create and call init_members first, passing needed parameters
 void system::init(){
-  if(initialized) err(str("Called ")+type+str(".init again"));
+  if(initialized) err(type+".init", "called twice");
   initialized = true; }
 
 // Call at the beginning of derived class run()
 void system::run(){
-  if(!initialized) err(str("Called ")+type+str(".run before init"));
-  if(active) err(str("Called ")+type+str(".run when running"));
+  if(!initialized) err(type+".run", "called before init");
+  if(active) err(type+".run", "called when running");
   active = true; }
 
 // Call at the beginning of derived class stop()
 void system::stop(){
-  if(!initialized) err(str("Called ")+type+str(".stop before init"));
-  if(!active) err(str("Called ")+type+str(".stop when not running"));
+  if(!initialized) err(type+".stop", "called before init");
+  if(!active) err(type+".stop", "called when not running");
   active = false; }
 
 // An object cannot continuously update, because other tasks must be processed.
@@ -85,8 +85,8 @@ void system::stop(){
 // Call at the beginning of derived class update()
 // Set last_update to clock() at the end of the update
 void system::update(const double ms){
-  if(!initialized) err(str("Called ")+type+str(".update before init"));
-  if(!active) err(str("Called ")+type+str(".update when not running")); }
+  if(!initialized) err(type+".update", "called before init");
+  if(!active) err(type+".update", "called when not running"); }
 
 // Return a unique object id
 llu system::new_id(){

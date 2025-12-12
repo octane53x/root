@@ -17,14 +17,20 @@ struct Entity : virtual model {
   // Equipped gems that enhance stats and actions
   umap<str, Gem> gems; // key = gem name
 
-  Entity();
+  Entity(Location* _loc);
+  virtual ~Entity();
 
   virtual void validate(const str& func);
   virtual void update_game() = 0; };
 
 // Set default member state
-Entity::Entity(): health(100) {
-  type = "Entity"; }
+Entity::Entity(Location* _loc): health(100), loc(_loc) {
+  type = "Entity";
+  loc->entities[id] = this; }
+
+// Delete from location
+Entity::~Entity(){
+  loc->entities.erase(id); }
 
 // Ensure valid state
 void Entity::validate(const str& func){

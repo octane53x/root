@@ -1,5 +1,7 @@
 // IMPACT
 
+// Dynamically allocated: Block, Location+, Entity+
+
 #ifndef IMPACT_HH
 #define IMPACT_HH
 
@@ -105,7 +107,8 @@ void Impact::update(const double ms){
     process_key(ke); }
   // Update server, game, env -> scenes
   serv.update(ms);
-  game.update(ms);
+  if(game.active)
+    game.update(ms);
   window::update(ms);
   // Update scene with server login status
   if(scene_title.logged_in == false && serv.user_id != 0)
@@ -163,18 +166,26 @@ scene* Impact::select_scene(){
     r = &scene_planet2d;
     break;
   default:
-    err("select_scene error"); }
+    err("Impact.select_scene", "unhandled scene"); }
   validate("Impact.select_scene");
   return r; }
 
 // Handle key events sent through the window
 // Called by: update
 void Impact::process_key(env::key_event ke){
-  if(ke.key == "LCLICK" && ke.down)
+  if(ke.key == "LCLICK" && ke.down){
     click(ke.cursor);
-  else if(ke.key == "M" && ke.down && build_pending == NULL)
-    build_pending = new Mine();
-  else if(ke.key[0] >= '0' && ke.key[0] <= '9'){
+  }else if(ke.key == "RCLICK" && ke.down){
+    if(build_pending != NULL){
+      scene_planet2d.objs.erase(build_pending->id);
+      delete build_pending;
+      build_pending = NULL; }
+  }else if(ke.key == "M" && ke.down){
+    if(build_pending == NULL){
+      Mine* m = new Mine(game.player->loc);
+      build_pending = m;
+      scene_planet2d.objs[m->id] = m; }
+  }else if(ke.key[0] >= '0' && ke.key[0] <= '9'){
     vec<Location::LocationLevel> opts = scene_options();
     int k = ke.key[0] - '0';
     //! switch to scenes if contains(opts, LocationLevel)

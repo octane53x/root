@@ -15,15 +15,16 @@ struct Bot : virtual Unit {
   // Targeted entity
   Entity* target;
 
-  Bot();
+  Bot(Location* _loc);
 
   virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
   virtual void update_game(); };
 
 // Set default member state
-Bot::Bot(): stage(3) {
+Bot::Bot(Location* _loc): Entity(_loc), Unit() {
   type = "Bot";
+  stage = 3; //! temp
   speed = 2.0;
   hitbox_size = point(1.0, 1.0, 1.0); }
 
@@ -51,7 +52,7 @@ void Bot::validate(const str& func){
   case 10:
     break;
   default:
-    err("player stage outside bounds"); } }
+    err("Bot.validate", "player stage outside bounds"); } }
 
 // Draw onto image
 void Bot::draw(image* canvas, const viewport& view){
@@ -63,7 +64,8 @@ void Bot::draw(image* canvas, const viewport& view){
   poly.add(point(x + 2.0, y + 2.0));
   poly.add(point(x, y + 2.0));
   poly.fill = RED;
-  poly.draw(canvas, view); }
+  poly.draw(canvas, view);
+  validate("Bot.draw"); }
 
 // Update game elements
 void Bot::update_game(){

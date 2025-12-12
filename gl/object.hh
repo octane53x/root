@@ -28,10 +28,9 @@ struct object : virtual system {
       // Circle around the root
       ORBIT,
       // Function called during movement so that roots can be handled
-      CUSTOM };
+      CUSTOM
+    } pat;
 
-    // Style of movement
-    mov_pattern pat;
     // Current position index in path
     int path_pos;
     // Movement velocity

@@ -77,14 +77,10 @@ void Planet::init(){
   earth.gen_planet(size); }
 
 // Draw onto image
-void Planet::draw(image* canvas, const viewport& view){
-  //! draw
-}
+void Planet::draw(image* canvas, const viewport& view){}
 
 // Update game elements
-void Planet::update_game(){
-  //! grow new trees, etc
-}
+void Planet::update_game(){}
 
 // Return a chunk given an environment coordinate
 // Called by: Game.init

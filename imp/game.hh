@@ -9,6 +9,11 @@
 // that need to be updated more often to be displayed properly
 const double GAME_TICK = 0.1; // seconds
 
+struct Game;
+
+// Set in constructor. Enables locations to add themselves.
+Game* _game;
+
 // The local game containing locations and entities, receiving data from the
 // server through the global Impact object that derives this
 struct Game : virtual system {
@@ -28,7 +33,13 @@ struct Game : virtual system {
 
 // Set default member state
 // Called by: global
-Game::Game(): player(NULL) {}
+Game::Game(): player(NULL) {
+  type = "Game";
+  _game = this; }
+
+// Add to Game.locations
+Location::Location(){
+  _game->locs[id] = this; }
 
 // Ensure valid state
 void Game::validate(const str& func){
@@ -49,8 +60,7 @@ void Game::init(){
 
   // Place player on land
   //! only works for box land
-  player = new Bot();
-  player->loc = planet;
+  player = new Bot(planet);
   bool found = false;
   while(!found){
     player->pos.x = (double)(lrand() % planet->size);
@@ -84,6 +94,7 @@ void Game::init(){
 // Update the game's locations, which also updates the entities within
 // Called by: Impact.update
 void Game::update(const double ms){
+  system::update(ms);
   clock_t now = clock();
   if(now - last_update >= tick){
     for(pair<llu, Location*> loc : locs){

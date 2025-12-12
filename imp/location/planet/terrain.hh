@@ -113,7 +113,7 @@ void Terrain::gen_chunk(Chunk* chunk){
       for(double y = max(topleft.y, chunk->pos.y);
           dlt(y, min(botright.y, chunk->pos.y + chunk->size)); y += 1.0){
         if(!chunk->in_chunk(point(x, y))) //! remove
-          err("terrain.gen_chunk find_tile");
+          err("terrain.gen_chunk", "find_tile range");
         *chunk->find_tile(point(x, y)) =
             (rand() % 2) ? Tile::GRASS : Tile::SNOW; } }
   validate("Terrain.gen_chunk"); }

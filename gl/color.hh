@@ -17,12 +17,11 @@ struct color : virtual thing {
     // Draw clear onto the next thing
     CLEAR_PEN,
     // Draw the debug color
-    DEBUG };
+    DEBUG
+  } custom;
 
   // Red, green, blue values
   uchar r, g, b;
-  // Alternative color
-  Custom custom;
 
   color();
   color(const uchar _r, const uchar _g, const uchar _b);

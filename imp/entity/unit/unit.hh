@@ -14,6 +14,8 @@ struct Unit : virtual Entity {
 
   // Available energy used for activities like combat
   int energy;
+  // Inventory capacity, cannot be exceeded
+  int inventory_cap;
   // Travel speed, can be altered by game effects
   double speed; // tiles per second
   // Plan for movement, determined when destination is selected
@@ -28,17 +30,23 @@ struct Unit : virtual Entity {
   virtual void validate(const str& func);
   virtual void update(const double ms);
 
+  int inventory_size() const;
+
   void move_dist(const double dist_able);
   void move(const point& p); };
 
+// Implemented just to compile
 // Set default member state
-Unit::Unit(): speed(1.0), ship(NULL) {
-  type = "Unit"; }
+Unit::Unit(){
+  type = "Unit";
+  speed = 1.0;
+  ship = NULL; }
 
 // Ensure valid state
 void Unit::validate(const str& func){
   Entity::validate(func);
-  assert(dgeq(speed, 0.0), func, "Unit.speed negative"); }
+  assert(dgeq(speed, 0.0), func, "Unit.speed negative");
+  assert(inventory_size() <= inventory_cap, func, "inventory exceeds cap"); }
 
 // Update to the next frame
 // Called by: scene.update -> virtual object.update
@@ -46,6 +54,13 @@ void Unit::update(const double ms){
   double dist_able = ms * speed / 1000.0;
   move_dist(dist_able);
   validate("Unit.update"); }
+
+// Count the unit's total inventory
+int Unit::inventory_size() const {
+  int r = 0;
+  for(pair<str, Item> p : inventory)
+    r += p.second.count;
+  return r; }
 
 // Move the unit as far as it can go along its path
 // Rarely if ever should a unit be stationary
