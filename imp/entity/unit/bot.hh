@@ -19,7 +19,7 @@ struct Bot : virtual Unit {
 
   virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view);
-  virtual void update_game(); };
+  virtual void update_game(const double tick); };
 
 // Set default member state
 Bot::Bot(Location* _loc): Entity(_loc), Unit() {
@@ -68,7 +68,7 @@ void Bot::draw(image* canvas, const viewport& view){
   validate("Bot.draw"); }
 
 // Update game elements
-void Bot::update_game(){
+void Bot::update_game(const double tick){
   //! recharge weapon, etc
 }
 

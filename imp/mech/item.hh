@@ -20,7 +20,7 @@ struct Item : virtual thing {
   virtual void validate(const str& func); };
 
 // Required implementation
-Item::Item(){}
+Item::Item(): count(0) {}
 
 // Ensure valid state
 void Item::validate(const str& func){

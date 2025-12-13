@@ -93,6 +93,11 @@ template <typename T>
 bool contains(const uset<T>& u, const T& item){
   return u.find(item) != u.end(); }
 
+// Return whether an unordered map contains an element
+template <typename K, typename V>
+bool contains(const umap<K, V>& u, const K& item){
+  return u.find(item) != u.end(); }
+
 // Double equals comparator
 bool deq(const double a, const double b){
   return fabs(a - b) < SAFE_ZERO; }

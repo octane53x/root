@@ -15,16 +15,25 @@ struct Mine : virtual Entity {
   uset<Block*> tunnel_assn;
   // Priority blocks, removed when worker is assigned
   map<int, Block*> prio;
-  // Graph of all blocks for finding paths
+  // Set of all blocks, queried by position
+  umap<point, Block*> block_by_pt;
+  // Graph of all tunneled blocks for finding paths
   graph<Block*> blocks;
+
+  // Minerals brought to top, not yet shipped
+  umap<str, Item> stockpile;
 
   Mine(Location* _loc);
 
   virtual void init();
   virtual void draw(image* canvas, const viewport& view);
-  virtual void update_game();
+  virtual void update_game(const double tick);
 
-  Block* next_tunnel(); };
+  int block_score(Block* block) const;
+
+  Block* next_tunnel();
+  queue<point> path_convert(const vec<Block*>& block_path);
+  void add_to_stockpile(const umap<str, Item>& inventory); };
 
 // Set default member state
 Mine::Mine(Location* _loc): Entity(_loc) {
@@ -35,7 +44,9 @@ Mine::Mine(Location* _loc): Entity(_loc) {
 // Set the top block
 void Mine::init(){
   Planet* planet = dynamic_cast<Planet*>(loc);
-  top = planet->earth.get_block(point(pos.x, pos.y, pos.z + 1.0)); }
+  top = planet->earth.get_block(point(pos.x, pos.y, pos.z + 1.0));
+  prio[block_score(top)] = top;
+  block_by_pt[top->pos] = top; }
 
 // Draw onto image
 void Mine::draw(image* canvas, const viewport& view){
@@ -50,9 +61,14 @@ void Mine::draw(image* canvas, const viewport& view){
   validate("Mine.draw"); }
 
 // Mine operations ???
-void Mine::update_game(){}
+void Mine::update_game(const double tick){}
 
-// Find a block to assign a tunneling operation
+// Find a priority score for a block based on its minerals
+//! Query the city market
+int Mine::block_score(Block* block) const {
+  return (block->mineral_count() > 0) ? 1 : 2; }
+
+// Find a block without a tunnel and assign as a tunneling operation
 // Returns NULL if no available blocks
 Block* Mine::next_tunnel(){
   queue<Block*> q;
@@ -69,5 +85,21 @@ Block* Mine::next_tunnel(){
       if(!contains(vis, t))
         q.push(t); }
   return NULL; }
+
+// Convert the result from graph.path to a Unit path
+queue<point> Mine::path_convert(const vec<Block*>& block_path){
+  queue<point> r;
+  for(Block* b : block_path)
+    r.push(point(b->pos.x + 0.5, b->pos.y + 0.5, b->pos.z + 0.5));
+  return r; }
+
+// Add unit inventory to mine stockpile
+void Mine::add_to_stockpile(const umap<str, Item>& inventory){
+  umap<str, Item>::iterator it;
+  for(pair<str, Item> p : inventory){
+    if((it = stockpile.find(p.second.name)) == stockpile.end())
+      stockpile[p.second.name] = p.second;
+    else
+      it->second.count += p.second.count; } }
 
 #endif

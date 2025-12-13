@@ -6,8 +6,12 @@
 #include "../mine.hh"
 
 const double
-    // How far the center of the block can be to mine it
-    BLOCK_RANGE = 1.2;
+    // How far the center of a block can be to mine it
+    BLOCK_RANGE = 1.2,
+    // How long it takes to mine one mineral from a block
+    MINE_TIME = 5.0,
+    // How long it takes to dig a tunnel
+    DIG_TIME = 5.0; //! short for testing
 
 // Worker unit for building, mining, farming
 struct Worker : Unit {
@@ -16,14 +20,14 @@ struct Worker : Unit {
   enum Activity {
     // Doing nothing
     IDLE,
-    // Mining a block
-    MINE,
-    // Digging a tunnel
-    DIG,
     // Moving to a block or surface destination
     TRAVEL,
     // Returning to offload site to dump inventory contents
     OFFLOAD,
+    // Mining a block
+    MINE,
+    // Digging a tunnel
+    DIG,
     // Planting seeds on a farm
     PLANT,
     // Harvesting crops from a farm
@@ -36,15 +40,14 @@ struct Worker : Unit {
   Block* block_loc;
   // Block being mined
   Block* target;
-  // Path to a block target issued by the mine
-  queue<Block*> path;
   // Mine the worker is working
   Mine* mine;
 
   Worker();
 
+  virtual void validate(const str& func);
   virtual void update(const double ms);
-  virtual void update_game();
+  virtual void update_game(const double tick);
 
   bool block_in_range(const Block* b); };
 
@@ -52,79 +55,120 @@ struct Worker : Unit {
 Worker::Worker(): activity(IDLE), block_loc(NULL), target(NULL), mine(NULL) {
   type = "Worker"; }
 
+// Ensure valid state
+void Worker::validate(const str& func){
+  Unit::validate(func);
+  assert(block_loc != NULL, func, "block_loc is NULL");
+  assert(mine != NULL, func, "mine is NULL"); }
+
 // Worker movement
 void Worker::update(const double ms){
   str func("Worker.update");
-  assert(block_loc != NULL, func, "block_loc is NULL");
-  assert(mine != NULL, func, "mine is NULL");
-
+  validate(func);
   Unit::update(ms);
   if(!block_loc->in_block(pos)){
-    bool found = false;
-    for(Block* adj : block_loc->adj)
-      if(adj->in_block(pos)){
-        block_loc = adj;
-        found = true;
-        break; }
-    if(!found)
-      err(func, "worker moved too far"); } }
+    point p(floor(pos.x), floor(pos.y), floor(pos.z));
+    assert(contains(mine->block_by_pt, p), func, "pos not in block_by_pt");
+    block_loc = mine->block_by_pt(p); }
+  validate(func); }
 
 // Worker operations
-void Worker::update_game(){
+void Worker::update_game(const double tick){
   str func("Worker.update_game");
-  assert(block_loc != NULL, func, "block_loc is NULL");
-  assert(mine != NULL, func, "mine is NULL");
+  validate(func);
 
-  switch(activity){
-  // Begin an activity
-  case IDLE:
-    assert(target == NULL, func, "activity is IDLE but target is set");
-    assert(path.empty(), func, "activity is IDLE but path is set");
+  // Select an activity
+  if(activity == IDLE){
+    assert(path.empty(), func, "IDLE but path not empty");
+
+    // Get path to top, switch to OFFLOAD
     if(inventory_size() == inventory_cap){
-      target = NULL;
-      path = mine->blocks.path(block_loc, mine->top);
+      assert(target == NULL, func, "Ready to OFFLOAD but target is set");
+      path = mine->path_convert(mine->blocks.path(block_loc, mine->top));
       activity = OFFLOAD;
-    }else if(block_in_range(target){
+
+    // Get target and path, switch to TRAVEL
+    }else if(target == NULL){
+      if(mine->prio.empty())
+        target = mine->next_tunnel();
+      else{
+        target = mine->prio.begin()->second;
+        mine->prio.erase(mine->prio.begin()); }
+      path = mine->path_convert(mine->blocks.path(block_loc, target));
+      activity = TRAVEL;
+
+    // If in range, switch to MINE or DIG
+    }else if(block_in_range(target)){
       if(contains(mine->tunnel_assn, target))
         activity = DIG;
       else
-        activity = MINE;
-    } //!
-    return;
+        activity = MINE; } }
 
-  // Mine the block target
-  case MINE:
-    assert(target != NULL, func, "activity is MINE but target is NULL");
-    assert(block_in_range(target), func,
-        "activity is MINE but target block not in range");
-    //!
-    return;
+  // Operations
+  switch(activity){
+  case IDLE:
+    err(func, "failed to set activity to non-IDLE");
 
-  // Dig a tunnel
-  case DIG:
-    assert(target != NULL, func, "activity is DIG but target is NULL");
-    assert(block_in_range(target), func,
-        "activity is DIG but target block not in range");
-    //!
-    return;
-
-  // Travel to block target
+  // If arrived, go to IDLE
   case TRAVEL:
-    assert(target != NULL, func, "activity is TRAVEL but target is NULL");
-    assert(!path.empty(), func, "activity is TRAVEL but path is empty");
-    //!
-    return;
+    if(path.empty())
+      activity = IDLE;
+    break;
 
-  // Return to top of mine
+  // If arrived, dump inventory, go to IDLE
   case OFFLOAD:
-    assert(target == NULL, func, "activity is OFFLOAD but target is set");
-    assert(!path.empty(), func, "activity is OFFLOAD but path is empty");
-    //!
-    return;
+    if(path.empty()){
+      mine->add_to_stockpile(inventory);
+      inventory.clear();
+      activity = IDLE; }
+    break;
 
-  // Otherwise error
+  // Advance progress on mining the target block
+  case MINE:
+    target->prog_mine += tick;
+    if(dgeq(target->prog_mine, 1.0)){
+      add_to_inventory(target->mine());
+      target->prog_mine = 0.0;
+      if(inventory_size() == inventory_cap){
+        mine->prio[mine->block_score(target)] = target;
+        target = NULL;
+        activity = IDLE;
+      }else if(target->mineral_count() == 0){
+        target = NULL;
+        activity = IDLE; } }
+    break;
+
+  // Advance progress on digging the tunnel
+  case DIG:
+    target->prog_tunnel += tick;
+    if(dgeq(target->prog_tunnel, 1.0)){
+      target->tunnel = true;
+      mine->tunnel_assn.erase(mine->tunnel_assn.find(target));
+      // Add tunneled block to graph
+
+      // Attach new blocks
+      vec<point> adj_pos;
+      point p = target->pos;
+      adj_pos.pb(point(p.x - 1.0, p.y, p.z));
+      adj_pos.pb(point(p.x + 1.0, p.y, p.z));
+      adj_pos.pb(point(p.x, p.y - 1.0, p.z));
+      adj_pos.pb(point(p.x, p.y + 1.0, p.z));
+      adj_pos.pb(point(p.x, p.y, p.z - 1.0));
+      adj_pos.pb(point(p.x, p.y, p.z + 1.0));
+      Planet* planet = dynamic_cast<Planet*>(mine->loc);
+      for(const point& adj : adj_pos)
+        if(mine->block_by_pt.find(adj) == mine->block_by_pt.end()){
+          Block* b = planet->earth.get_block(adj);
+          mine->prio[mine->block_score(b)] = b;
+          mine->block_by_pt[b->pos] = b; }
+      target = NULL;
+      activity = IDLE;
+    }
+    break;
+
   default:
-    err(func, "unhandled activity"); } }
+    err(func, "unhandled activity"); }
+  validate(func); }
 
 // Whether a block can be mined at the worker's current position
 bool Worker::block_in_range(const Block* b){

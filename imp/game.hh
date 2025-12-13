@@ -98,9 +98,9 @@ void Game::update(const double ms){
   clock_t now = clock();
   if(now - last_update >= tick){
     for(pair<llu, Location*> loc : locs){
-      loc.second->update_game();
+      loc.second->update_game(tick);
       for(pair<llu, Entity*> ent : loc.second->entities)
-        ent.second->update_game(); }
+        ent.second->update_game(tick); }
     last_update = clock(); }
   validate("Game.update"); }
 

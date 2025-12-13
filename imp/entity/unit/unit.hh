@@ -33,7 +33,8 @@ struct Unit : virtual Entity {
   int inventory_size() const;
 
   void move_dist(const double dist_able);
-  void move(const point& p); };
+  void move(const point& p);
+  void add_to_inventory(Item item); };
 
 // Implemented just to compile
 // Set default member state
@@ -95,5 +96,13 @@ void Unit::move(const point& p){
   path = queue<point>();
   path.push(p);
   validate("Unit.move"); }
+
+// Add item to inventory
+void Unit::add_to_inventory(Item item){
+  umap<str, Item>::iterator it;
+  if((it = inventory.find(item.name)) == inventory.end())
+    inventory[item.name] = item;
+  else
+    it->second.count += item.count; }
 
 #endif

@@ -28,7 +28,7 @@ struct Location : virtual object {
   Location();
 
   virtual void validate(const str& func);
-  virtual void update_game() = 0; };
+  virtual void update_game(const double tick) = 0; };
 
 // Ensure valid state
 void Location::validate(const str& func){

@@ -29,7 +29,7 @@ struct Planet : virtual Location {
   virtual void validate(const str& func);
   virtual void init();
   virtual void draw(image* canvas, const viewport& view);
-  virtual void update_game();
+  virtual void update_game(const double tick);
 
   Chunk* find_chunk(const point& p); };
 
@@ -80,7 +80,7 @@ void Planet::init(){
 void Planet::draw(image* canvas, const viewport& view){}
 
 // Update game elements
-void Planet::update_game(){}
+void Planet::update_game(const double tick){}
 
 // Return a chunk given an environment coordinate
 // Called by: Game.init

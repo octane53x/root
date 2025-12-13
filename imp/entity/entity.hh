@@ -21,7 +21,7 @@ struct Entity : virtual model {
   virtual ~Entity();
 
   virtual void validate(const str& func);
-  virtual void update_game() = 0; };
+  virtual void update_game(const double tick) = 0; };
 
 // Set default member state
 Entity::Entity(Location* _loc): health(100), loc(_loc) {
