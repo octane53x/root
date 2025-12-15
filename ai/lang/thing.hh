@@ -3,11 +3,13 @@
 #ifndef THING_HH
 #define THING_HH
 
+#include "var.hh"
+
 // Base structure inherited by all
 struct Thing : virtual Var {
 
   // Variable name
-  str name;
+  Name name;
   // Variable type
   Type type;
   // Unique object instance identifier
@@ -19,12 +21,12 @@ struct Thing : virtual Var {
   // Containing object
   Thing* ctr;
   // Member data
-  umap<str, Var*> members; // Key by name
+  umap<Name, Var*> members;
 
   Thing();
-  Thing(const Type& _type, const str& _name);
+  Thing(const Name& _name, Thing* _ctr);
 
-  Variable* operator()(const str& _name);
+  Var* operator()(const str& _name);
 
   virtual str to_str() const;
   virtual str get_state() const;
@@ -37,27 +39,30 @@ struct Thing : virtual Var {
   void assert(const bool cond, const str& msg) const;
 
   ID new_id();
-  void add(Var* member); };
+  void add(Thing* member);
+  void add(const Name& _name, Var* member); };
 
 // Start IDs at 1
 ID Thing::next_id = 1;
 
-// Set default member state
-Thing::Thing(): prim(false), name(""), type("Thing"), ptr(NULL), ctr(NULL) {
-  id = new_id();
-  reg.add(type, {"Var"}); }
+// Required implementation
+Thing::Thing(){}
 
 // Construct with type, name, and container
-Thing::Thing(const str& _name, const Thing* _ctr): Thing() {
-  name = _name, ctr = _ctr; }
+Thing::Thing(const Name& _name, Thing* _ctr):
+    name(_name), ctr(_ctr), ptr(NULL){
+  prim = false;
+  id = new_id();
+  type = "Thing";
+  reg.add(type, {"Var"}); }
 
 // Get a member by name
-Variable* Thing::operator()(const str& var_name){
+Var* Thing::operator()(const str& var_name){
   return members[var_name]; }
 
 // Convert to readable string
 str Thing::to_str() const {
-  return type+" "+name+": "+to_string(id); }
+  return type+" "+name+": "+std::to_string(id); }
 
 // Convert to writable state to save
 str Thing::get_state() const { return ""; }
@@ -74,7 +79,7 @@ void Thing::validate(){
   assert(id > 0, "id is zero"); }
 
 // Required implementation
-void Thing::init(){}
+void Thing::init(const vec<Var*>& params){}
 
 // Throw an error
 void Thing::err(const str& msg) const {
@@ -89,5 +94,13 @@ void Thing::assert(const bool cond, const str& msg) const {
 // Assign the next ID
 ID Thing::new_id(){
   return next_id++; }
+
+// Add Thing member
+void Thing::add(Thing* member){
+  members[member->name] = member; }
+
+// Add primitive member
+void Thing::add(const Name& _name, Var* member){
+  members[_name] = member; }
 
 #endif

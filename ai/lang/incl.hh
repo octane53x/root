@@ -13,7 +13,10 @@
 #define vec std::vector
 #define umap std::unordered_map
 
+#define pb push_back
+
 typedef llu ID;
+typedef str Name;
 typedef str Type;
 
 #endif

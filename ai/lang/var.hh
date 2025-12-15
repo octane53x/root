@@ -7,19 +7,17 @@
 
 // Abstract base class for both primitives and structures
 // Contains almost no data so derived primitive wrapper takes no extra memory
-typedef struct Variable {
+struct Var {
 
   // Whether this is a primitive, for casting
   bool prim;
 
-  Variable();
+  Var();
 
   virtual str to_str() const = 0;
   virtual str get_state() const = 0;
 
-  virtual void load_state(const str& state) = 0;
-
-} Var;
+  virtual void load_state(const str& state) = 0; };
 
 // Set default member state
 Var::Var(): prim(true) {
