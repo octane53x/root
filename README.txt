@@ -32,6 +32,8 @@ Note many structures inherit from these and are not listed here.
 
 TODO
 
+! dynamic_cast -> functional cast OR c-style cast
+
 ! imp console
 ! demo square rotate
 ! clear out data.hh
