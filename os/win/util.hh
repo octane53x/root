@@ -16,6 +16,7 @@ LPCWSTR str_to_lpcw(str s){
   return r; }
 
 // Convert bitmap file to image object
+//! Only works for certain bitmap sizes, e.g. 60x90
 image load_bmp(str dir){
 #ifdef _WIN32
   HBITMAP hbmp = (HBITMAP)LoadImage(NULL, str_to_lpcw(dir), IMAGE_BITMAP,

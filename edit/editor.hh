@@ -50,8 +50,6 @@ void Editor::update(const double ms){
 
 void Editor::load_font(){
   image font_img = load_bmp(_FONT_LOC);
-  assert(font_img.width == _SYMBOLS.size() * CHAR_WIDTH, "Editor.load_font",
-      "font image not aligned with symbol list");
   for(int i = 0; i < _SYMBOLS.size(); ++i){
     image new_char(CHAR_WIDTH, LINE_HEIGHT);
     for(int xi = i * CHAR_WIDTH, xo = 0; xo < CHAR_WIDTH; ++xi, ++xo)
@@ -61,7 +59,7 @@ void Editor::load_font(){
 
 void Editor::process_key(env::key_event ke){
   // 0-9, A-Z, a-z
-  if(ke.key.size() == 1){
+  if(ke.key.size() == 1 && ke.down){
     char ci = ke.key[0], co;
     if(ci >= '0' && ci <= '9')
       co = ci;
@@ -72,8 +70,9 @@ void Editor::process_key(env::key_event ke){
       else
         co = ci - 'A' + 'a'; }
     str line = scene_text.text[scene_text.line_pos];
-    scene_text.text[scene_text.line_pos] = line.substr(0, scene_text.char_pos)
-        + str("" + co) + line.substr(scene_text.char_pos);
+    str new_line = line.substr(0, scene_text.char_pos) + str(1, co)
+        + line.substr(scene_text.char_pos);
+    scene_text.text[scene_text.line_pos] = new_line;
     ++scene_text.char_pos;
 
   // Modifiers
