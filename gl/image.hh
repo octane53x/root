@@ -92,7 +92,7 @@ void image::set_size(const int w, const int h){
 
 // Set pixel at (x,y) to color
 inline void image::set_pixel(const int x, const int y, const color& c){
-  if(x >= 0 && x < width && y >= 0 && y < height)
+  if(x >= 0 && x < width && y >= 0 && y < height && c != CLEAR)
     data[y][x] = c; }
 
 // Delete margins of color
