@@ -145,6 +145,7 @@ void Worker::update_game(const double tick){
       target->tunnel = true;
       mine->tunnel_assn.erase(mine->tunnel_assn.find(target));
       // Add tunneled block to graph
+      //!
 
       // Attach new blocks
       vec<point> adj_pos;

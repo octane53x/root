@@ -1,0 +1,18 @@
+// SAMPLE CODE
+
+/* NEW KEYWORDS:
+obj: define a new object
+print: output to console
+*/
+/* OLD KEYWORDS:
+return, break, continue
+*/
+
+obj Type:
+  str var;
+  num fn():
+    return num(var) + 1;
+
+Type a;
+a.var = "53"
+print(a.fn())

@@ -26,6 +26,7 @@ Bot::Bot(Location* _loc): Entity(_loc), Unit() {
   type = "Bot";
   stage = 3; //! temp
   speed = 2.0;
+  inventory_cap = 100;
   hitbox_size = point(1.0, 1.0, 1.0); }
 
 // Ensure valid state

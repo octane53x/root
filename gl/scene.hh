@@ -43,6 +43,7 @@ struct scene : virtual object {
   virtual void stop();
   virtual void update(const double ms);
   virtual void draw(image* canvas, const viewport& view);
+  virtual void draw_bkgd();
 
   void move_rec(const move_node* node, const point& mov, const double ms);
   void move_objs(const double ms); };
@@ -61,26 +62,26 @@ void scene::validate(const str& func){
 void scene::init(){
   object::init();
   vp.size_in = vp.size_out = min(width, height);
-  bkgd.set_size(width, height);
-  for(int i = 0; i < height; ++i)
-    for(int j = 0; j < width; ++j)
-      bkgd.set_pixel(j, i, bkgd_color);
+  draw_bkgd();
   img = bkgd;
   for(pair<llu, object*> p : objs)
-    p.second->init(); }
+    if(!p.second->initialized)
+      p.second->init(); }
 
 // Activate objects
 void scene::run(){
   object::run();
   for(pair<llu, object*> p : objs)
-    p.second->run();
+    if(!p.second->active)
+      p.second->run();
   validate("scene.run"); }
 
 // Deactivate objects
 void scene::stop(){
   object::stop();
   for(pair<llu, object*> p : objs)
-    p.second->stop();
+    if(p.second->active)
+      p.second->stop();
   validate("scene.stop"); }
 
 // Update and move objects
@@ -89,7 +90,8 @@ void scene::update(const double ms){
   object::update(ms);
   move_objs(ms);
   for(pair<llu, object*> p : objs)
-    p.second->update(ms);
+    if(p.second->active)
+      p.second->update(ms);
   last_update = clock();
   validate("scene.update"); }
 
@@ -107,6 +109,14 @@ void scene::draw(image* canvas, const viewport& view){
     v[i]->draw(&img, vp);
   img.draw(canvas, view);
   validate("scene.draw"); }
+
+// Draw scene background
+void scene::draw_bkgd(){
+  bkgd.set_size(width, height);
+  img.set_size(width, height);
+  for(int i = 0; i < height; ++i)
+    for(int j = 0; j < width; ++j)
+      bkgd.set_pixel(j, i, bkgd_color); }
 
 // Recursive helper function to move_objs
 // For objects rooted to objects that are also rooted to other objects

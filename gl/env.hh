@@ -135,9 +135,13 @@ void env::draw(image* canvas, const viewport& view){
 void env::draw_bkgd(){
   int w = scene::win_w, h = scene::win_h;
   bkgd.set_size(w, h);
+  frame.set_size(w, h);
   for(int i = 0; i < h; ++i)
     for(int j = 0; j < w; ++j)
-      bkgd.set_pixel(j, i, bkgd_color); }
+      bkgd.set_pixel(j, i, bkgd_color);
+  for(pair<llu, scene*> p : scenes)
+    if(p.second->active)
+      p.second->draw_bkgd(); }
 
 // Hover a button, attempted in order of z value
 // Called by: update

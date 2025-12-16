@@ -10,7 +10,7 @@ struct Fn : virtual Thing {
 
   Fn(const Name& _name, Thing* _ctr);
 
-  virtual void call(const vec<Var*>& params) = 0; };
+  virtual void fn(const vec<Var*>& params) = 0; };
 
 // Construct with type, name, and container
 Fn::Fn(const Name& _name, Thing* _ctr):

@@ -171,6 +171,7 @@ void window::run(){
 // Called by: _win_proc
 void window::update_pos(const int x, const int y, const int w, const int h){
   win_pos = point(x, y);
+  if(width == w && height == h) return;
   width = w, height = h;
   scene::win_w = w, scene::win_h = h;
   draw_bkgd();

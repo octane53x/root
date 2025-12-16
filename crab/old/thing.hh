@@ -6,21 +6,11 @@
 #include "var.hh"
 
 // Base structure inherited by all
-struct Thing : virtual Var {
+struct Thing : virtual _Thing {
 
-  // Variable name
-  Name name;
-  // Variable type
-  Type type;
-  // Unique object instance identifier
-  ID id;
-  // Next ID to assign
-  static ID next_id;
   // Alternative location of data (could be a chain)
   Var* ptr;
-  // Containing object
-  Thing* ctr;
-  // Member data
+  // Members
   umap<Name, Var*> members;
 
   Thing();

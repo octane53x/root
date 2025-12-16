@@ -92,6 +92,7 @@ void Title::init(){
   objs[c->id] = c;
 
   scene::init();
+  scene::draw_bkgd();
   draw_bkgd(); }
 
 // Move the boxes
@@ -105,6 +106,10 @@ void Title::update(const double ms){
 
 // Draw background
 void Title::draw_bkgd(){
+  bool redraw = (width != win_w || height != win_h);
+  width = win_w, height = win_h;
+  if(redraw)
+    scene::draw_bkgd();
   title_lbl.draw(&bkgd, vp); }
 
 // Enter loading state

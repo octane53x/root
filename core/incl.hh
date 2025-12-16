@@ -24,9 +24,8 @@
 #include <map>
 #include <unordered_map>
 
-#ifdef _WIN32
+//! wrap with #ifdef _WIN32
 #include <windows.h>
 #include <windowsx.h>
-#endif
 
 #endif
