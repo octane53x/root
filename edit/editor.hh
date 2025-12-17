@@ -100,19 +100,16 @@ str _win_key(WPARAM wParam){
   return s; }
 
 LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
-  // Update cursor position and draw
   POINT p;
   GetCursorPos(&p);
   edit.mouse_pos = point(p.x, p.y);
-  _win_paint(hwnd);
   RECT r;
-  // Check uMsg for an event
   switch(uMsg){
   case WM_DESTROY:
     PostQuitMessage(0);
     return 0;
   case WM_PAINT:
-    // Draw no matter what the uMsg since mouse movement is stopping WM_PAINT
+    _win_paint(hwnd);
     return 0;
   case WM_MOVE:
   case WM_SIZE:
@@ -121,9 +118,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     edit.width = r.right - r.left, edit.height = r.bottom - r.top;
     return 0;
   case WM_MOUSEMOVE:
-    // Rarely called for some reason, prefer to update cursor each draw
     return 0;
-  // Send a mouse click or key event
   case WM_LBUTTONDOWN:
   case WM_LBUTTONUP:
     edit.process_key("LCLICK", uMsg == WM_LBUTTONDOWN, point(p.x, p.y));
@@ -147,12 +142,14 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 void Editor::init(const HINSTANCE wp1, const int wp2){
+  debug("init");
   updated = true;
   shift = ctrl = alt = false;
   win_param_1 = wp1, win_param_2 = wp2;
   width = INIT_WIN_W, height = INIT_WIN_H;
   last_update = 0;
   bkgd_color = INIT_BKGD_COLOR;
+  text.pb("");
 
   load_font();
   draw_bkgd();
@@ -166,6 +163,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cursor.last_update = 0; }
 
 void Editor::run(){
+  debug("run");
   const wchar_t CLASS[] = L"WindowClass";
   WNDCLASS wc = {};
   wc.lpfnWndProc = _win_proc;
@@ -187,6 +185,7 @@ void Editor::run(){
     InvalidateRect(hwnd, NULL, FALSE); } }
 
 void Editor::update(const double ms){
+  debug("update");
   cursor.pos = point(char_pos * CHAR_WIDTH, line_pos * LINE_HEIGHT);
   double sec = (double)(clock() - cursor.last_update) / CLOCKS_PER_SEC;
   if(sec >= CURSOR_BLINK){
@@ -196,6 +195,7 @@ void Editor::update(const double ms){
   updated = true; }
 
 void Editor::draw(){
+  debug("draw");
   for(int y = 0; y < text.size(); ++y)
     for(int x = 0; x < text[y].size(); ++x){
       image c = font[text[y][x]];
@@ -204,7 +204,7 @@ void Editor::draw(){
   cursor.draw(&frame, viewport()); }
 
 void Editor::draw_bkgd(){
-  frame.width = width, frame.height = height;
+  frame.set_size(width, height);
   for(int y = 0; y < height; ++y)
     for(int x = 0; x < width; ++x)
       frame.set_pixel(x, y, bkgd_color); }
