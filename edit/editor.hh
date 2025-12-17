@@ -24,8 +24,9 @@ const str
 
 struct Editor : virtual window {
 
-  bool refresh_line, refresh_page, shift, ctrl, alt;
+  bool shift, ctrl, alt;
   color bkgd_color;
+  vec<int> refresh_lines;
   vec<str> text;
   umap<char, image> font;
   viewport view;
@@ -41,6 +42,7 @@ struct Editor : virtual window {
   void update(const double ms);
   void draw();
   void draw_bkgd();
+  void draw_char(const int x, const int y);
   void load_font();
   void process_key(const str& key, const bool down, const point& mouse);
   void add_char(const char c); };
@@ -53,7 +55,6 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   width = INIT_WIN_W, height = INIT_WIN_H;
 
   last_update = 0;
-  refresh_line = refresh_page = false;
   shift = ctrl = alt = false;
   bkgd_color = INIT_BKGD_COLOR;
   text.pb("");
@@ -79,26 +80,48 @@ void Editor::update(const double ms){
   double sec = (double)(clock() - cursor.last_update) / CLOCKS_PER_SEC;
   if(sec >= CURSOR_BLINK){
     cursor.blink = !cursor.blink;
-    cursor.fill = cursor.blink ? cursor.col : bkgd_color;
+    cursor.fill = cursor.blink ? cursor.col : CLEAR;
     cursor.last_update = clock(); }
   updated = true; }
 
 void Editor::draw(){
-  // Reset last cursor position
+  for(int y : refresh_lines){
+    // Clear line
+    polygon p;
+    p.pos = point(0, y * LINE_HEIGHT);
+    p.add(point(0, 0));
+    p.add(point(width, 0));
+    p.add(point(width, LINE_HEIGHT));
+    p.add(point(0, LINE_HEIGHT));
+    p.fill = bkgd_color;
+    p.draw(&frame, view);
+    // Draw text
+    if(y < text.size())
+      for(int x = 0; x < text[y].size(); ++x)
+        draw_char(x, y); }
+  refresh_lines.clear();
+
   if(cursor.xlast != cursor.x || cursor.ylast != cursor.y){
+    // Clear last character
     color c = cursor.fill;
     cursor.fill = bkgd_color;
     cursor.pos = point(cursor.xlast * CHAR_WIDTH, cursor.ylast * LINE_HEIGHT);
     cursor.draw(&frame, view);
     cursor.pos = point(cursor.x * CHAR_WIDTH, cursor.y * LINE_HEIGHT);
     cursor.fill = c;
-    if(cursor.ylast < text.size() && cursor.xlast < text[cursor.ylast].size()){
-      image cdraw = font[text[cursor.ylast][cursor.xlast]];
-      cdraw.pos = point(cursor.xlast * CHAR_WIDTH, cursor.ylast * LINE_HEIGHT);
-      cdraw.draw(&frame, view); }
+    // Draw last character
+    if(cursor.ylast < text.size() && cursor.xlast < text[cursor.ylast].size())
+      draw_char(cursor.xlast, cursor.ylast);
     cursor.xlast = cursor.x, cursor.ylast = cursor.y; }
+  // Draw current character
+  draw_char(cursor.x, cursor.y);
   // Draw cursor
   cursor.draw(&frame, view); }
+
+void Editor::draw_char(const int x, const int y){
+  image cdraw = font[text[y][x]];
+  cdraw.pos = point(x * CHAR_WIDTH, y * LINE_HEIGHT);
+  cdraw.draw(&frame, view); }
 
 void Editor::draw_bkgd(){
   frame.set_size(width, height);
@@ -182,13 +205,18 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Backspace
     if(key == "BACKSPACE"){
-      if(text[cursor.y].size() > 0){
-        text[cursor.y] = text[cursor.y].substr(0, text[cursor.y].size() - 1);
+      if(cursor.x > 0){
+        text[cursor.y] = text[cursor.y].substr(0, cursor.x - 1)
+            + text[cursor.y].substr(cursor.x);
         --cursor.x;
-      }else if(text.size() > 1){
-        text.erase(text.begin() + cursor.y);
+        refresh_lines.pb(cursor.y);
+      }else if(cursor.y > 0){
         --cursor.y;
         cursor.x = (int)text[cursor.y].size();
+        text[cursor.y] += text[cursor.y + 1];
+        text.erase(text.begin() + cursor.y + 1);
+        for(int y = cursor.y; y <= text.size(); ++y)
+          refresh_lines.pb(y);
       }else
         assert(text.size() == 1 && text[0] == "", "Editor.process_key",
             "text should be empty");
@@ -201,12 +229,17 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       ++cursor.y;
       cursor.x = 0;
       text.insert(text.begin() + cursor.y, tail);
+      for(int y = cursor.y - 1; y < text.size(); ++y)
+        refresh_lines.pb(y);
       return; } }
 
   if(!ctrl && alt){
     // Alt+IJKL
     if(key == "I"){
-      if(cursor.y == 0) return;
+      if(cursor.y == 0){
+        if(cursor.x > 0)
+          cursor.x = 0;
+        return; }
       --cursor.y;
       if(cursor.x > text[cursor.y].size())
         cursor.x = (int)text[cursor.y].size();
@@ -220,7 +253,10 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         --cursor.x;
       return; }
     if(key == "K"){
-      if(cursor.y == text.size() - 1) return;
+      if(cursor.y == text.size() - 1){
+        if(cursor.x < text[cursor.y].size())
+          cursor.x = text[cursor.y].size();
+        return; }
       ++cursor.y;
       if(cursor.x > text[cursor.y].size())
         cursor.x = (int)text[cursor.y].size();
@@ -244,6 +280,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 void Editor::add_char(const char c){
   text[cursor.y] = text[cursor.y].substr(0, cursor.x) + str(1, c)
       + text[cursor.y].substr(cursor.x);
-  ++cursor.x; }
+  ++cursor.x;
+  refresh_lines.pb(cursor.y); }
 
 #endif

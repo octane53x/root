@@ -115,6 +115,10 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     _win->process_key(_win_key(wParam),
         uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN, point(p.x, p.y));
     return 0;
+  case WM_CHAR:
+  case WM_SYSCHAR:
+    // Stop beeping
+    return 0;
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
