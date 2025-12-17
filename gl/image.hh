@@ -70,8 +70,7 @@ void image::draw(image* canvas, const viewport& view){
       y < min(canvas->height, (int)round(pos.y)+height); ++y, ++yt)
     for(int x = max(0, (int)round(pos.x)), xt = max(0, -(int)round(pos.x));
         x < min(canvas->width, (int)round(pos.x)+width); ++x, ++xt)
-      if(data[yt][xt] != CLEAR)
-        canvas->set_pixel(x, y, img.data[yt][xt]);
+      canvas->set_pixel(x, y, img.data[yt][xt]);
   validate("image.draw"); }
 
 // True if no pixels stored
@@ -92,8 +91,13 @@ void image::set_size(const int w, const int h){
 
 // Set pixel at (x,y) to color
 inline void image::set_pixel(const int x, const int y, const color& c){
-  if(x >= 0 && x < width && y >= 0 && y < height && c != CLEAR)
-    data[y][x] = c; }
+  if(c == CLEAR) return;
+  if(c != CLEAR_PEN){
+    if(x >= 0 && x < width && y >= 0 && y < height)
+      data[y][x] = c;
+    return;
+  }else if(x >= 0 && x < width && y >= 0 && y < height)
+    data[y][x] = CLEAR; }
 
 // Delete margins of color
 void image::fix(const color& c){
