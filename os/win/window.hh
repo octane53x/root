@@ -5,6 +5,9 @@
 
 #include "../../gl/env.hh"
 
+const double
+    MAX_FPS = 60.0;
+
 struct window;
 
 // Set in constructor. Enables global functions to call env.
@@ -173,8 +176,7 @@ void window::update_pos(const int x, const int y, const int w, const int h){
   win_pos = point(x, y);
   if(width == w && height == h) return;
   width = w, height = h;
-  scene::win_w = w, scene::win_h = h;
-  draw_bkgd();
+  resize_window(w, h);
   validate("window.update_pos"); }
 
 // Report a change in the cursor position
@@ -222,6 +224,7 @@ void window::main_loop(){
     DispatchMessage(&msg);
     clock_t now = clock();
     double ms = (double)(now - last_update) * 1000.0 / CLOCKS_PER_SEC;
+    if(ms / 1000.0 < 1.0 / MAX_FPS) continue;
     _win->update(ms);
     _win->draw(&frame, viewport());
     InvalidateRect(hwnd, NULL, FALSE);

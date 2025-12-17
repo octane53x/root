@@ -16,6 +16,8 @@ struct scene : virtual object {
     move_node* parent;
     vec<move_node*> children; };
 
+  // Whether to draw background each frame
+  bool redraw_bkgd;
   // Scene size
   int width, height;
   // Window size available here so scenes can resize themselves properly
@@ -45,6 +47,7 @@ struct scene : virtual object {
   virtual void draw(image* canvas, const viewport& view);
   virtual void draw_bkgd();
 
+  void resize_window(int w, int h);
   void move_rec(const move_node* node, const point& mov, const double ms);
   void move_objs(const double ms); };
 
@@ -98,25 +101,38 @@ void scene::update(const double ms){
 // Draw objects onto background
 // Called by: env.draw
 void scene::draw(image* canvas, const viewport& view){
-  img = bkgd;
+  if(redraw_bkgd)
+    img = bkgd;
   vec<object*> v;
   for(pair<llu, object*> p : objs)
     if(p.second->active)
       v.pb(p.second);
   sort(v.begin(), v.end(),
       [](const object* a, const object* b){ return a->pos.z > b->pos.z; });
-  for(int i = 0; i < v.size(); ++i)
-    v[i]->draw(&img, vp);
-  img.draw(canvas, view);
+  if(redraw_bkgd){
+    for(int i = 0; i < v.size(); ++i)
+      v[i]->draw(&img, vp);
+    img.draw(canvas, view);
+  }else{
+    for(int i = 0; i < v.size(); ++i){
+      v[i]->pos += pos;
+      v[i]->draw(canvas, vp);
+      v[i]->pos -= pos; } }
   validate("scene.draw"); }
 
 // Draw scene background
 void scene::draw_bkgd(){
   bkgd.set_size(width, height);
-  img.set_size(width, height);
+  img = bkgd;
   for(int i = 0; i < height; ++i)
     for(int j = 0; j < width; ++j)
       bkgd.set_pixel(j, i, bkgd_color); }
+
+// Adjust to a window resize
+void scene::resize_window(int w, int h){
+  width = win_w, height = win_h;
+  redraw_bkgd = true;
+  draw_bkgd(); }
 
 // Recursive helper function to move_objs
 // For objects rooted to objects that are also rooted to other objects

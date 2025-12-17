@@ -33,6 +33,8 @@ struct env : virtual object {
     // Where the mouse was at the time of the event
     point cursor; };
 
+  // Whether to redraw the background
+  bool redraw_bkgd;
   // Whether the frame has been updated since last draw
   bool frame_updated;
   // Current frames per second
@@ -60,11 +62,13 @@ struct env : virtual object {
   virtual void draw(image* canvas, const viewport& view);
 
   void draw_bkgd();
+  void resize_window(int w, int h);
   void hover();
   void click(const point& p); };
 
 // Set default member state and global env pointer
-env::env(): frame_updated(false), bkgd_color(DEFAULT_COLOR) {
+env::env():
+    redraw_bkgd(false), frame_updated(false), bkgd_color(DEFAULT_COLOR) {
   type = "env";
   last_frame = clock();
   _env = this; }
@@ -77,7 +81,7 @@ button::button(){
 
 // FOREIGN CONSTRUCTOR
 // Add itself to env automatically upon creation
-scene::scene(): z(0.0), bkgd_color(DEFAULT_COLOR) {
+scene::scene(): redraw_bkgd(true), z(0.0), bkgd_color(DEFAULT_COLOR) {
   type = "scene";
   _env->scenes[id] = this; }
 
@@ -118,7 +122,8 @@ void env::draw(image* canvas, const viewport& view){
     if(p.second->active) active_scenes.pb(p.second);
   sort(active_scenes.begin(), active_scenes.end(),
       [](const scene* a, const scene* b){ return a->z > b->z; });
-  frame = bkgd;
+  if(redraw_bkgd)
+    frame = bkgd;
   viewport default_view;
   default_view.size_in = default_view.size_out = min(frame.width, frame.height);
   //! Adjust view by pos
@@ -138,10 +143,15 @@ void env::draw_bkgd(){
   frame.set_size(w, h);
   for(int i = 0; i < h; ++i)
     for(int j = 0; j < w; ++j)
-      bkgd.set_pixel(j, i, bkgd_color);
+      bkgd.set_pixel(j, i, bkgd_color); }
+
+// Signal a window resize to active scenes
+void env::resize_window(int w, int h){
+  scene::win_w = w, scene::win_h = h;
+  draw_bkgd();
   for(pair<llu, scene*> p : scenes)
     if(p.second->active)
-      p.second->draw_bkgd(); }
+      p.second->resize_window(w, h); }
 
 // Hover a button, attempted in order of z value
 // Called by: update
