@@ -68,10 +68,18 @@ void debug(const str& msg){
   print_time(); }
 
 // Initialize debug environment
-void debug_init(const time_t time){
+void debug_init(){
+  time_t t = time(NULL);
   remove(DEBUG_FILE.c_str());
   print(str("Executed at "));
-  print_time(time); }
+  print_time(t); }
+
+// Terminate the program
+void quit(){
+  time_t t = time(NULL);
+  print(str("Terminated at "));
+  print_time(t);
+  exit(0); }
 
 // Wait for a duration, in milliseconds
 void sleep(const int ms){

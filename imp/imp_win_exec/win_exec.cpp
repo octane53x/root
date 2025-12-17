@@ -11,7 +11,7 @@ const int
 // Called by: OPERATING SYSTEM
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
-  debug_init(time_exec = time(NULL));
+  debug_init();
   imp.UI_MODE = Impact::UI_WINDOW;
   imp.init_members(hInst, nCmdShow, INIT_WIN_W, INIT_WIN_H);
   imp.init();

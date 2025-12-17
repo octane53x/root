@@ -110,7 +110,10 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     return 0;
   case WM_KEYDOWN:
   case WM_KEYUP:
-    _win->process_key(_win_key(wParam), uMsg == WM_KEYDOWN, point(p.x, p.y));
+  case WM_SYSKEYDOWN:
+  case WM_SYSKEYUP:
+    _win->process_key(_win_key(wParam),
+        uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN, point(p.x, p.y));
     return 0;
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }

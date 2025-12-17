@@ -124,15 +124,18 @@ void Editor::load_font(){
 void Editor::process_key(const str& key, const bool down, const point& mouse){
   // Modifiers
   if(key == "SHIFT"){
-    shift = down; return; }
+    shift = down;
+    return; }
   if(key == "CONTROL"){
-    ctrl = down; return; }
+    ctrl = down;
+    return; }
   if(key == "ALT"){
-    alt = down; return; }
+    alt = down;
+    return; }
   if(!down) return;
 
-  // Single character
   if(!ctrl && !alt){
+    // Single character
     char c = 0;
     if(key.size() == 1){
       char ci = key[0];
@@ -168,37 +171,75 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     else if(key == "QUOTE") c = shift ? '"' : '\'';
     if(c != 0){
       add_char(c);
+      return; }
+
+    // Space or two
+    if(key == "SPACE"){
+      add_char(' ');
+      if(shift)
+        add_char(' ');
+      return; }
+
+    // Backspace
+    if(key == "BACKSPACE"){
+      if(text[cursor.y].size() > 0){
+        text[cursor.y] = text[cursor.y].substr(0, text[cursor.y].size() - 1);
+        --cursor.x;
+      }else if(text.size() > 1){
+        text.erase(text.begin() + cursor.y);
+        --cursor.y;
+        cursor.x = (int)text[cursor.y].size();
+      }else
+        assert(text.size() == 1 && text[0] == "", "Editor.process_key",
+            "text should be empty");
+      return; }
+
+    // Enter
+    if(key == "ENTER"){
+      str tail = text[cursor.y].substr(cursor.x);
+      text[cursor.y] = text[cursor.y].substr(0, cursor.x);
+      ++cursor.y;
+      cursor.x = 0;
+      text.insert(text.begin() + cursor.y, tail);
       return; } }
 
-  // Space or two
-  if(key == "SPACE" && !ctrl && !alt){
-    add_char(' ');
-    if(shift)
-      add_char(' '); }
-
-  // Backspace
-  else if(key == "BACKSPACE" && !ctrl && !alt){
-    if(text[cursor.y].size() > 0){
-      text[cursor.y] = text[cursor.y].substr(0, text[cursor.y].size() - 1);
-      --cursor.x;
-    }else if(text.size() > 1){
-      text.erase(text.begin() + cursor.y);
+  if(!ctrl && alt){
+    // Alt+IJKL
+    if(key == "I"){
+      if(cursor.y == 0) return;
       --cursor.y;
-      cursor.x = text[cursor.y].size();
-    }else
-      assert(text.size() == 1 && text[0] == "", "Editor.process_key",
-          "text should be empty");
+      if(cursor.x > text[cursor.y].size())
+        cursor.x = (int)text[cursor.y].size();
+      return; }
+    if(key == "J"){
+      if(cursor.x == 0){
+        if(cursor.y == 0) return;
+        --cursor.y;
+        cursor.x = (int)text[cursor.y].size();
+      }else
+        --cursor.x;
+      return; }
+    if(key == "K"){
+      if(cursor.y == text.size() - 1) return;
+      ++cursor.y;
+      if(cursor.x > text[cursor.y].size())
+        cursor.x = (int)text[cursor.y].size();
+      return; }
+    if(key == "L"){
+      if(cursor.x == text[cursor.y].size()){
+        if(cursor.y == text.size() - 1) return;
+        ++cursor.y;
+        cursor.x = 0;
+      }else
+        ++cursor.x;
+      return; } }
 
-  // Enter
-  }else if(key == "ENTER" && !ctrl && !alt){
-    str tail = text[cursor.y].substr(cursor.x);
-    text[cursor.y] = text[cursor.y].substr(0, cursor.x);
-    ++cursor.y;
-    cursor.x = 0;
-    text.insert(text.begin() + cursor.y, tail); }
+  if(ctrl && !alt){
+    // Ctrl+Q
+    if(key == "Q" && ctrl && !alt)
+      quit(); }
 
-  //! more
-}
+  if(ctrl && alt){} }
 
 void Editor::add_char(const char c){
   text[cursor.y] = text[cursor.y].substr(0, cursor.x) + str(1, c)
