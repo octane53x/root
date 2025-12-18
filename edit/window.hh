@@ -9,6 +9,7 @@ struct window {
 
   HINSTANCE win_param_1;
   int win_param_2;
+  HWND hwnd;
 
   bool updated;
   int width, height;
@@ -122,18 +123,20 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
-void _win_run(){
+void _win_init(){
   const wchar_t CLASS[] = L"WindowClass";
   WNDCLASS wc = {};
   wc.lpfnWndProc = _win_proc;
   wc.hInstance = _win->win_param_1;
   wc.lpszClassName = CLASS;
   RegisterClass(&wc);
-  HWND hwnd = CreateWindowEx(
+  _win->hwnd = CreateWindowEx(
       0, CLASS, L"Window", WS_OVERLAPPEDWINDOW, 0, 0,
       _win->width, _win->height, NULL, NULL, _win->win_param_1, NULL);
-  assert(hwnd != NULL, "window.display", "could not create window");
-  ShowWindow(hwnd, _win->win_param_2);
+  assert(_win->hwnd != NULL, "window.display", "could not create window");
+  ShowWindow(_win->hwnd, _win->win_param_2); }
+
+void _win_run(){
   MSG msg = {};
   while(GetMessage(&msg, NULL, 0, 0)){
     TranslateMessage(&msg);
@@ -141,6 +144,6 @@ void _win_run(){
     double ms = (double)(clock() - _win->last_update) * 1000.0 / CLOCKS_PER_SEC;
     _win->update(ms);
     _win->draw();
-    InvalidateRect(hwnd, NULL, FALSE); } }
+    InvalidateRect(_win->hwnd, NULL, FALSE); } }
 
 #endif
