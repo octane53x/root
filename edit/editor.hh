@@ -10,7 +10,7 @@
 const int
     INIT_WIN_W = 1500,
     INIT_WIN_H = 750,
-    HEIGHT_OFFSET = -55,
+    HEIGHT_OFFSET = -38,
     LINE_HEIGHT = 20,
     CHAR_WIDTH = 10;
 const double
@@ -34,6 +34,7 @@ struct Editor : virtual window {
     color col; };
 
   struct Panel : virtual polygon {
+    bool refresh;
     int width, height, top_line;
     str file;
     color col;
@@ -44,8 +45,7 @@ struct Editor : virtual window {
 
   bool shift, ctrl, alt;
   umap<char, image> font;
-  Panel* focus;
-  Panel cmd, info;
+  Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
 
   void init(const HINSTANCE wp1, const int wp2);
@@ -54,6 +54,7 @@ struct Editor : virtual window {
   void draw();
   void load_font();
   void process_key(const str& key, const bool down, const point& mouse);
+  void process_cmd(const str& cmd);
   void set_panel(Panel* panel);
   void add_char(const char c); };
 
@@ -71,6 +72,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   p.pos = point(0, 0);
   p.width = width, p.height = height;
   set_panel(&p);
+  p.top_line = 0;
   p.file = "";
   p.col = BKGD_COLOR;
   p.text.pb("");
@@ -90,6 +92,8 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cmd.pos = point(0, height - LINE_HEIGHT + HEIGHT_OFFSET);
   cmd.width = width, cmd.height = LINE_HEIGHT;
   set_panel(&cmd);
+  cmd.refresh = false;
+  cmd.top_line = 0;
   cmd.col = CMD_BAR_COLOR;
   cmd.text.pb("");
   cmd.cursor = c;
@@ -119,8 +123,23 @@ void Editor::update(const double ms){
   updated = true; }
 
 void Editor::draw(){
+  // Hide cmd bar
+  if(cmd.refresh){
+    assert(focus != &cmd, "draw", "cmd marked for refresh but still in focus");
+    polygon line;
+    line.pos = point(cmd.pos.x, cmd.pos.y);
+    line.add(point(0, 0));
+    line.add(point(cmd.width - 1, 0));
+    line.add(point(cmd.width - 1, LINE_HEIGHT - 1));
+    line.add(point(0, LINE_HEIGHT - 1));
+    line.fill = BKGD_COLOR;
+    line.draw(&frame, cmd.view);
+    cmd.refresh = false; }
+
   Panel& p = *focus;
+  debug("start");
   for(int y : p.refresh_lines){
+    debug(to_string(y));
     // Clear line
     polygon line;
     line.pos = point(p.pos.x, p.pos.y + (y - p.top_line) * LINE_HEIGHT);
@@ -130,6 +149,7 @@ void Editor::draw(){
     line.add(point(0, LINE_HEIGHT - 1));
     line.fill = p.col;
     line.draw(&frame, p.view);
+    if(y >= p.text.size()) continue;
     // Draw text
     for(int x = 0; x < p.text[y].size(); ++x){
       image img = font[p.text[y][x]];
@@ -137,6 +157,7 @@ void Editor::draw(){
           p.pos.y + (y - p.top_line) * LINE_HEIGHT);
       img.draw(&frame, p.view); } }
   p.refresh_lines.clear();
+  debug("end");
 
   Cursor& c = p.cursor;
   if(c.xprev != c.x || c.yprev != c.y){

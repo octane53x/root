@@ -1,9 +1,9 @@
-// EDITOR INPUT
+// PROCESS EDITOR INPUT
 
 #ifndef INPUT_HH
 #define INPUT_HH
 
-#include "editor.hh"
+#include "cmd.hh"
 
 void Editor::process_key(const str& key, const bool down, const point& mouse){
   // Modifiers
@@ -86,13 +86,19 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Enter
     if(key == "ENTER"){
-      str tail = p.text[p.cursor.y].substr(p.cursor.x);
-      p.text[p.cursor.y] = p.text[p.cursor.y].substr(0, p.cursor.x);
-      ++p.cursor.y;
-      p.cursor.x = 0;
-      p.text.insert(p.text.begin() + p.cursor.y, tail);
-      for(int y = p.cursor.y - 1; y < p.text.size(); ++y)
-        p.refresh_lines.pb(y);
+      if(focus == &cmd){
+        focus = prev_panel;
+        process_cmd(cmd.text[0]);
+        cmd.text[0] = "";
+        cmd.refresh = true;
+      }else{
+        str tail = p.text[p.cursor.y].substr(p.cursor.x);
+        p.text[p.cursor.y] = p.text[p.cursor.y].substr(0, p.cursor.x);
+        ++p.cursor.y;
+        p.cursor.x = 0;
+        p.text.insert(p.text.begin() + p.cursor.y, tail);
+        for(int y = p.cursor.y - 1; y < p.text.size(); ++y)
+          p.refresh_lines.pb(y); }
       return; } }
 
   if(!ctrl && alt){
@@ -139,9 +145,10 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Ctrl+O
     if(key == "O" && focus != &cmd){
+      prev_panel = focus;
       focus = &cmd;
       cmd.text[0] = "Open: " + current_path().string();
-      cmd.cursor.x = cmd.text[0].size();
+      cmd.cursor.x = (int)cmd.text[0].size();
       cmd.refresh_lines.pb(0); } }
 
   if(ctrl && alt){} }
