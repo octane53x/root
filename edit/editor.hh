@@ -11,10 +11,11 @@ const int
     INIT_WIN_W = 1500,
     INIT_WIN_H = 750,
     HEIGHT_OFFSET = -38,
-    LINE_HEIGHT = 20,
-    CHAR_WIDTH = 10,
+    LINE_HEIGHT_SCALE_1 = 20,
+    CHAR_WIDTH_SCALE_1 = 10,
     SCROLL_LINES = 10;
 const double
+    INIT_TEXT_SCALE = 0.95,
     CURSOR_BLINK = 0.5;
 const color
     BKGD_COLOR = BLACK,
@@ -47,7 +48,9 @@ struct Editor : virtual window {
     Cursor cursor; };
 
   bool shift, ctrl, alt;
-  umap<char, image> font;
+  int char_width, line_height;
+  double text_scale;
+  umap<char, image> font, font_base;
   Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
 
@@ -59,6 +62,7 @@ struct Editor : virtual window {
   void draw();
 
   void load_font();
+  void scale_font(double factor);
   void process_key(const str& key, const bool down, const point& mouse);
   void process_cmd(const str& cmd);
   void set_panel(Panel* panel);
@@ -74,12 +78,21 @@ bool Editor::name_or_val(const char c) const {
 void Editor::init(const HINSTANCE wp1, const int wp2){
   _win = this;
 
+  // Small members
   win_param_1 = wp1, win_param_2 = wp2;
   width = INIT_WIN_W, height = INIT_WIN_H;
   updated = true;
   last_update = 0;
   shift = ctrl = alt = false;
 
+  // Font
+  line_height = LINE_HEIGHT_SCALE_1;
+  char_width = CHAR_WIDTH_SCALE_1;
+  load_font();
+  text_scale = 1.0;
+  scale_font(INIT_TEXT_SCALE);
+
+  // Initial panel
   panels.pb(Panel());
   Panel& p = panels.back();
   p.pos = point(0, 0);
@@ -91,19 +104,21 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   p.text.pb("");
   focus = &p;
 
+  // Initial panel cursor
   Cursor& c = focus->cursor;
   c.x = c.y = 0;
   c.xprev = c.yprev = 0;
   c.add(point(0, 0));
-  c.add(point(CHAR_WIDTH-1, 0));
-  c.add(point(CHAR_WIDTH-1, LINE_HEIGHT-1));
-  c.add(point(0, LINE_HEIGHT-1));
+  c.add(point(char_width-1, 0));
+  c.add(point(char_width-1, line_height-1));
+  c.add(point(0, line_height-1));
   c.col = CURSOR_COLOR;
   c.blink = true;
   c.last_update = 0;
 
-  cmd.pos = point(0, height - LINE_HEIGHT + HEIGHT_OFFSET);
-  cmd.width = width, cmd.height = LINE_HEIGHT;
+  // Command bar
+  cmd.pos = point(0, height - line_height + HEIGHT_OFFSET);
+  cmd.width = width, cmd.height = line_height;
   set_panel(&cmd);
   cmd.hide = false;
   cmd.top_line = 0;
@@ -112,7 +127,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cmd.cursor = c;
   cmd.cursor.blink = false;
 
-  load_font();
+  // Display frame
   frame.set_size(width, height);
   for(int y = 0; y < height; ++y)
     for(int x = 0; x < width; ++x)
@@ -125,8 +140,8 @@ void Editor::run(){
 void Editor::update(const double ms){
   // Set cursor pos based on text pos
   Cursor& c = focus->cursor;
-  c.pos = point(focus->pos.x + c.x * CHAR_WIDTH,
-      focus->pos.y + (c.y - focus->top_line) * LINE_HEIGHT);
+  c.pos = point(focus->pos.x + c.x * char_width,
+      focus->pos.y + (c.y - focus->top_line) * line_height);
   // Blink cursor
   double sec = (double)(clock() - c.last_update) / CLOCKS_PER_SEC;
   if(sec >= CURSOR_BLINK){
@@ -143,8 +158,8 @@ void Editor::draw(){
     line.pos = point(cmd.pos.x, cmd.pos.y);
     line.add(point(0, 0));
     line.add(point(cmd.width - 1, 0));
-    line.add(point(cmd.width - 1, LINE_HEIGHT - 1));
-    line.add(point(0, LINE_HEIGHT - 1));
+    line.add(point(cmd.width - 1, line_height - 1));
+    line.add(point(0, line_height - 1));
     line.fill = BKGD_COLOR;
     line.draw(&frame, cmd.view);
     cmd.hide = false; }
@@ -153,18 +168,18 @@ void Editor::draw(){
   for(int y : p.refresh_lines){
     // Clear line
     polygon line;
-    line.pos = point(p.pos.x, p.pos.y + y * LINE_HEIGHT);
+    line.pos = point(p.pos.x, p.pos.y + y * line_height);
     line.add(point(0, 0));
     line.add(point(p.width - 1, 0));
-    line.add(point(p.width - 1, LINE_HEIGHT - 1));
-    line.add(point(0, LINE_HEIGHT - 1));
+    line.add(point(p.width - 1, line_height - 1));
+    line.add(point(0, line_height - 1));
     line.fill = p.col;
     line.draw(&frame, p.view);
     if(y + p.top_line >= p.text.size()) continue;
     // Draw text
     for(int x = 0; x < p.text[y + p.top_line].size(); ++x){
       image img = font[p.text[y + p.top_line][x]];
-      img.pos = point(p.pos.x + x * CHAR_WIDTH, p.pos.y + y * LINE_HEIGHT);
+      img.pos = point(p.pos.x + x * char_width, p.pos.y + y * line_height);
       img.draw(&frame, p.view); } }
   p.refresh_lines.clear();
 
@@ -173,17 +188,17 @@ void Editor::draw(){
     // Clear last character
     color col = c.fill;
     c.fill = p.col;
-    c.pos = point(p.pos.x + c.xprev * CHAR_WIDTH,
-        p.pos.y + (c.yprev - p.top_line) * LINE_HEIGHT);
+    c.pos = point(p.pos.x + c.xprev * char_width,
+        p.pos.y + (c.yprev - p.top_line) * line_height);
     c.draw(&frame, p.view);
-    c.pos = point(p.pos.x + c.x * CHAR_WIDTH,
-        p.pos.y + (c.y - p.top_line) * LINE_HEIGHT);
+    c.pos = point(p.pos.x + c.x * char_width,
+        p.pos.y + (c.y - p.top_line) * line_height);
     c.fill = col;
     // Draw last character
     if(c.yprev < p.text.size() && c.xprev < p.text[c.yprev].size()){
       image img = font[p.text[c.yprev][c.xprev]];
-      img.pos = point(p.pos.x + c.xprev * CHAR_WIDTH,
-          p.pos.y + (c.yprev - p.top_line) * LINE_HEIGHT);
+      img.pos = point(p.pos.x + c.xprev * char_width,
+          p.pos.y + (c.yprev - p.top_line) * line_height);
       img.draw(&frame, p.view); }
     c.xprev = c.x, c.yprev = c.y; }
 
@@ -194,8 +209,8 @@ void Editor::draw(){
   c.fill = col;
   // Draw current character
   image img = font[p.text[c.y][c.x]];
-  img.pos = point(p.pos.x + c.x * CHAR_WIDTH,
-      p.pos.y + (c.y - p.top_line) * LINE_HEIGHT);
+  img.pos = point(p.pos.x + c.x * char_width,
+      p.pos.y + (c.y - p.top_line) * line_height);
   img.draw(&frame, p.view);
   // Draw cursor
   c.draw(&frame, p.view); }
@@ -203,17 +218,26 @@ void Editor::draw(){
 void Editor::load_font(){
   image font_img = load_bmp(_FONT_LOC);
   for(int i = 0; i < _SYMBOLS.size(); ++i){
-    image c(CHAR_WIDTH, LINE_HEIGHT);
-    for(int xi = i * CHAR_WIDTH, xo = 0; xo < CHAR_WIDTH; ++xi, ++xo)
-      for(int y = 0; y < LINE_HEIGHT; ++y)
+    image c(char_width, line_height);
+    for(int xi = i * char_width, xo = 0; xo < char_width; ++xi, ++xo)
+      for(int y = 0; y < line_height; ++y)
         c.set_pixel(xo, y, font_img.data[y][xi]);
-    font[_SYMBOLS[i]] = c; }
+    font_base[_SYMBOLS[i]] = c; }
   // Add space manually //! add to symbols
-  image space(CHAR_WIDTH, LINE_HEIGHT);
+  image space(char_width, line_height);
   for(int y = 0; y < space.height; ++y)
     for(int x = 0; x < space.width; ++x)
       space.set_pixel(x, y, CLEAR_PEN);
-  font[' '] = space; }
+  font_base[' '] = space;
+  font = font_base; }
+
+void Editor::scale_font(double factor){
+  text_scale *= factor;
+  line_height = (int)ceil(text_scale * line_height);
+  char_width = (int)ceil(text_scale * char_width);
+  font.clear();
+  for(pair<char, image> p : font_base)
+    font[p.first] = p.second.scale(text_scale); }
 
 void Editor::set_panel(Panel* panel){
   assert(panel->width > 0 && panel->height > 0, "set_panel",
@@ -232,7 +256,7 @@ void Editor::add_char(const char c){
   p.refresh_lines.insert(p.cursor.y - p.top_line); }
 
 void Editor::refresh(){
-  for(int y = 0; y <= focus->height / LINE_HEIGHT; ++y)
+  for(int y = 0; y <= focus->height / line_height; ++y)
     focus->refresh_lines.insert(y); }
 
 void Editor::scroll(const bool down){
@@ -251,7 +275,7 @@ void Editor::move_cursor(const Dir d){
       return; }
     --c.y;
     if(c.x > focus->text[c.y].size())
-      c.x = focus->text[c.y].size();
+      c.x = (int)focus->text[c.y].size();
     if(c.y < focus->top_line)
       scroll(false);
     return;
@@ -273,19 +297,19 @@ void Editor::move_cursor(const Dir d){
         c.x = (int)focus->text[c.y].size();
       return; }
     ++c.y;
-    if(c.y - focus->top_line >= focus->height / LINE_HEIGHT)
-      scroll(true);
     if(c.x > focus->text[c.y].size())
       c.x = (int)focus->text[c.y].size();
+    if(c.y - focus->top_line >= focus->height / line_height)
+      scroll(true);
     return;
 
   case RIGHT:
     if(c.x == focus->text[c.y].size()){
       if(c.y == focus->text.size() - 1) return;
       ++c.y;
-      if(c.y - focus->top_line >= focus->height / LINE_HEIGHT)
-        scroll(true);
       c.x = 0;
+      if(c.y - focus->top_line >= focus->height / line_height)
+        scroll(true);
     }else
       ++c.x;
     return;

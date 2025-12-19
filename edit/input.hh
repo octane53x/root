@@ -81,7 +81,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         p.text[c.y] += p.text[c.y + 1];
         p.text.erase(p.text.begin() + c.y + 1);
         for(int y = c.y;
-            y <= p.top_line + p.height / LINE_HEIGHT && y <= p.text.size(); ++y)
+            y <= p.top_line + p.height / line_height && y <= p.text.size(); ++y)
           p.refresh_lines.insert(y - p.top_line);
       }else
         assert(p.text.size() == 1 && p.text[0] == "", "process_key",
@@ -99,12 +99,12 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         str tail = p.text[c.y].substr(c.x);
         p.text[c.y] = p.text[c.y].substr(0, c.x);
         ++c.y;
-        if(c.y - p.top_line >= p.height / LINE_HEIGHT)
+        if(c.y - p.top_line >= p.height / line_height)
           scroll(true);
         c.x = 0;
         p.text.insert(p.text.begin() + c.y, tail);
         for(int y = c.y - 1;
-            y <= p.top_line + p.height / LINE_HEIGHT && y <= p.text.size(); ++y)
+            y <= p.top_line + p.height / line_height && y <= p.text.size(); ++y)
           p.refresh_lines.insert(y - p.top_line); }
       return; }
 

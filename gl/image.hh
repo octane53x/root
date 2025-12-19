@@ -146,42 +146,63 @@ void image::replace_except(const color& src, const color& dest){
   validate("image.replace_except"); }
 
 // Return a scaled image. Does not modify current image
-//! Not working
 image image::scale(const double s) const {
   if(deq(s, 1.0)) return *this;
-  image r((int)ceil(s * width), (int)ceil(s * height));
-  if(s < 1.0){ // Scale down
-    //s = 1.0 / s;
-    double sx = (double)width / r.width, sy = (double)height / r.height;
-    int ny = height, ry = r.height, dy = 0;
-    for(int y = 0; y < r.height; ++y){
-      double sy2 = (double)ny / ry;
-      int py = (sy2 > sy) ? (int)ceil(sy) : (int)floor(sy);
-      int nx = width, rx = r.width, dx = 0;
-      for(int x = 0; x < r.width; ++x){
-        double sx2 = (double)nx / rx;
-        int px = (sx2 > sx) ? (int)ceil(sx) : (int)floor(sx);
-        r.set_pixel(x, y, data[dy][dx]);
-        dx += px; }
-      dy += py; }
-  }else if(s > 1.0){ // Scale up
-    double sx = (double)r.width / width, sy = (double)r.height / height;
-    int ny = height, ry = r.height, dy = 0;
-    for(int y = 0; y < height; ++y){
-      double sy2 = (double)ry / ny;
-      int py = (sy2 > sy) ? (int)ceil(sy) : (int)floor(sy);
-      int nx = width, rx = r.width, dx = 0;
-      for(int x = 0; x < width; ++x){
-        double sx2 = (double)rx / nx;
-        int px = (sx2 > sx) ? (int)ceil(sx) : (int)floor(sx);
-        for(int i = 0; i < py; ++i)
-          for(int j = 0; j < px; ++j)
-            r.set_pixel(dx+j, dy+i, data[y][x]);
-        dx += px; }
-      dy += py; } }
-  r.pos = pos;
-  r.validate("image.scale");
-  return r; }
+  image ret((int)ceil(s * width), (int)ceil(s * height));
+
+  // Enlarge image
+  if(s > 1.0){
+    double ys = 0.0;
+    for(int yo = 0, yi = 0; yo < ret.height; ++yo){
+      double xs = 0.0;
+      for(int xo = 0, xi = 0; xo < ret.width; ++xo){
+        if(dgeq(xs, s)){
+          xs -= s;
+          ++xi; }
+        ret.data[yo][xo] = data[yi][xi];
+        xs += 1.0; }
+      if(dgeq(ys, s)){
+        ys -= s;
+        ++yi; }
+      ys += 1.0; }
+
+  // Shrink image
+  }else{
+    double ys = 0.0;
+    for(int yo = 0, yi = 0; yo < ret.height && yi < data.size(); ++yo){
+      double xs = 0.0;
+      int xo = 0;
+      for(int xi = 0; xo < ret.width && xi < data[yi].size(); ++xo){
+        // Average the input pixel colors
+        int r = 0, g = 0, b = 0, custom = 0, c = 0;
+        color special;
+        double yst = ys;
+        for(int yt = yi; dlt(yst, 1.0); yst += s, ++yt){
+          double xst = xs;
+          for(int xt = xi; dlt(xst, 1.0); xst += s, ++xt, ++c){
+            if(data[yt][xt].custom == color::NONE){
+              ++custom;
+              special = data[yt][xt];
+            }else
+              r += data[yt][xt].r, g += data[yt][xt].g, b += data[yt][xt].b; } }
+        int n = c - custom;
+        color col = (custom > c / 2) ? special : color(r / n, g / n, b / n);
+        // Set output pixel
+        ret.data[yo][xo] = col;
+        while(dlt(xs, 1.0)){
+          xs += s;
+          ++xi; }
+        xs -= 1.0; }
+      if(xo < ret.width)
+        ret.data[yo][xo] = ret.data[yo][xo - 1];
+      while(dlt(ys, 1.0)){
+        ys += s;
+        ++yi; }
+      ys -= 1.0; } }
+
+  ret.pos = pos;
+  ret.validate("image.scale");
+  return ret; }
 
 // Rotate an image by a given degree < 360
 image image::rotate(const double deg) const {
