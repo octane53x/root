@@ -35,7 +35,7 @@ struct Editor : virtual window {
     color col; };
 
   struct Panel : virtual polygon {
-    bool refresh;
+    bool hide;
     int width, height, top_line;
     str file;
     color col;
@@ -95,7 +95,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cmd.pos = point(0, height - LINE_HEIGHT + HEIGHT_OFFSET);
   cmd.width = width, cmd.height = LINE_HEIGHT;
   set_panel(&cmd);
-  cmd.refresh = false;
+  cmd.hide = false;
   cmd.top_line = 0;
   cmd.col = CMD_BAR_COLOR;
   cmd.text.pb("");
@@ -127,7 +127,7 @@ void Editor::update(const double ms){
 
 void Editor::draw(){
   // Hide cmd bar
-  if(cmd.refresh){
+  if(cmd.hide){
     assert(focus != &cmd, "draw", "cmd marked for refresh but still in focus");
     polygon line;
     line.pos = point(cmd.pos.x, cmd.pos.y);
@@ -137,7 +137,7 @@ void Editor::draw(){
     line.add(point(0, LINE_HEIGHT - 1));
     line.fill = BKGD_COLOR;
     line.draw(&frame, cmd.view);
-    cmd.refresh = false; }
+    cmd.hide = false; }
 
   Panel& p = *focus;
   debug("start");
@@ -182,7 +182,7 @@ void Editor::draw(){
 
   // Clear cursor
   color col = c.fill;
-  c.fill = BKGD_COLOR;
+  c.fill = p.col;
   c.draw(&frame, p.view);
   c.fill = col;
   // Draw current character

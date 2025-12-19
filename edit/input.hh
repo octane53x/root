@@ -93,7 +93,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         focus = prev_panel;
         process_cmd(cmd.text[0]);
         cmd.text[0] = "";
-        cmd.refresh = true;
+        cmd.hide = true;
       }else{
         str tail = p.text[p.cursor.y].substr(p.cursor.x);
         p.text[p.cursor.y] = p.text[p.cursor.y].substr(0, p.cursor.x);
@@ -105,7 +105,13 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         for(int y = p.cursor.y - 1;
             y <= p.top_line + p.height / LINE_HEIGHT && y <= p.text.size(); ++y)
           p.refresh_lines.insert(y - p.top_line); }
-      return; } }
+      return; }
+
+    // Escape
+    if(key == "ESCAPE"){
+      if(focus != &cmd) return;
+      focus = prev_panel;
+      cmd.hide = true; } }
 
   if(!ctrl && alt){
     // Alt+IJKL
