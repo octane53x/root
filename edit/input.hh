@@ -114,7 +114,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       cmd.hide = true; } }
 
   if(!ctrl && alt){
-    // Alt+IJKL
+    // Alt+I
     if(key == "I"){
       if(p.cursor.y == 0){
         if(p.cursor.x > 0)
@@ -126,6 +126,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       if(p.cursor.x > p.text[p.cursor.y].size())
         p.cursor.x = (int)p.text[p.cursor.y].size();
       return; }
+
+    // Alt+J
     if(key == "J"){
       if(p.cursor.x == 0){
         if(p.cursor.y == 0) return;
@@ -136,6 +138,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       }else
         --p.cursor.x;
       return; }
+
+    // Alt+K
     if(key == "K"){
       if(p.cursor.y == p.text.size() - 1){
         if(p.cursor.x < p.text[p.cursor.y].size())
@@ -147,6 +151,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       if(p.cursor.x > p.text[p.cursor.y].size())
         p.cursor.x = (int)p.text[p.cursor.y].size();
       return; }
+
+    // Alt+L
     if(key == "L"){
       if(p.cursor.x == p.text[p.cursor.y].size()){
         if(p.cursor.y == p.text.size() - 1) return;
@@ -159,6 +165,36 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       return; } }
 
   if(ctrl && !alt){
+    // Ctrl+I
+    if(key == "I"){
+      if(p.cursor.y > 0)
+        --p.cursor.y;
+      while(p.text[p.cursor.y] != "" && p.cursor.y > 0)
+        --p.cursor.y;
+      while(p.cursor.y < p.top_line)
+        scroll(false);
+      return; }
+
+    // Ctrl+J
+    if(key == "J"){
+      //!
+    }
+
+    // Ctrl+K
+    if(key == "K"){
+      if(p.cursor.y < p.text.size() - 1)
+        ++p.cursor.y;
+      while(p.text[p.cursor.y] != "" && p.cursor.y < p.text.size() - 1)
+        ++p.cursor.y;
+      while(p.cursor.y - p.top_line >= p.height / LINE_HEIGHT)
+        scroll(true);
+      return; }
+
+    // Ctrl+L
+    if(key == "L"){
+      //!
+    }
+
     // Ctrl+Q
     if(key == "Q")
       quit();
@@ -170,7 +206,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       str cwd = current_path().string();
       cmd.text[0] = "Open: " + cwd.substr(0, cwd.find("\\root\\") + 6);
       cmd.cursor.x = (int)cmd.text[0].size();
-      cmd.refresh_lines.insert(0); } }
+      cmd.refresh_lines.insert(0);
+      return; } }
 
   if(ctrl && alt){} }
 
