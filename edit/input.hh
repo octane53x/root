@@ -182,6 +182,24 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       refresh();
       return; } }
 
-  if(ctrl && alt){} }
+  if(ctrl && alt){
+    // Ctrl+Alt+IJKL
+    if(key == "I"){
+      c.y = p.top_line = 0;
+      c.x = 0;
+      refresh();
+      return; }
+    if(key == "J"){
+      c.x = 0;
+      return; }
+    if(key == "K"){
+      c.y = (int)p.text.size() - 1;
+      c.x = (int)p.text[c.y].size();
+      p.top_line = (int)p.text.size() - p.height / line_height;
+      refresh();
+      return; }
+    if(key == "L"){
+      c.x = (int)p.text[c.y].size();
+      return; } } }
 
 #endif
