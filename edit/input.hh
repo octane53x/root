@@ -69,8 +69,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     // Backspace
     if(key == "BACKSPACE"){
       if(c.x > 0){
-        p.text[c.y] = p.text[c.y].substr(0, c.x - 1)
-            + p.text[c.y].substr(c.x);
+        p.text[c.y] = p.text[c.y].substr(0, c.x - 1) + p.text[c.y].substr(c.x);
         --c.x;
         p.refresh_lines.insert(c.y - p.top_line);
       }else if(c.y > 0){
@@ -80,12 +79,9 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         c.x = (int)p.text[c.y].size();
         p.text[c.y] += p.text[c.y + 1];
         p.text.erase(p.text.begin() + c.y + 1);
-        for(int y = c.y;
-            y <= p.top_line + p.height / line_height && y <= p.text.size(); ++y)
-          p.refresh_lines.insert(y - p.top_line);
-      }else
-        assert(p.text.size() == 1 && p.text[0] == "", "process_key",
-            "text should be empty");
+        for(int y = c.y; y <= p.top_line + p.height / line_height
+            && y <= p.text.size(); ++y)
+          p.refresh_lines.insert(y - p.top_line); }
       return; }
 
     // Enter
@@ -108,14 +104,14 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
           p.refresh_lines.insert(y - p.top_line); }
       return; }
 
-    // Escape
+    // Escape: Close cmd bar
     if(key == "ESCAPE"){
       if(focus != &cmd) return;
       focus = prev_panel;
       cmd.hide = true; } }
 
   if(!ctrl && alt){
-    // Alt+IJKL
+    // Alt+IJKL: Move cursor one position
     if(key == "I"){
       move_cursor(UP);
       return; }
@@ -130,7 +126,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       return; } }
 
   if(ctrl && !alt){
-    // Ctrl+IJKL
+    // Ctrl+IJKL: Move cursor several positions
     if(key == "I"){
       move_cursor(UP);
       while(c.y > 0 && p.text[c.y] != "")
@@ -138,10 +134,10 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       return; }
     if(key == "J"){
       if(name_or_val(p.text[c.y][c.x]))
-        while(name_or_val(p.text[c.y][c.x]))
+        while(!(c.y == 0 && c.x == 0) && name_or_val(p.text[c.y][c.x]))
           move_cursor(LEFT);
       else
-        while(!name_or_val(p.text[c.y][c.x]))
+        while(!(c.y == 0 && c.x == 0) && !name_or_val(p.text[c.y][c.x]))
           move_cursor(LEFT);
       return; }
     if(key == "K"){
@@ -151,18 +147,33 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       return; }
     if(key == "L"){
       if(name_or_val(p.text[c.y][c.x]))
-        while(name_or_val(p.text[c.y][c.x]))
+        while(!(c.y == p.text.size() - 1 && c.x == p.text[c.y].size())
+            && name_or_val(p.text[c.y][c.x]))
           move_cursor(RIGHT);
       else
-        while(!name_or_val(p.text[c.y][c.x]))
+        while(!(c.y == p.text.size() - 1 && c.x == p.text[c.y].size())
+            && !name_or_val(p.text[c.y][c.x]))
           move_cursor(RIGHT);
       return; }
 
-    // Ctrl+Q
+    // Ctrl+D: Delete a character
+    if(key == "D"){
+      if(c.x < p.text[c.y].size()){
+        p.text[c.y] = p.text[c.y].substr(0, c.x) + p.text[c.y].substr(c.x + 1);
+        p.refresh_lines.insert(c.y - p.top_line);
+      }else if(c.y < p.text.size() - 1){
+        p.text[c.y] += p.text[c.y + 1];
+        p.text.erase(p.text.begin() + c.y + 1);
+        for(int y = c.y; y <= p.top_line + p.height / line_height
+            && y <= p.text.size(); ++y)
+          p.refresh_lines.insert(y - p.top_line); }
+      return; }
+
+    // Ctrl+Q: Close application
     if(key == "Q")
       quit();
 
-    // Ctrl+O
+    // Ctrl+O: Open file
     if(key == "O" && focus != &cmd){
       prev_panel = focus;
       focus = &cmd;
@@ -172,7 +183,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       cmd.refresh_lines.insert(0);
       return; }
 
-    // Ctrl+(+-)
+    // Ctrl+(+-): Zoom text
     if(key == "EQUALS"){
       scale_font(SCALE_FACTOR);
       refresh();
@@ -183,7 +194,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       return; } }
 
   if(ctrl && alt){
-    // Ctrl+Alt+IJKL
+    // Ctrl+Alt+IJKL: Move cursor maximal position
     if(key == "I"){
       c.y = p.top_line = 0;
       c.x = 0;
