@@ -27,6 +27,8 @@ const str
     _SYMBOLS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         ".,/?:;'\"+=-_\\|~!@#$%^&*()[]{}<>";
 
+enum Dir { UP, LEFT, DOWN, RIGHT };
+
 struct Editor : virtual window {
 
   struct Cursor : virtual polygon {
@@ -49,17 +51,25 @@ struct Editor : virtual window {
   Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
 
+  bool name_or_val(const char c) const;
+
   void init(const HINSTANCE wp1, const int wp2);
   void run();
   void update(const double ms);
   void draw();
+
   void load_font();
   void process_key(const str& key, const bool down, const point& mouse);
   void process_cmd(const str& cmd);
   void set_panel(Panel* panel);
   void add_char(const char c);
   void refresh();
-  void scroll(const bool down); };
+  void scroll(const bool down);
+  void move_cursor(const Dir d); };
+
+bool Editor::name_or_val(const char c) const {
+  return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
+      || (c >= 'a' && c <= 'z') || c == '_'; }
 
 void Editor::init(const HINSTANCE wp1, const int wp2){
   _win = this;
@@ -140,9 +150,7 @@ void Editor::draw(){
     cmd.hide = false; }
 
   Panel& p = *focus;
-  debug("start");
   for(int y : p.refresh_lines){
-    debug(to_string(y));
     // Clear line
     polygon line;
     line.pos = point(p.pos.x, p.pos.y + y * LINE_HEIGHT);
@@ -159,7 +167,6 @@ void Editor::draw(){
       img.pos = point(p.pos.x + x * CHAR_WIDTH, p.pos.y + y * LINE_HEIGHT);
       img.draw(&frame, p.view); } }
   p.refresh_lines.clear();
-  debug("end");
 
   Cursor& c = p.cursor;
   if(c.xprev != c.x || c.yprev != c.y){
@@ -233,5 +240,56 @@ void Editor::scroll(const bool down){
   int lines = min((int)focus->text.size() - focus->top_line - 1, SCROLL_LINES);
   focus->top_line += down ? lines : -lines;
   refresh(); }
+
+void Editor::move_cursor(const Dir d){
+  Cursor& c = focus->cursor;
+  switch(d){
+  case UP:
+    if(c.y == 0){
+      if(c.x > 0)
+        c.x = 0;
+      return; }
+    --c.y;
+    if(c.x > focus->text[c.y].size())
+      c.x = focus->text[c.y].size();
+    if(c.y < focus->top_line)
+      scroll(false);
+    return;
+
+  case LEFT:
+    if(c.x == 0){
+      if(c.y == 0) return;
+      --c.y;
+      c.x = (int)focus->text[c.y].size();
+      if(c.y < focus->top_line)
+        scroll(false);
+    }else
+      --c.x;
+    return;
+
+  case DOWN:
+    if(c.y == focus->text.size() - 1){
+      if(c.x < focus->text[c.y].size())
+        c.x = (int)focus->text[c.y].size();
+      return; }
+    ++c.y;
+    if(c.y - focus->top_line >= focus->height / LINE_HEIGHT)
+      scroll(true);
+    if(c.x > focus->text[c.y].size())
+      c.x = (int)focus->text[c.y].size();
+    return;
+
+  case RIGHT:
+    if(c.x == focus->text[c.y].size()){
+      if(c.y == focus->text.size() - 1) return;
+      ++c.y;
+      if(c.y - focus->top_line >= focus->height / LINE_HEIGHT)
+        scroll(true);
+      c.x = 0;
+    }else
+      ++c.x;
+    return;
+  default:
+    err("move_cursor", "bad direction"); } }
 
 #endif
