@@ -12,7 +12,8 @@ const int
     INIT_WIN_H = 750,
     HEIGHT_OFFSET = -38,
     LINE_HEIGHT = 20,
-    CHAR_WIDTH = 10;
+    CHAR_WIDTH = 10,
+    SCROLL_LINES = 10;
 const double
     CURSOR_BLINK = 0.5;
 const color
@@ -38,8 +39,8 @@ struct Editor : virtual window {
     int width, height, top_line;
     str file;
     color col;
-    vec<int> refresh_lines;
     vec<str> text;
+    uset<int> refresh_lines;
     viewport view;
     Cursor cursor; };
 
@@ -56,7 +57,9 @@ struct Editor : virtual window {
   void process_key(const str& key, const bool down, const point& mouse);
   void process_cmd(const str& cmd);
   void set_panel(Panel* panel);
-  void add_char(const char c); };
+  void add_char(const char c);
+  void refresh();
+  void scroll(const bool down); };
 
 void Editor::init(const HINSTANCE wp1, const int wp2){
   _win = this;
@@ -70,7 +73,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   panels.pb(Panel());
   Panel& p = panels.back();
   p.pos = point(0, 0);
-  p.width = width, p.height = height;
+  p.width = width, p.height = height + HEIGHT_OFFSET;
   set_panel(&p);
   p.top_line = 0;
   p.file = "";
@@ -142,19 +145,18 @@ void Editor::draw(){
     debug(to_string(y));
     // Clear line
     polygon line;
-    line.pos = point(p.pos.x, p.pos.y + (y - p.top_line) * LINE_HEIGHT);
+    line.pos = point(p.pos.x, p.pos.y + y * LINE_HEIGHT);
     line.add(point(0, 0));
     line.add(point(p.width - 1, 0));
     line.add(point(p.width - 1, LINE_HEIGHT - 1));
     line.add(point(0, LINE_HEIGHT - 1));
     line.fill = p.col;
     line.draw(&frame, p.view);
-    if(y >= p.text.size()) continue;
+    if(y + p.top_line >= p.text.size()) continue;
     // Draw text
-    for(int x = 0; x < p.text[y].size(); ++x){
-      image img = font[p.text[y][x]];
-      img.pos = point(p.pos.x + x * CHAR_WIDTH,
-          p.pos.y + (y - p.top_line) * LINE_HEIGHT);
+    for(int x = 0; x < p.text[y + p.top_line].size(); ++x){
+      image img = font[p.text[y + p.top_line][x]];
+      img.pos = point(p.pos.x + x * CHAR_WIDTH, p.pos.y + y * LINE_HEIGHT);
       img.draw(&frame, p.view); } }
   p.refresh_lines.clear();
   debug("end");
@@ -178,12 +180,16 @@ void Editor::draw(){
       img.draw(&frame, p.view); }
     c.xprev = c.x, c.yprev = c.y; }
 
+  // Clear cursor
+  color col = c.fill;
+  c.fill = BKGD_COLOR;
+  c.draw(&frame, p.view);
+  c.fill = col;
   // Draw current character
   image img = font[p.text[c.y][c.x]];
   img.pos = point(p.pos.x + c.x * CHAR_WIDTH,
       p.pos.y + (c.y - p.top_line) * LINE_HEIGHT);
   img.draw(&frame, p.view);
-
   // Draw cursor
   c.draw(&frame, p.view); }
 
@@ -216,6 +222,16 @@ void Editor::add_char(const char c){
   p.text[p.cursor.y] = p.text[p.cursor.y].substr(0, p.cursor.x) + str(1, c)
       + p.text[p.cursor.y].substr(p.cursor.x);
   ++p.cursor.x;
-  p.refresh_lines.pb(p.cursor.y); }
+  p.refresh_lines.insert(p.cursor.y - p.top_line); }
+
+void Editor::refresh(){
+  for(int y = 0; y <= focus->height / LINE_HEIGHT; ++y)
+    focus->refresh_lines.insert(y); }
+
+void Editor::scroll(const bool down){
+  assert(focus != &cmd, "scroll", "cmd bar is in focus");
+  int lines = min((int)focus->text.size() - focus->top_line - 1, SCROLL_LINES);
+  focus->top_line += down ? lines : -lines;
+  refresh(); }
 
 #endif

@@ -71,14 +71,17 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         p.text[p.cursor.y] = p.text[p.cursor.y].substr(0, p.cursor.x - 1)
             + p.text[p.cursor.y].substr(p.cursor.x);
         --p.cursor.x;
-        p.refresh_lines.pb(p.cursor.y);
+        p.refresh_lines.insert(p.cursor.y - p.top_line);
       }else if(p.cursor.y > 0){
         --p.cursor.y;
+        if(p.cursor.y < p.top_line)
+          scroll(false);
         p.cursor.x = (int)p.text[p.cursor.y].size();
         p.text[p.cursor.y] += p.text[p.cursor.y + 1];
         p.text.erase(p.text.begin() + p.cursor.y + 1);
-        for(int y = p.cursor.y; y <= p.text.size(); ++y)
-          p.refresh_lines.pb(y);
+        for(int y = p.cursor.y;
+            y <= p.top_line + p.height / LINE_HEIGHT && y <= p.text.size(); ++y)
+          p.refresh_lines.insert(y - p.top_line);
       }else
         assert(p.text.size() == 1 && p.text[0] == "", "process_key",
             "text should be empty");
@@ -95,10 +98,13 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         str tail = p.text[p.cursor.y].substr(p.cursor.x);
         p.text[p.cursor.y] = p.text[p.cursor.y].substr(0, p.cursor.x);
         ++p.cursor.y;
+        if(p.cursor.y - p.top_line >= p.height / LINE_HEIGHT)
+          scroll(true);
         p.cursor.x = 0;
         p.text.insert(p.text.begin() + p.cursor.y, tail);
-        for(int y = p.cursor.y - 1; y < p.text.size(); ++y)
-          p.refresh_lines.pb(y); }
+        for(int y = p.cursor.y - 1;
+            y <= p.top_line + p.height / LINE_HEIGHT && y <= p.text.size(); ++y)
+          p.refresh_lines.insert(y - p.top_line); }
       return; } }
 
   if(!ctrl && alt){
@@ -109,6 +115,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
           p.cursor.x = 0;
         return; }
       --p.cursor.y;
+      if(p.cursor.y < p.top_line)
+        scroll(false);
       if(p.cursor.x > p.text[p.cursor.y].size())
         p.cursor.x = (int)p.text[p.cursor.y].size();
       return; }
@@ -116,6 +124,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       if(p.cursor.x == 0){
         if(p.cursor.y == 0) return;
         --p.cursor.y;
+        if(p.cursor.y < p.top_line)
+          scroll(false);
         p.cursor.x = (int)p.text[p.cursor.y].size();
       }else
         --p.cursor.x;
@@ -126,6 +136,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
           p.cursor.x = (int)p.text[p.cursor.y].size();
         return; }
       ++p.cursor.y;
+      if(p.cursor.y - p.top_line >= p.height / LINE_HEIGHT)
+        scroll(true);
       if(p.cursor.x > p.text[p.cursor.y].size())
         p.cursor.x = (int)p.text[p.cursor.y].size();
       return; }
@@ -133,6 +145,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       if(p.cursor.x == p.text[p.cursor.y].size()){
         if(p.cursor.y == p.text.size() - 1) return;
         ++p.cursor.y;
+        if(p.cursor.y - p.top_line >= p.height / LINE_HEIGHT)
+          scroll(true);
         p.cursor.x = 0;
       }else
         ++p.cursor.x;
@@ -147,9 +161,10 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     if(key == "O" && focus != &cmd){
       prev_panel = focus;
       focus = &cmd;
-      cmd.text[0] = "Open: " + current_path().string();
+      str cwd = current_path().string();
+      cmd.text[0] = "Open: " + cwd.substr(0, cwd.find("\\root\\") + 6);
       cmd.cursor.x = (int)cmd.text[0].size();
-      cmd.refresh_lines.pb(0); } }
+      cmd.refresh_lines.insert(0); } }
 
   if(ctrl && alt){} }
 
