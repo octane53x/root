@@ -16,6 +16,7 @@ const int
     SCROLL_LINES = 10;
 const double
     INIT_TEXT_SCALE = 0.95,
+    SCALE_FACTOR = 1.05,
     CURSOR_BLINK = 0.5;
 const color
     BKGD_COLOR = BLACK,
@@ -84,13 +85,8 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   updated = true;
   last_update = 0;
   shift = ctrl = alt = false;
-
-  // Font
   line_height = LINE_HEIGHT_SCALE_1;
   char_width = CHAR_WIDTH_SCALE_1;
-  load_font();
-  text_scale = 1.0;
-  scale_font(INIT_TEXT_SCALE);
 
   // Initial panel
   panels.pb(Panel());
@@ -126,6 +122,11 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cmd.text.pb("");
   cmd.cursor = c;
   cmd.cursor.blink = false;
+
+  // Font
+  load_font();
+  text_scale = 1.0;
+  scale_font(INIT_TEXT_SCALE);
 
   // Display frame
   frame.set_size(width, height);
@@ -233,11 +234,12 @@ void Editor::load_font(){
 
 void Editor::scale_font(double factor){
   text_scale *= factor;
-  line_height = (int)ceil(text_scale * line_height);
-  char_width = (int)ceil(text_scale * char_width);
+  line_height = (int)ceil(text_scale * LINE_HEIGHT_SCALE_1);
+  char_width = (int)ceil(text_scale * CHAR_WIDTH_SCALE_1);
   font.clear();
   for(pair<char, image> p : font_base)
-    font[p.first] = p.second.scale(text_scale); }
+    font[p.first] = p.second.scale(text_scale);
+  focus->cursor.scale(factor); }
 
 void Editor::set_panel(Panel* panel){
   assert(panel->width > 0 && panel->height > 0, "set_panel",

@@ -24,7 +24,8 @@ struct polygon : virtual object {
   bool intersects(const polygon& o) const;
   double area() const;
 
-  void add(const point& p); };
+  void add(const point& p);
+  void scale(const double s); };
 
 // Set default member state
 polygon::polygon(){
@@ -127,5 +128,12 @@ double polygon::area() const {
 // Add a point to the polygon
 void polygon::add(const point& p){
   points.pb(p); }
+
+// Scale the polygon by the given factor
+void polygon::scale(const double s){
+  vec<point> new_points;
+  for(const point& p : points)
+    new_points.pb(p * s);
+  points = new_points; }
 
 #endif

@@ -170,6 +170,16 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       cmd.text[0] = "Open: " + cwd.substr(0, cwd.find("\\root\\") + 6);
       cmd.cursor.x = (int)cmd.text[0].size();
       cmd.refresh_lines.insert(0);
+      return; }
+
+    // Ctrl+(+-)
+    if(key == "EQUALS"){
+      scale_font(SCALE_FACTOR);
+      refresh();
+      return; }
+    if(key == "MINUS"){
+      scale_font(1.0 / SCALE_FACTOR);
+      refresh();
       return; } }
 
   if(ctrl && alt){} }

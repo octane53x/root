@@ -169,7 +169,8 @@ image image::scale(const double s) const {
   // Shrink image
   }else{
     double ys = 0.0;
-    for(int yo = 0, yi = 0; yo < ret.height && yi < data.size(); ++yo){
+    int yo = 0;
+    for(int yi = 0; yo < ret.height && yi < data.size(); ++yo){
       double xs = 0.0;
       int xo = 0;
       for(int xi = 0; xo < ret.width && xi < data[yi].size(); ++xo){
@@ -177,9 +178,10 @@ image image::scale(const double s) const {
         int r = 0, g = 0, b = 0, custom = 0, c = 0;
         color special;
         double yst = ys;
-        for(int yt = yi; dlt(yst, 1.0); yst += s, ++yt){
+        for(int yt = yi; yt < data.size() && dlt(yst, 1.0); yst += s, ++yt){
           double xst = xs;
-          for(int xt = xi; dlt(xst, 1.0); xst += s, ++xt, ++c){
+          for(int xt = xi; xt < data[yt].size() && dlt(xst, 1.0);
+              xst += s, ++xt, ++c){
             if(data[yt][xt].custom == color::NONE){
               ++custom;
               special = data[yt][xt];
@@ -187,6 +189,7 @@ image image::scale(const double s) const {
               r += data[yt][xt].r, g += data[yt][xt].g, b += data[yt][xt].b; } }
         int n = c - custom;
         color col = (custom > c / 2) ? special : color(r / n, g / n, b / n);
+
         // Set output pixel
         ret.data[yo][xo] = col;
         while(dlt(xs, 1.0)){
@@ -198,7 +201,10 @@ image image::scale(const double s) const {
       while(dlt(ys, 1.0)){
         ys += s;
         ++yi; }
-      ys -= 1.0; } }
+      ys -= 1.0; }
+    if(yo < ret.height)
+      for(int x = 0; x < ret.width; ++x)
+        ret.data[yo][x] = ret.data[yo - 1][x]; }
 
   ret.pos = pos;
   ret.validate("image.scale");
