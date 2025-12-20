@@ -194,11 +194,11 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       return; }
 
     // Ctrl+(+-): Zoom text
-    if(key == "EQUALS"){
+    if(key == "EQUALS" && focus != &cmd){
       scale_font(SCALE_FACTOR);
       refresh_panel();
       return; }
-    if(key == "MINUS"){
+    if(key == "MINUS" && focus != &cmd){
       scale_font(1.0 / SCALE_FACTOR);
       refresh_panel();
       return; } }
@@ -230,12 +230,12 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
   if(ctrl && !alt && shift){
     // Ctrl+Shift+I
-    if(key == "I"){
+    if(key == "I" && focus != &cmd){
       close_panel();
       return; }
 
     // Ctrl+Shift+J
-    if(key == "J"){
+    if(key == "J" && focus != &cmd){
       int i;
       for(i = 0; i < panels.size(); ++i)
         if(focus == &panels[i]) break;
@@ -245,7 +245,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       return; }
 
     // Ctrl+Shift+K
-    if(key == "K"){
+    if(key == "K" && focus != &cmd){
       if(!p.split_ready){
         p.split_ready = true;
         return;
@@ -255,7 +255,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         return; } }
 
     // Ctrl+Shift+L
-    if(key == "L"){
+    if(key == "L" && focus != &cmd){
       if(p.split_ready){
         p.split_ready = false;
         split_vertical();

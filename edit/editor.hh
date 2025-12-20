@@ -58,12 +58,12 @@ struct Editor : virtual window {
   Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
 
-  bool name_or_val(int y, int x) const;
-
   void init(const HINSTANCE wp1, const int wp2);
   void run();
   void update(const double ms);
   void draw();
+
+  bool name_or_val(int y, int x) const;
 
   void load_font();
   void scale_font(double factor);
@@ -77,14 +77,6 @@ struct Editor : virtual window {
   void split_horizontal();
   void split_vertical();
   void close_panel(); };
-
-bool Editor::name_or_val(int y, int x) const {
-  const Panel& p = *focus;
-  if(y >= p.text.size() || x >= p.text[y].size())
-    return false;
-  const char c = p.text[y][x];
-  return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
-      || (c >= 'a' && c <= 'z') || c == '_'; }
 
 void Editor::init(const HINSTANCE wp1, const int wp2){
   _win = this;
@@ -132,7 +124,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cmd.line_height = LINE_HEIGHT_SCALE_1;
   cmd.char_width = CHAR_WIDTH_SCALE_1;
   cmd.text_scale = 1.0;
-  cmd.pos = point(0, p.height);
+  cmd.pos = point(0, p.height + p.line_height);
   cmd.width = width;
   cmd.height = cmd.line_height;
   set_panel(&cmd);
@@ -152,6 +144,12 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   default_font = p.font;
   focus = &cmd;
   scale_font(INIT_TEXT_SCALE);
+  umap<char, image> black_font;
+  for(pair<char, image> t : cmd.font){
+    image black_char = t.second;
+    black_char.replace_except(CLEAR, BLACK);
+    black_font[t.first] = black_char; }
+  cmd.font = black_font;
   focus = &p;
 
   // Display frame
@@ -223,10 +221,11 @@ void Editor::draw(){
   c.draw(&frame, p.view);
   c.fill = col;
   // Draw current character
-  image img = p.font[p.text[c.y][c.x]];
-  img.pos = point(p.pos.x + c.x * p.char_width,
-      p.pos.y + (c.y - p.top_line) * p.line_height);
-  img.draw(&frame, p.view);
+  if(c.y < p.text.size() && c.x < p.text[c.y].size()){
+    image img = p.font[p.text[c.y][c.x]];
+    img.pos = point(p.pos.x + c.x * p.char_width,
+        p.pos.y + (c.y - p.top_line) * p.line_height);
+    img.draw(&frame, p.view); }
   // Draw cursor
   c.draw(&frame, p.view);
 
@@ -262,6 +261,8 @@ void Editor::draw(){
     for(int x = 0; x < bar_text.size(); ++x){
       image img = default_font[bar_text[x]];
       img.pos = point(bar.pos.x + x * default_char_width, bar.pos.y);
+      if(focus == &t)
+        img.replace_except(CLEAR, BLACK);
       img.draw(&frame, t.view); }
     t.refresh_file_bar = false; }
 
@@ -278,19 +279,31 @@ void Editor::draw(){
     line.draw(&frame, cmd.view);
     cmd.hide = false; } }
 
+bool Editor::name_or_val(int y, int x) const {
+  const Panel& p = *focus;
+  if(y >= p.text.size() || x >= p.text[y].size())
+    return false;
+  const char c = p.text[y][x];
+  return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
+      || (c >= 'a' && c <= 'z') || c == '_'; }
+
 void Editor::load_font(){
   image font_img = load_bmp(_FONT_LOC);
   for(int i = 0; i < _SYMBOLS.size(); ++i){
     image c(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
     for(int xi = i * c.width, xo = 0; xo < c.width; ++xi, ++xo)
-      for(int y = 0; y < c.height; ++y)
-        c.set_pixel(xo, y, font_img.data[y][xi]);
+      for(int y = 0; y < c.height; ++y){
+        color col = font_img.data[y][xi];
+        if(col.approximately(BLACK))
+          c.data[y][xo] = CLEAR;
+        else
+          c.set_pixel(xo, y, col); }
     font_base[_SYMBOLS[i]] = c; }
   // Add space manually //! add to symbols
   image space(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
   for(int y = 0; y < space.height; ++y)
     for(int x = 0; x < space.width; ++x)
-      space.set_pixel(x, y, CLEAR_PEN);
+      space.data[y][x] = CLEAR;
   font_base[' '] = space; }
 
 void Editor::scale_font(double factor){

@@ -182,7 +182,7 @@ image image::scale(const double s) const {
           double xst = xs;
           for(int xt = xi; xt < data[yt].size() && dlt(xst, 1.0);
               xst += s, ++xt, ++c){
-            if(data[yt][xt].custom == color::NONE){
+            if(data[yt][xt].custom != color::NONE){
               ++custom;
               special = data[yt][xt];
             }else

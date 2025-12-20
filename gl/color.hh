@@ -33,6 +33,7 @@ struct color : virtual thing {
   virtual void validate(const str& func);
   virtual str to_str() const;
 
+  bool approximately(const color& c1) const ;
   color avg(const color& c) const;
   color random() const; };
 
@@ -90,7 +91,15 @@ void color::validate(const str& func){}
 
 // Convert to text
 str color::to_str() const {
+  if(custom == CLEAR) return "CLEAR";
+  if(custom == CLEAR_PEN) return "CLEAR_PEN";
+  if(custom == DEBUG) return "DEBUG";
   return "(" + to_string(r) + ", " + to_string(g) + ", " + to_string(b) + ")"; }
+
+// Whether the color is approximately the other color
+bool color::approximately(const color& c) const {
+  int off = abs((int)r - c.r) + abs((int)g - c.g) + abs((int)b - c.b);
+  return off < 64; }
 
 // Return the average of this color with another
 color color::avg(const color& c) const {
