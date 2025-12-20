@@ -20,7 +20,13 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  if(!ctrl && !alt){
+
+  // Cancel split
+  if(p.split_ready && !(key == "K" || key == "L")){
+    p.split_ready = false;
+    return; }
+
+  if(!ctrl && !alt && !shift){
     // Single character
     char co = 0;
     if(key.size() == 1){
@@ -119,7 +125,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       move_cursor(RIGHT);
       return; } }
 
-  if(ctrl && !alt){
+  if(ctrl && !alt && !shift){
     // Ctrl+IJKL: Move cursor several positions
     if(key == "I"){
       move_cursor(UP);
@@ -197,7 +203,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       refresh_panel();
       return; } }
 
-  if(ctrl && alt){
+  if(ctrl && alt && !shift){
     // Ctrl+Alt+IJKL: Move cursor maximal position
     if(key == "I"){
       while(c.y > 0)
@@ -220,6 +226,47 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     if(key == "L"){
       while(c.x < p.text[c.y].size())
         move_cursor(RIGHT);
-      return; } } }
+      return; } }
+
+  if(ctrl && !alt && shift){
+    // Ctrl+Shift+I
+    if(key == "I"){
+      close_panel();
+      return; }
+
+    // Ctrl+Shift+J
+    if(key == "J"){
+      int i;
+      for(i = 0; i < panels.size(); ++i)
+        if(focus == &panels[i]) break;
+      p.refresh_file_bar = true;
+      focus = &panels[(i == 0) ? panels.size() - 1 : i - 1];
+      focus->refresh_file_bar = true;
+      return; }
+
+    // Ctrl+Shift+K
+    if(key == "K"){
+      if(!p.split_ready){
+        p.split_ready = true;
+        return;
+      }else{
+        split_horizontal();
+        p.split_ready = false;
+        return; } }
+
+    // Ctrl+Shift+L
+    if(key == "L"){
+      if(p.split_ready){
+        split_vertical();
+        p.split_ready = false;
+        return;
+      }else{
+        int i;
+        for(i = 0; i < panels.size(); ++i)
+          if(focus == &panels[i]) break;
+        p.refresh_file_bar = true;
+        focus = &panels[(i == panels.size() - 1) ? 0 : i + 1];
+        focus->refresh_file_bar = true;
+        return; } } } }
 
 #endif

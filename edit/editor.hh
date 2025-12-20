@@ -39,7 +39,7 @@ struct Editor : virtual window {
     color col; };
 
   struct Panel : virtual polygon {
-    bool hide, saved, refresh_file_bar;
+    bool hide, saved, refresh_file_bar, split_ready;
     int width, height, top_line, line_height, char_width;
     double text_scale;
     str file;
@@ -71,7 +71,10 @@ struct Editor : virtual window {
   void add_char(const char c);
   void refresh_panel();
   void scroll(const bool down);
-  void move_cursor(const Dir d); };
+  void move_cursor(const Dir d);
+  void split_horizontal();
+  void split_vertical();
+  void close_panel(); };
 
 bool Editor::name_or_val(int y, int x) const {
   const Panel& p = *focus;
@@ -107,6 +110,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   p.text.pb("");
   p.saved = true;
   p.refresh_file_bar = true;
+  p.split_ready = false;
   focus = &p;
 
   // Initial panel cursor
@@ -364,5 +368,28 @@ void Editor::move_cursor(const Dir d){
     return;
   default:
     err("move_cursor", "bad direction"); } }
+
+void Editor::split_horizontal(){
+  Panel& p = *focus;
+  p.height = (p.height + p.line_height) / 2 - p.line_height;
+  p.refresh_file_bar = true;
+  int i;
+  for(i = 0; i < panels.size(); ++i)
+    if(focus == &panels[i]) break;
+  if(i + 1 == panels.size())
+    panels.pb(p);
+  else
+    panels.insert(panels.begin() + i + 1, p);
+  Panel& p2 = panels[i];
+  focus = &panels[i + 1];
+  focus->pos = point(p2.pos.x, p2.pos.y + p2.height + p2.line_height); }
+
+void Editor::split_vertical(){
+
+}
+
+void Editor::close_panel(){
+
+}
 
 #endif
