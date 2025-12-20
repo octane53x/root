@@ -16,16 +16,20 @@ const int
     CHAR_WIDTH_SCALE_1 = 10,
     VERTICAL_DIVIDE = 20,
     SCROLL_LINES = 10;
+
 const double
-    INIT_TEXT_SCALE = 0.95,
-    SCALE_FACTOR = 1.05,
+    INIT_TEXT_SCALE = 1.0,
+    SCALE_FACTOR = 1.1,
     CURSOR_BLINK = 0.5;
+
 const color
     BKGD_COLOR = BLACK,
     CURSOR_COLOR = CYAN,
     CMD_BAR_COLOR = RED,
+    CMD_TEXT_COLOR = BLACK,
     FOCUS_FILE_BAR_COLOR = LTGRAY,
     UNFOCUS_FILE_BAR_COLOR = DKGRAY;
+
 const str
     _FONT_LOC = "../symbols.bmp",
     _SYMBOLS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -47,6 +51,7 @@ struct Editor : virtual window {
     str file;
     color col;
     vec<str> text;
+    vec<vec<color> > text_color;
     uset<int> refresh_lines;
     umap<char, image> font;
     viewport view;
@@ -71,6 +76,8 @@ struct Editor : virtual window {
   void process_cmd(const str& cmd);
   void set_panel(Panel* panel);
   void add_char(const char c);
+  void draw_char(const image& img, const point& p, const color& c);
+  void highlight_text();
   void refresh_panel();
   void scroll(const bool down);
   void move_cursor(const Dir d);
@@ -163,6 +170,14 @@ void Editor::run(){
   _win_run(); }
 
 void Editor::update(const double ms){
+  // Update text color
+  if(focus == &cmd){
+    cmd.text_color.clear();
+    cmd.text_color.pb(vec<color>());
+    for(int i = 0; i < cmd.text[0].size(); ++i)
+      cmd.text_color.back().pb(CMD_TEXT_COLOR);
+  }else
+    highlight_text();
   // Set cursor pos based on text pos
   Panel& p = *focus;
   Cursor& c = p.cursor;
@@ -190,10 +205,10 @@ void Editor::draw(){
     line.draw(&frame, p.view);
     if(y + p.top_line >= p.text.size()) continue;
     // Draw text
-    for(int x = 0; x < p.text[y + p.top_line].size(); ++x){
-      image img = p.font[p.text[y + p.top_line][x]];
-      img.pos = point(p.pos.x + x * p.char_width, p.pos.y + y * p.line_height);
-      img.draw(&frame, p.view); } }
+    for(int x = 0; x < p.text[y + p.top_line].size(); ++x)
+      draw_char(p.font[p.text[y + p.top_line][x]],
+          point(p.pos.x + x * p.char_width, p.pos.y + y * p.line_height),
+          p.text_color[y + p.top_line][x]); }
   p.refresh_lines.clear();
 
   Cursor& c = p.cursor;
@@ -208,11 +223,11 @@ void Editor::draw(){
         p.pos.y + (c.y - p.top_line) * p.line_height);
     c.fill = col;
     // Draw last character
-    if(c.yprev < p.text.size() && c.xprev < p.text[c.yprev].size()){
-      image img = p.font[p.text[c.yprev][c.xprev]];
-      img.pos = point(p.pos.x + c.xprev * p.char_width,
-          p.pos.y + (c.yprev - p.top_line) * p.line_height);
-      img.draw(&frame, p.view); }
+    if(c.yprev < p.text.size() && c.xprev < p.text[c.yprev].size())
+      draw_char(p.font[p.text[c.yprev][c.xprev]],
+          point(p.pos.x + c.xprev * p.char_width,
+          p.pos.y + (c.yprev - p.top_line) * p.line_height),
+          p.text_color[c.yprev][c.xprev]);
     c.xprev = c.x, c.yprev = c.y; }
 
   // Clear cursor
@@ -221,11 +236,10 @@ void Editor::draw(){
   c.draw(&frame, p.view);
   c.fill = col;
   // Draw current character
-  if(c.y < p.text.size() && c.x < p.text[c.y].size()){
-    image img = p.font[p.text[c.y][c.x]];
-    img.pos = point(p.pos.x + c.x * p.char_width,
-        p.pos.y + (c.y - p.top_line) * p.line_height);
-    img.draw(&frame, p.view); }
+  if(c.y < p.text.size() && c.x < p.text[c.y].size())
+    draw_char(p.font[p.text[c.y][c.x]],
+        point(p.pos.x + c.x * p.char_width,
+        p.pos.y + (c.y - p.top_line) * p.line_height), p.text_color[c.y][c.x]);
   // Draw cursor
   c.draw(&frame, p.view);
 
@@ -258,12 +272,9 @@ void Editor::draw(){
       bar_text += t.file.substr(t.file.find("\\root\\") + 6) + "     ";
     bar_text += "(" + to_string(t.cursor.y + 1) + ","
         + to_string(t.cursor.x + 1) + ")";
-    for(int x = 0; x < bar_text.size(); ++x){
-      image img = default_font[bar_text[x]];
-      img.pos = point(bar.pos.x + x * default_char_width, bar.pos.y);
-      if(focus == &t)
-        img.replace_except(CLEAR, BLACK);
-      img.draw(&frame, t.view); }
+    for(int x = 0; x < bar_text.size(); ++x)
+      draw_char(default_font[bar_text[x]],
+          point(bar.pos.x + x * default_char_width, bar.pos.y), BLACK);
     t.refresh_file_bar = false; }
 
   // Hide cmd bar
@@ -292,18 +303,14 @@ void Editor::load_font(){
   for(int i = 0; i < _SYMBOLS.size(); ++i){
     image c(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
     for(int xi = i * c.width, xo = 0; xo < c.width; ++xi, ++xo)
-      for(int y = 0; y < c.height; ++y){
-        color col = font_img.data[y][xi];
-        if(col.approximately(BLACK))
-          c.data[y][xo] = CLEAR;
-        else
-          c.set_pixel(xo, y, col); }
+      for(int y = 0; y < c.height; ++y)
+        c.set_pixel(xo, y, font_img.data[y][xi]);
     font_base[_SYMBOLS[i]] = c; }
   // Add space manually //! add to symbols
   image space(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
   for(int y = 0; y < space.height; ++y)
     for(int x = 0; x < space.width; ++x)
-      space.data[y][x] = CLEAR;
+      space.data[y][x] = BKGD_COLOR;
   font_base[' '] = space; }
 
 void Editor::scale_font(double factor){
@@ -332,6 +339,18 @@ void Editor::add_char(const char c){
   move_cursor(RIGHT);
   p.refresh_lines.insert(p.cursor.y - p.top_line);
   p.refresh_file_bar = true; }
+
+void Editor::draw_char(const image& img, const point& p, const color& c){
+  image r = img;
+  r.pos = p;
+  for(int y = 0; y < img.height; ++y)
+    for(int x = 0; x < img.width; ++x){
+      color ci = img.data[y][x];
+      if(ci.r > 128 || ci.g > 128 || ci.b > 128)
+        r.set_pixel(x, y, c.approximately(BLACK) ? BLACK : ci.avg(c));
+      else
+        r.data[y][x] = CLEAR; }
+  r.draw(&frame, focus->view); }
 
 void Editor::refresh_panel(){
   for(int y = 0; y <= focus->height / focus->line_height; ++y)

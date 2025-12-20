@@ -4,6 +4,7 @@
 #define INPUT_HH
 
 #include "cmd.hh"
+#include "highlight.hh" // Not used here
 
 void Editor::process_key(const str& key, const bool down, const point& mouse){
   // Modifiers
@@ -26,7 +27,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     p.split_ready = false;
     return; }
 
-  if(!ctrl && !alt && !shift){
+  if(!ctrl && !alt){
     // Single character
     char co = 0;
     if(key.size() == 1){
@@ -110,7 +111,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       focus = prev_panel;
       cmd.hide = true; } }
 
-  if(!ctrl && alt){
+  if(!ctrl && alt && !shift){
     // Alt+IJKL: Move cursor one position
     if(key == "I"){
       move_cursor(UP);
@@ -159,6 +160,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         move_cursor(LEFT);
       while(!(c.y == 0 && c.x == 0) && name_or_val(c.y, c.x))
         move_cursor(LEFT);
+      move_cursor(RIGHT);
       p.text[c.y] = p.text[c.y].substr(0, c.x) + p.text[y0].substr(x0);
       for(int y = y0; y > c.y; --y)
         p.text.erase(p.text.begin() + y);
