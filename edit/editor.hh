@@ -56,7 +56,7 @@ struct Editor : virtual window {
   Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
 
-  bool name_or_val(const char c) const;
+  bool name_or_val(int y, int x) const;
 
   void init(const HINSTANCE wp1, const int wp2);
   void run();
@@ -73,7 +73,11 @@ struct Editor : virtual window {
   void scroll(const bool down);
   void move_cursor(const Dir d); };
 
-bool Editor::name_or_val(const char c) const {
+bool Editor::name_or_val(int y, int x) const {
+  const Panel& p = *focus;
+  if(y >= p.text.size() || x >= p.text[y].size())
+    return false;
+  const char c = p.text[y][x];
   return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
       || (c >= 'a' && c <= 'z') || c == '_'; }
 
@@ -95,7 +99,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   p.text_scale = 1.0;
   p.pos = point(0, 0);
   p.width = width;
-  p.height = height - p.line_height + HEIGHT_OFFSET;
+  p.height = height - p.line_height * 2 + HEIGHT_OFFSET;
   set_panel(&p);
   p.top_line = 0;
   p.file = "";
@@ -222,7 +226,7 @@ void Editor::draw(){
   for(Panel& t : panels){
     if(!t.refresh_file_bar) continue;
     polygon bar;
-    bar.pos = point(t.pos.x, t.pos.y + t.height - default_line_height);
+    bar.pos = point(t.pos.x, t.pos.y + t.height);
     bar.add(point(0, 0));
     bar.add(point(t.width - 1, 0));
     bar.add(point(t.width - 1, default_line_height - 1));

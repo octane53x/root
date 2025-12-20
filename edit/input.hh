@@ -127,9 +127,9 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         move_cursor(UP);
       return; }
     if(key == "J"){
-      while(!(c.y == 0 && c.x == 0) && !name_or_val(p.text[c.y][c.x]))
+      while(!(c.y == 0 && c.x == 0) && !name_or_val(c.y, c.x))
         move_cursor(LEFT);
-      while(!(c.y == 0 && c.x == 0) && name_or_val(p.text[c.y][c.x]))
+      while(!(c.y == 0 && c.x == 0) && name_or_val(c.y, c.x))
         move_cursor(LEFT);
       return; }
     if(key == "K"){
@@ -139,12 +139,26 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       return; }
     if(key == "L"){
       while(!(c.y == p.text.size() - 1 && c.x == p.text[c.y].size())
-          && !name_or_val(p.text[c.y][c.x]))
+          && !name_or_val(c.y, c.x))
         move_cursor(RIGHT);
       while(!(c.y == p.text.size() - 1 && c.x == p.text[c.y].size())
-          && name_or_val(p.text[c.y][c.x]))
+          && name_or_val(c.y, c.x))
         move_cursor(RIGHT);
       return; }
+
+    // Ctrl+Backspace: Delete back several characters
+    if(key == "BACKSPACE"){
+      int y0 = c.y, x0 = c.x;
+      while(!(c.y == 0 && c.x == 0) && !name_or_val(c.y, c.x))
+        move_cursor(LEFT);
+      while(!(c.y == 0 && c.x == 0) && name_or_val(c.y, c.x))
+        move_cursor(LEFT);
+      p.text[c.y] = p.text[c.y].substr(0, c.x) + p.text[y0].substr(x0);
+      for(int y = y0; y > c.y; --y)
+        p.text.erase(p.text.begin() + y);
+      for(int y = c.y; y <= p.top_line + p.height / p.line_height
+          && y <= p.text.size(); ++y)
+        p.refresh_lines.insert(y - p.top_line); }
 
     // Ctrl+D: Delete a character
     if(key == "D"){
