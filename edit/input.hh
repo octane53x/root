@@ -250,15 +250,15 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         p.split_ready = true;
         return;
       }else{
-        split_horizontal();
         p.split_ready = false;
+        split_horizontal();
         return; } }
 
     // Ctrl+Shift+L
     if(key == "L"){
       if(p.split_ready){
-        split_vertical();
         p.split_ready = false;
+        split_vertical();
         return;
       }else{
         int i;

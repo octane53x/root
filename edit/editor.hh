@@ -10,9 +10,11 @@
 const int
     INIT_WIN_W = 1500,
     INIT_WIN_H = 750,
+    WIDTH_OFFSET = -16,
     HEIGHT_OFFSET = -38,
     LINE_HEIGHT_SCALE_1 = 20,
     CHAR_WIDTH_SCALE_1 = 10,
+    VERTICAL_DIVIDE = 20,
     SCROLL_LINES = 10;
 const double
     INIT_TEXT_SCALE = 0.95,
@@ -39,7 +41,7 @@ struct Editor : virtual window {
     color col; };
 
   struct Panel : virtual polygon {
-    bool hide, saved, refresh_file_bar, split_ready;
+    bool hide, saved, refresh_file_bar, refresh_divider, split_ready;
     int width, height, top_line, line_height, char_width;
     double text_scale;
     str file;
@@ -101,7 +103,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   p.char_width = CHAR_WIDTH_SCALE_1;
   p.text_scale = 1.0;
   p.pos = point(0, 0);
-  p.width = width;
+  p.width = width - VERTICAL_DIVIDE + WIDTH_OFFSET;
   p.height = height - p.line_height * 2 + HEIGHT_OFFSET;
   set_panel(&p);
   p.top_line = 0;
@@ -110,6 +112,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   p.text.pb("");
   p.saved = true;
   p.refresh_file_bar = true;
+  p.refresh_divider = true;
   p.split_ready = false;
   focus = &p;
 
@@ -129,7 +132,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cmd.line_height = LINE_HEIGHT_SCALE_1;
   cmd.char_width = CHAR_WIDTH_SCALE_1;
   cmd.text_scale = 1.0;
-  cmd.pos = point(0, height - cmd.line_height + HEIGHT_OFFSET);
+  cmd.pos = point(0, p.height);
   cmd.width = width;
   cmd.height = cmd.line_height;
   set_panel(&cmd);
@@ -139,6 +142,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cmd.text.pb("");
   cmd.cursor = c;
   cmd.cursor.blink = false;
+  cmd.split_ready = false;
 
   // Font
   load_font();
@@ -225,6 +229,19 @@ void Editor::draw(){
   img.draw(&frame, p.view);
   // Draw cursor
   c.draw(&frame, p.view);
+
+  // Draw vertical divider
+  for(Panel& t : panels){
+    if(!t.refresh_divider) continue;
+    polygon div;
+    div.pos = point(t.pos.x + t.width, t.pos.y);
+    div.add(point(0, 0));
+    div.add(point(VERTICAL_DIVIDE - 1, 0));
+    div.add(point(VERTICAL_DIVIDE - 1, t.height - 1));
+    div.add(point(0, t.height - 1));
+    div.fill = UNFOCUS_FILE_BAR_COLOR;
+    div.draw(&frame, t.view);
+    t.refresh_divider = false; }
 
   // Draw file bars
   for(Panel& t : panels){
@@ -314,6 +331,7 @@ void Editor::scroll(const bool down){
   if(!down)
     lines = min(lines, focus->top_line);
   focus->top_line += down ? lines : -lines;
+  focus->refresh_divider = true;
   refresh_panel(); }
 
 void Editor::move_cursor(const Dir d){
@@ -371,8 +389,9 @@ void Editor::move_cursor(const Dir d){
 
 void Editor::split_horizontal(){
   Panel& p = *focus;
-  p.height = (p.height + p.line_height) / 2 - p.line_height;
+  p.height = (p.height + default_line_height) / 2 - default_line_height;
   p.refresh_file_bar = true;
+  p.refresh_divider = true;
   int i;
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
@@ -382,11 +401,25 @@ void Editor::split_horizontal(){
     panels.insert(panels.begin() + i + 1, p);
   Panel& p2 = panels[i];
   focus = &panels[i + 1];
-  focus->pos = point(p2.pos.x, p2.pos.y + p2.height + p2.line_height); }
+  focus->pos = point(p2.pos.x, p2.pos.y + p2.height + default_line_height);
+  refresh_panel(); }
 
 void Editor::split_vertical(){
-
-}
+  Panel& p = *focus;
+  p.width = (p.width + VERTICAL_DIVIDE) / 2 - VERTICAL_DIVIDE;
+  p.refresh_file_bar = true;
+  p.refresh_divider = true;
+  int i;
+  for(i = 0; i < panels.size(); ++i)
+    if(focus == &panels[i]) break;
+  if(i + 1 == panels.size())
+    panels.pb(p);
+  else
+    panels.insert(panels.begin() + i + 1, p);
+  Panel& p2 = panels[i];
+  focus = &panels[i + 1];
+  focus->pos = point(p2.pos.x + p2.width + VERTICAL_DIVIDE, p2.pos.y);
+  refresh_panel(); }
 
 void Editor::close_panel(){
 
