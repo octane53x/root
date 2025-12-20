@@ -39,19 +39,20 @@ struct Editor : virtual window {
     color col; };
 
   struct Panel : virtual polygon {
-    bool hide;
-    int width, height, top_line;
+    bool hide, saved, refresh_file_bar;
+    int width, height, top_line, line_height, char_width;
+    double text_scale;
     str file;
     color col;
     vec<str> text;
     uset<int> refresh_lines;
+    umap<char, image> font;
     viewport view;
     Cursor cursor; };
 
   bool shift, ctrl, alt;
-  int char_width, line_height;
-  double text_scale;
-  umap<char, image> font, font_base;
+  int default_line_height, default_char_width;
+  umap<char, image> default_font, font_base;
   Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
 
@@ -68,7 +69,7 @@ struct Editor : virtual window {
   void process_cmd(const str& cmd);
   void set_panel(Panel* panel);
   void add_char(const char c);
-  void refresh();
+  void refresh_panel();
   void scroll(const bool down);
   void move_cursor(const Dir d); };
 
@@ -85,19 +86,23 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   updated = true;
   last_update = 0;
   shift = ctrl = alt = false;
-  line_height = LINE_HEIGHT_SCALE_1;
-  char_width = CHAR_WIDTH_SCALE_1;
 
   // Initial panel
   panels.pb(Panel());
   Panel& p = panels.back();
+  p.line_height = LINE_HEIGHT_SCALE_1;
+  p.char_width = CHAR_WIDTH_SCALE_1;
+  p.text_scale = 1.0;
   p.pos = point(0, 0);
-  p.width = width, p.height = height + HEIGHT_OFFSET;
+  p.width = width;
+  p.height = height - p.line_height + HEIGHT_OFFSET;
   set_panel(&p);
   p.top_line = 0;
   p.file = "";
   p.col = BKGD_COLOR;
   p.text.pb("");
+  p.saved = true;
+  p.refresh_file_bar = true;
   focus = &p;
 
   // Initial panel cursor
@@ -105,16 +110,20 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   c.x = c.y = 0;
   c.xprev = c.yprev = 0;
   c.add(point(0, 0));
-  c.add(point(char_width-1, 0));
-  c.add(point(char_width-1, line_height-1));
-  c.add(point(0, line_height-1));
+  c.add(point(p.char_width-1, 0));
+  c.add(point(p.char_width-1, p.line_height-1));
+  c.add(point(0, p.line_height-1));
   c.col = CURSOR_COLOR;
   c.blink = true;
   c.last_update = 0;
 
   // Command bar
-  cmd.pos = point(0, height - line_height + HEIGHT_OFFSET);
-  cmd.width = width, cmd.height = line_height;
+  cmd.line_height = LINE_HEIGHT_SCALE_1;
+  cmd.char_width = CHAR_WIDTH_SCALE_1;
+  cmd.text_scale = 1.0;
+  cmd.pos = point(0, height - cmd.line_height + HEIGHT_OFFSET);
+  cmd.width = width;
+  cmd.height = cmd.line_height;
   set_panel(&cmd);
   cmd.hide = false;
   cmd.top_line = 0;
@@ -125,8 +134,13 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
 
   // Font
   load_font();
-  text_scale = 1.0;
   scale_font(INIT_TEXT_SCALE);
+  default_line_height = p.line_height;
+  default_char_width = p.char_width;
+  default_font = p.font;
+  focus = &cmd;
+  scale_font(INIT_TEXT_SCALE);
+  focus = &p;
 
   // Display frame
   frame.set_size(width, height);
@@ -140,9 +154,10 @@ void Editor::run(){
 
 void Editor::update(const double ms){
   // Set cursor pos based on text pos
-  Cursor& c = focus->cursor;
-  c.pos = point(focus->pos.x + c.x * char_width,
-      focus->pos.y + (c.y - focus->top_line) * line_height);
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  c.pos = point(p.pos.x + c.x * p.char_width,
+      p.pos.y + (c.y - p.top_line) * p.line_height);
   // Blink cursor
   double sec = (double)(clock() - c.last_update) / CLOCKS_PER_SEC;
   if(sec >= CURSOR_BLINK){
@@ -152,35 +167,22 @@ void Editor::update(const double ms){
   updated = true; }
 
 void Editor::draw(){
-  // Hide cmd bar
-  if(cmd.hide){
-    assert(focus != &cmd, "draw", "cmd marked for refresh but still in focus");
-    polygon line;
-    line.pos = point(cmd.pos.x, cmd.pos.y);
-    line.add(point(0, 0));
-    line.add(point(cmd.width - 1, 0));
-    line.add(point(cmd.width - 1, line_height - 1));
-    line.add(point(0, line_height - 1));
-    line.fill = BKGD_COLOR;
-    line.draw(&frame, cmd.view);
-    cmd.hide = false; }
-
   Panel& p = *focus;
   for(int y : p.refresh_lines){
     // Clear line
     polygon line;
-    line.pos = point(p.pos.x, p.pos.y + y * line_height);
+    line.pos = point(p.pos.x, p.pos.y + y * p.line_height);
     line.add(point(0, 0));
     line.add(point(p.width - 1, 0));
-    line.add(point(p.width - 1, line_height - 1));
-    line.add(point(0, line_height - 1));
+    line.add(point(p.width - 1, p.line_height - 1));
+    line.add(point(0, p.line_height - 1));
     line.fill = p.col;
     line.draw(&frame, p.view);
     if(y + p.top_line >= p.text.size()) continue;
     // Draw text
     for(int x = 0; x < p.text[y + p.top_line].size(); ++x){
-      image img = font[p.text[y + p.top_line][x]];
-      img.pos = point(p.pos.x + x * char_width, p.pos.y + y * line_height);
+      image img = p.font[p.text[y + p.top_line][x]];
+      img.pos = point(p.pos.x + x * p.char_width, p.pos.y + y * p.line_height);
       img.draw(&frame, p.view); } }
   p.refresh_lines.clear();
 
@@ -189,17 +191,17 @@ void Editor::draw(){
     // Clear last character
     color col = c.fill;
     c.fill = p.col;
-    c.pos = point(p.pos.x + c.xprev * char_width,
-        p.pos.y + (c.yprev - p.top_line) * line_height);
+    c.pos = point(p.pos.x + c.xprev * p.char_width,
+        p.pos.y + (c.yprev - p.top_line) * p.line_height);
     c.draw(&frame, p.view);
-    c.pos = point(p.pos.x + c.x * char_width,
-        p.pos.y + (c.y - p.top_line) * line_height);
+    c.pos = point(p.pos.x + c.x * p.char_width,
+        p.pos.y + (c.y - p.top_line) * p.line_height);
     c.fill = col;
     // Draw last character
     if(c.yprev < p.text.size() && c.xprev < p.text[c.yprev].size()){
-      image img = font[p.text[c.yprev][c.xprev]];
-      img.pos = point(p.pos.x + c.xprev * char_width,
-          p.pos.y + (c.yprev - p.top_line) * line_height);
+      image img = p.font[p.text[c.yprev][c.xprev]];
+      img.pos = point(p.pos.x + c.xprev * p.char_width,
+          p.pos.y + (c.yprev - p.top_line) * p.line_height);
       img.draw(&frame, p.view); }
     c.xprev = c.x, c.yprev = c.y; }
 
@@ -209,37 +211,72 @@ void Editor::draw(){
   c.draw(&frame, p.view);
   c.fill = col;
   // Draw current character
-  image img = font[p.text[c.y][c.x]];
-  img.pos = point(p.pos.x + c.x * char_width,
-      p.pos.y + (c.y - p.top_line) * line_height);
+  image img = p.font[p.text[c.y][c.x]];
+  img.pos = point(p.pos.x + c.x * p.char_width,
+      p.pos.y + (c.y - p.top_line) * p.line_height);
   img.draw(&frame, p.view);
   // Draw cursor
-  c.draw(&frame, p.view); }
+  c.draw(&frame, p.view);
+
+  // Draw file bars
+  for(Panel& t : panels){
+    if(!t.refresh_file_bar) continue;
+    polygon bar;
+    bar.pos = point(t.pos.x, t.pos.y + t.height - default_line_height);
+    bar.add(point(0, 0));
+    bar.add(point(t.width - 1, 0));
+    bar.add(point(t.width - 1, default_line_height - 1));
+    bar.add(point(0, default_line_height - 1));
+    bar.fill = (focus == &t) ? FOCUS_FILE_BAR_COLOR : UNFOCUS_FILE_BAR_COLOR;
+    bar.draw(&frame, t.view);
+    str bar_text = str(t.saved ? "-----" : "*****") + "     ";
+    if(t.file.find("\\root\\") != str::npos)
+      bar_text += t.file.substr(t.file.find("\\root\\") + 6) + "     ";
+    bar_text += "(" + to_string(t.cursor.y + 1) + ","
+        + to_string(t.cursor.x + 1) + ")";
+    for(int x = 0; x < bar_text.size(); ++x){
+      image img = default_font[bar_text[x]];
+      img.pos = point(bar.pos.x + x * default_char_width, bar.pos.y);
+      img.draw(&frame, t.view); }
+    t.refresh_file_bar = false; }
+
+  // Hide cmd bar
+  if(cmd.hide){
+    assert(focus != &cmd, "draw", "cmd marked for refresh but still in focus");
+    polygon line;
+    line.pos = point(cmd.pos.x, cmd.pos.y);
+    line.add(point(0, 0));
+    line.add(point(cmd.width - 1, 0));
+    line.add(point(cmd.width - 1, cmd.line_height - 1));
+    line.add(point(0, cmd.line_height - 1));
+    line.fill = BKGD_COLOR;
+    line.draw(&frame, cmd.view);
+    cmd.hide = false; } }
 
 void Editor::load_font(){
   image font_img = load_bmp(_FONT_LOC);
   for(int i = 0; i < _SYMBOLS.size(); ++i){
-    image c(char_width, line_height);
-    for(int xi = i * char_width, xo = 0; xo < char_width; ++xi, ++xo)
-      for(int y = 0; y < line_height; ++y)
+    image c(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
+    for(int xi = i * c.width, xo = 0; xo < c.width; ++xi, ++xo)
+      for(int y = 0; y < c.height; ++y)
         c.set_pixel(xo, y, font_img.data[y][xi]);
     font_base[_SYMBOLS[i]] = c; }
   // Add space manually //! add to symbols
-  image space(char_width, line_height);
+  image space(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
   for(int y = 0; y < space.height; ++y)
     for(int x = 0; x < space.width; ++x)
       space.set_pixel(x, y, CLEAR_PEN);
-  font_base[' '] = space;
-  font = font_base; }
+  font_base[' '] = space; }
 
 void Editor::scale_font(double factor){
-  text_scale *= factor;
-  line_height = (int)ceil(text_scale * LINE_HEIGHT_SCALE_1);
-  char_width = (int)ceil(text_scale * CHAR_WIDTH_SCALE_1);
-  font.clear();
-  for(pair<char, image> p : font_base)
-    font[p.first] = p.second.scale(text_scale);
-  focus->cursor.scale(factor); }
+  Panel& p = *focus;
+  p.text_scale *= factor;
+  p.line_height = (int)ceil(p.text_scale * LINE_HEIGHT_SCALE_1);
+  p.char_width = (int)ceil(p.text_scale * CHAR_WIDTH_SCALE_1);
+  p.font.clear();
+  for(pair<char, image> f : font_base)
+    p.font[f.first] = f.second.scale(p.text_scale);
+  p.cursor.scale(factor); }
 
 void Editor::set_panel(Panel* panel){
   assert(panel->width > 0 && panel->height > 0, "set_panel",
@@ -254,21 +291,27 @@ void Editor::add_char(const char c){
   Panel& p = *focus;
   p.text[p.cursor.y] = p.text[p.cursor.y].substr(0, p.cursor.x) + str(1, c)
       + p.text[p.cursor.y].substr(p.cursor.x);
-  ++p.cursor.x;
-  p.refresh_lines.insert(p.cursor.y - p.top_line); }
+  move_cursor(RIGHT);
+  p.refresh_lines.insert(p.cursor.y - p.top_line);
+  p.refresh_file_bar = true; }
 
-void Editor::refresh(){
-  for(int y = 0; y <= focus->height / line_height; ++y)
-    focus->refresh_lines.insert(y); }
+void Editor::refresh_panel(){
+  for(int y = 0; y <= focus->height / focus->line_height; ++y)
+    focus->refresh_lines.insert(y);
+  focus->refresh_file_bar = cmd.hide = true; }
 
 void Editor::scroll(const bool down){
   assert(focus != &cmd, "scroll", "cmd bar is in focus");
   int lines = min((int)focus->text.size() - focus->top_line - 1, SCROLL_LINES);
+  if(!down)
+    lines = min(lines, focus->top_line);
   focus->top_line += down ? lines : -lines;
-  refresh(); }
+  refresh_panel(); }
 
 void Editor::move_cursor(const Dir d){
-  Cursor& c = focus->cursor;
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  p.refresh_file_bar = true;
   switch(d){
   case UP:
     if(c.y == 0){
@@ -276,9 +319,9 @@ void Editor::move_cursor(const Dir d){
         c.x = 0;
       return; }
     --c.y;
-    if(c.x > focus->text[c.y].size())
-      c.x = (int)focus->text[c.y].size();
-    if(c.y < focus->top_line)
+    if(c.x > p.text[c.y].size())
+      c.x = (int)p.text[c.y].size();
+    if(c.y < p.top_line)
       scroll(false);
     return;
 
@@ -286,31 +329,31 @@ void Editor::move_cursor(const Dir d){
     if(c.x == 0){
       if(c.y == 0) return;
       --c.y;
-      c.x = (int)focus->text[c.y].size();
-      if(c.y < focus->top_line)
+      c.x = (int)p.text[c.y].size();
+      if(c.y < p.top_line)
         scroll(false);
     }else
       --c.x;
     return;
 
   case DOWN:
-    if(c.y == focus->text.size() - 1){
-      if(c.x < focus->text[c.y].size())
-        c.x = (int)focus->text[c.y].size();
+    if(c.y == p.text.size() - 1){
+      if(c.x < p.text[c.y].size())
+        c.x = (int)p.text[c.y].size();
       return; }
     ++c.y;
-    if(c.x > focus->text[c.y].size())
-      c.x = (int)focus->text[c.y].size();
-    if(c.y - focus->top_line >= focus->height / line_height)
+    if(c.x > p.text[c.y].size())
+      c.x = (int)p.text[c.y].size();
+    if(c.y - p.top_line >= p.height / p.line_height - 1)
       scroll(true);
     return;
 
   case RIGHT:
-    if(c.x == focus->text[c.y].size()){
-      if(c.y == focus->text.size() - 1) return;
+    if(c.x == p.text[c.y].size()){
+      if(c.y == p.text.size() - 1) return;
       ++c.y;
       c.x = 0;
-      if(c.y - focus->top_line >= focus->height / line_height)
+      if(c.y - p.top_line >= p.height / p.line_height - 1)
         scroll(true);
     }else
       ++c.x;

@@ -13,7 +13,7 @@ void Editor::process_cmd(const str& cmd){
     focus->text.clear();
     focus->cursor.x = focus->cursor.y = 0;
     focus->top_line = 0;
-    refresh();
+    refresh_panel();
     // Load file text
     if(exists(focus->file)){
       ifstream fs(focus->file);

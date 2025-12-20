@@ -70,16 +70,13 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     if(key == "BACKSPACE"){
       if(c.x > 0){
         p.text[c.y] = p.text[c.y].substr(0, c.x - 1) + p.text[c.y].substr(c.x);
-        --c.x;
+        move_cursor(LEFT);
         p.refresh_lines.insert(c.y - p.top_line);
       }else if(c.y > 0){
-        --c.y;
-        if(c.y < p.top_line)
-          scroll(false);
-        c.x = (int)p.text[c.y].size();
+        move_cursor(LEFT);
         p.text[c.y] += p.text[c.y + 1];
         p.text.erase(p.text.begin() + c.y + 1);
-        for(int y = c.y; y <= p.top_line + p.height / line_height
+        for(int y = c.y; y <= p.top_line + p.height / p.line_height
             && y <= p.text.size(); ++y)
           p.refresh_lines.insert(y - p.top_line); }
       return; }
@@ -94,13 +91,10 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       }else{
         str tail = p.text[c.y].substr(c.x);
         p.text[c.y] = p.text[c.y].substr(0, c.x);
-        ++c.y;
-        if(c.y - p.top_line >= p.height / line_height)
-          scroll(true);
-        c.x = 0;
-        p.text.insert(p.text.begin() + c.y, tail);
-        for(int y = c.y - 1;
-            y <= p.top_line + p.height / line_height && y <= p.text.size(); ++y)
+        p.text.insert(p.text.begin() + c.y + 1, tail);
+        move_cursor(RIGHT);
+        for(int y = c.y - 1; y <= p.top_line + p.height / p.line_height
+            && y <= p.text.size(); ++y)
           p.refresh_lines.insert(y - p.top_line); }
       return; }
 
@@ -133,12 +127,10 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         move_cursor(UP);
       return; }
     if(key == "J"){
-      if(name_or_val(p.text[c.y][c.x]))
-        while(!(c.y == 0 && c.x == 0) && name_or_val(p.text[c.y][c.x]))
-          move_cursor(LEFT);
-      else
-        while(!(c.y == 0 && c.x == 0) && !name_or_val(p.text[c.y][c.x]))
-          move_cursor(LEFT);
+      while(!(c.y == 0 && c.x == 0) && !name_or_val(p.text[c.y][c.x]))
+        move_cursor(LEFT);
+      while(!(c.y == 0 && c.x == 0) && name_or_val(p.text[c.y][c.x]))
+        move_cursor(LEFT);
       return; }
     if(key == "K"){
       move_cursor(DOWN);
@@ -146,14 +138,12 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         move_cursor(DOWN);
       return; }
     if(key == "L"){
-      if(name_or_val(p.text[c.y][c.x]))
-        while(!(c.y == p.text.size() - 1 && c.x == p.text[c.y].size())
-            && name_or_val(p.text[c.y][c.x]))
-          move_cursor(RIGHT);
-      else
-        while(!(c.y == p.text.size() - 1 && c.x == p.text[c.y].size())
-            && !name_or_val(p.text[c.y][c.x]))
-          move_cursor(RIGHT);
+      while(!(c.y == p.text.size() - 1 && c.x == p.text[c.y].size())
+          && !name_or_val(p.text[c.y][c.x]))
+        move_cursor(RIGHT);
+      while(!(c.y == p.text.size() - 1 && c.x == p.text[c.y].size())
+          && name_or_val(p.text[c.y][c.x]))
+        move_cursor(RIGHT);
       return; }
 
     // Ctrl+D: Delete a character
@@ -164,7 +154,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       }else if(c.y < p.text.size() - 1){
         p.text[c.y] += p.text[c.y + 1];
         p.text.erase(p.text.begin() + c.y + 1);
-        for(int y = c.y; y <= p.top_line + p.height / line_height
+        for(int y = c.y; y <= p.top_line + p.height / p.line_height
             && y <= p.text.size(); ++y)
           p.refresh_lines.insert(y - p.top_line); }
       return; }
@@ -186,31 +176,36 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     // Ctrl+(+-): Zoom text
     if(key == "EQUALS"){
       scale_font(SCALE_FACTOR);
-      refresh();
+      refresh_panel();
       return; }
     if(key == "MINUS"){
       scale_font(1.0 / SCALE_FACTOR);
-      refresh();
+      refresh_panel();
       return; } }
 
   if(ctrl && alt){
     // Ctrl+Alt+IJKL: Move cursor maximal position
     if(key == "I"){
-      c.y = p.top_line = 0;
-      c.x = 0;
-      refresh();
+      while(c.y > 0)
+        move_cursor(UP);
+      while(c.x > 0)
+        move_cursor(LEFT);
+      refresh_panel();
       return; }
     if(key == "J"){
-      c.x = 0;
+      while(c.x > 0)
+        move_cursor(LEFT);
       return; }
     if(key == "K"){
-      c.y = (int)p.text.size() - 1;
-      c.x = (int)p.text[c.y].size();
-      p.top_line = (int)p.text.size() - p.height / line_height;
-      refresh();
+      while(c.y < p.text.size() - 1)
+        move_cursor(DOWN);
+      while(c.x < p.text[c.y].size())
+        move_cursor(RIGHT);
+      refresh_panel();
       return; }
     if(key == "L"){
-      c.x = (int)p.text[c.y].size();
+      while(c.x < p.text[c.y].size())
+        move_cursor(RIGHT);
       return; } } }
 
 #endif
