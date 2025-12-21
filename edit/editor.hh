@@ -75,19 +75,21 @@ struct Editor : virtual window {
 
   void load_font();
   void scale_font(double factor);
-  void process_key(const str& key, const bool down, const point& mouse);
-  void process_cmd(const str& cmd);
-  void set_panel(Panel* panel);
-  void add_char(const char c);
   void draw_char(const image& img, const point& p, const color& c);
-  void highlight_text(const int line);
+  void insert_text(const vec<str>& text, const int y, const int x);
+  void remove_text(const int y0, const int yf, const int x0, const int xf);
   void refresh_panel();
   void scroll(const bool down);
   void move_cursor(const Dir d);
   void clip();
   void split_horizontal();
   void split_vertical();
-  void close_panel(); };
+  void close_panel();
+
+  // Defined outside this file
+  void process_key(const str& key, const bool down, const point& mouse);
+  void process_cmd(const str& cmd);
+  void highlight_text(const int line); };
 
 void Editor::init(const HINSTANCE wp1, const int wp2){
   _win = this;
@@ -108,7 +110,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   p.pos = point(0, 0);
   p.width = width - VERTICAL_DIVIDE + WIDTH_OFFSET;
   p.height = height - p.line_height * 2 + HEIGHT_OFFSET;
-  set_panel(&p);
+  p.set_box(p.width, p.height);
   p.top_line = 0;
   p.file = "";
   p.col = BKGD_COLOR;
@@ -139,7 +141,7 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   cmd.pos = point(0, p.height + p.line_height);
   cmd.width = width;
   cmd.height = cmd.line_height;
-  set_panel(&cmd);
+  cmd.set_box(cmd.width, cmd.height);
   cmd.hide = false;
   cmd.top_line = 0;
   cmd.col = CMD_BAR_COLOR;
@@ -194,6 +196,8 @@ void Editor::draw(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   for(int y : p.refresh_lines){
+    if(y < 0 || y > p.height / p.line_height)
+      err("draw", "bad refresh line");
     int yl = y + p.top_line;
 
     // Determine selection
@@ -371,23 +375,6 @@ void Editor::scale_font(double factor){
     p.font[f.first] = f.second.scale(p.text_scale);
   p.cursor.scale(factor); }
 
-void Editor::set_panel(Panel* panel){
-  assert(panel->width > 0 && panel->height > 0, "set_panel",
-      "panel size not positive");
-  panel->points.clear();
-  panel->add(point(0, 0));
-  panel->add(point(panel->width - 1, 0));
-  panel->add(point(panel->width - 1, panel->height - 1));
-  panel->add(point(0, panel->height - 1)); }
-
-void Editor::add_char(const char c){
-  Panel& p = *focus;
-  p.text[p.cursor.y] = p.text[p.cursor.y].substr(0, p.cursor.x) + str(1, c)
-      + p.text[p.cursor.y].substr(p.cursor.x);
-  move_cursor(RIGHT);
-  p.refresh_lines.insert(p.cursor.y - p.top_line);
-  p.refresh_file_bar = true; }
-
 void Editor::draw_char(const image& img, const point& p, const color& c){
   image r = img;
   r.pos = p;
@@ -399,6 +386,34 @@ void Editor::draw_char(const image& img, const point& p, const color& c){
       else
         r.data[y][x] = CLEAR; }
   r.draw(&frame, focus->view); }
+
+void Editor::insert_text(const vec<str>& text, const int y, const int x){
+  Panel& p = *focus;
+  str tail = p.text[y].substr(x);
+  p.text[y] = p.text[y].substr(0, x) + text[0];
+  p.text.insert(p.text.begin() + y + 1, text.begin() + 1, text.end());
+  p.text[y + text.size() - 1] += tail;
+  for(int yl = y; yl - p.top_line <= p.height / p.line_height
+      && yl < p.text.size(); ++yl)
+    p.refresh_lines.insert(yl - p.top_line);
+  p.refresh_file_bar = true; }
+
+void Editor::remove_text(
+    const int y0, const int yf, const int x0, const int xf){
+  Panel& p = *focus;
+  str line = p.text[y0].substr(0, x0);
+  if(xf == p.text[yf].size()){
+    if(yf + 1 < p.text.size() && p.text[yf + 1] != "")
+      line += p.text[yf + 1];
+    p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf + 2);
+  }else{
+    line += p.text[yf].substr(xf + 1);
+    p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf + 1); }
+  p.text[y0] = line;
+  for(int y = y0; y <= p.top_line + p.height / p.line_height
+      && y <= p.text.size(); ++y)
+    p.refresh_lines.insert(y - p.top_line);
+  p.refresh_file_bar = true; }
 
 void Editor::refresh_panel(){
   Panel& p = *focus;

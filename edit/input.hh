@@ -63,29 +63,23 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     else if(key == "RBRACKET") co = shift ? '}' : ']';
     else if(key == "QUOTE") co = shift ? '"' : '\'';
     if(co != 0){
-      add_char(co);
+      insert_text(vec<str>({str(1, co)}), c.y, c.x);
+      move_cursor(RIGHT);
       return; }
 
     // Space or two
     if(key == "SPACE"){
-      add_char(' ');
-      if(shift)
-        add_char(' ');
+      insert_text(vec<str>({" "}), c.y, c.x);
+      move_cursor(RIGHT);
+      if(shift){
+        insert_text(vec<str>({" "}), c.y, c.x);
+        move_cursor(RIGHT); }
       return; }
 
     // Backspace
     if(key == "BACKSPACE"){
-      if(c.x > 0){
-        p.text[c.y] = p.text[c.y].substr(0, c.x - 1) + p.text[c.y].substr(c.x);
-        move_cursor(LEFT);
-        p.refresh_lines.insert(c.y - p.top_line);
-      }else if(c.y > 0){
-        move_cursor(LEFT);
-        p.text[c.y] += p.text[c.y + 1];
-        p.text.erase(p.text.begin() + c.y + 1);
-        for(int y = c.y; y <= p.top_line + p.height / p.line_height
-            && y <= p.text.size(); ++y)
-          p.refresh_lines.insert(y - p.top_line); }
+      move_cursor(LEFT);
+      remove_text(c.y, c.y, c.x, c.x);
       return; }
 
     // Enter
@@ -216,7 +210,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Ctrl+A: Select all
     if(key == "A"){
-      p.ymark = p.text.size() - 1, p.xmark = p.text.back().size();
+      p.ymark = (int)p.text.size() - 1, p.xmark = (int)p.text.back().size();
       c.y = c.x = 0;
       while(p.top_line != 0)
         scroll(false);
@@ -224,18 +218,13 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Ctrl+X: Cut selection
     if(key == "X"){
+      if(p.ymark == -1) return;
       clip();
-      int y0, yf, x0, xf;
       if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
-        y0 = c.y, yf = p.ymark, x0 = c.x, xf = p.xmark - 1;
+        remove_text(c.y, p.ymark, c.x, p.xmark - 1);
       else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
-        y0 = p.ymark, yf = c.y, x0 = p.xmark, xf = c.x - 1;
+        remove_text(p.ymark, c.y, p.xmark, c.x - 1);
       else return;
-      p.text[y0] = p.text[y0].substr(0, x0) + p.text[yf].substr(xf + 1);
-      p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf + 1);
-      for(int y = y0; y <= p.top_line + p.height / p.line_height
-          && y <= p.text.size(); ++y)
-        p.refresh_lines.insert(y - p.top_line);
       if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
         c.y = p.ymark, c.x = p.xmark;
       p.ymark = p.xmark = -1;
@@ -243,13 +232,22 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Ctrl+C: Copy selection
     if(key == "C"){
+      if(p.ymark == -1) return;
       clip();
+      for(int y = min(p.ymark, c.y); y <= max(p.ymark, c.y); ++y)
+        p.refresh_lines.insert(y - p.top_line);
       p.ymark = p.xmark = -1;
       return; }
 
     // Ctrl+V: Paste seletion
     if(key == "V"){
-
+      if(clipboard.empty()) return;
+      insert_text(clipboard, c.y, c.x);
+      c.y += (int)clipboard.size() - 1;
+      if(clipboard.size() == 1)
+        c.x += (int)clipboard.back().size();
+      else
+        c.x = (int)clipboard.back().size();
       return; } }
 
   if(ctrl && alt && !shift){
