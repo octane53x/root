@@ -181,36 +181,6 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
           p.refresh_lines.insert(y - p.top_line); }
       return; }
 
-    // Ctrl+X: Cut selection
-    if(key == "X"){
-      clip();
-      int y0, yf, x0, xf;
-      if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
-        y0 = c.y, yf = p.ymark, x0 = c.x, xf = p.xmark - 1;
-      else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
-        y0 = p.ymark, yf = c.y, x0 = p.xmark, xf = c.x - 1;
-      else return;
-      p.text[y0] = p.text[y0].substr(0, x0) + p.text[yf].substr(xf + 1);
-      p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf + 1);
-      for(int y = y0; y <= p.top_line + p.height / p.line_height
-          && y <= p.text.size(); ++y)
-        p.refresh_lines.insert(y - p.top_line);
-      if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
-        c.y = p.ymark, c.x = p.xmark;
-      p.ymark = p.xmark = -1;
-      return; }
-
-    // Ctrl+C: Copy selection
-    if(key == "C"){
-      clip();
-      p.ymark = p.xmark = -1;
-      return; }
-
-    // Ctrl+V: Paste seletion
-    if(key == "V"){
-
-      return; }
-
     // Ctrl+Q: Close application
     if(key == "Q")
       quit();
@@ -242,7 +212,45 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       else{
         for(int i = min(p.ymark, c.y); i <= max(p.ymark, c.y); ++i)
           p.refresh_lines.insert(i - p.top_line);
-        p.ymark = p.xmark = -1; } } }
+        p.ymark = p.xmark = -1; } }
+
+    // Ctrl+A: Select all
+    if(key == "A"){
+      p.ymark = p.text.size() - 1, p.xmark = p.text.back().size();
+      c.y = c.x = 0;
+      while(p.top_line != 0)
+        scroll(false);
+      return; }
+
+    // Ctrl+X: Cut selection
+    if(key == "X"){
+      clip();
+      int y0, yf, x0, xf;
+      if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
+        y0 = c.y, yf = p.ymark, x0 = c.x, xf = p.xmark - 1;
+      else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
+        y0 = p.ymark, yf = c.y, x0 = p.xmark, xf = c.x - 1;
+      else return;
+      p.text[y0] = p.text[y0].substr(0, x0) + p.text[yf].substr(xf + 1);
+      p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf + 1);
+      for(int y = y0; y <= p.top_line + p.height / p.line_height
+          && y <= p.text.size(); ++y)
+        p.refresh_lines.insert(y - p.top_line);
+      if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
+        c.y = p.ymark, c.x = p.xmark;
+      p.ymark = p.xmark = -1;
+      return; }
+
+    // Ctrl+C: Copy selection
+    if(key == "C"){
+      clip();
+      p.ymark = p.xmark = -1;
+      return; }
+
+    // Ctrl+V: Paste seletion
+    if(key == "V"){
+
+      return; } }
 
   if(ctrl && alt && !shift){
     // Ctrl+Alt+IJKL: Move cursor maximal position

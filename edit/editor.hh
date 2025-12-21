@@ -407,12 +407,13 @@ void Editor::refresh_panel(){
   p.refresh_file_bar = cmd.hide = true; }
 
 void Editor::scroll(const bool down){
-  assert(focus != &cmd, "scroll", "cmd bar is in focus");
-  int lines = min((int)focus->text.size() - focus->top_line - 1, SCROLL_LINES);
+  Panel& p = *focus;
+  assert(&p != &cmd, "scroll", "cmd bar is in focus");
+  int lines = min((int)p.text.size() - p.top_line - 1, SCROLL_LINES);
   if(!down)
-    lines = min(lines, focus->top_line);
-  focus->top_line += down ? lines : -lines;
-  focus->refresh_divider = true;
+    lines = min(lines, p.top_line);
+  p.top_line += down ? lines : -lines;
+  p.refresh_divider = true;
   refresh_panel(); }
 
 void Editor::move_cursor(const Dir d){
