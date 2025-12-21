@@ -151,12 +151,6 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   default_font = p.font;
   focus = &cmd;
   scale_font(INIT_TEXT_SCALE);
-  umap<char, image> black_font;
-  for(pair<char, image> t : cmd.font){
-    image black_char = t.second;
-    black_char.replace_except(CLEAR, BLACK);
-    black_font[t.first] = black_char; }
-  cmd.font = black_font;
   focus = &p;
 
   // Display frame
