@@ -67,6 +67,13 @@ void debug(const str& msg){
   printl(msg);
   print_time(); }
 
+// Print debug ints
+void debug(const initializer_list<int>& ints){
+  str msg = "";
+  for(int i : ints)
+    msg += to_string(i) + " ";
+  debug(msg); }
+
 // Initialize debug environment
 void debug_init(){
   time_t t = time(NULL);

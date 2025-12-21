@@ -181,6 +181,36 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
           p.refresh_lines.insert(y - p.top_line); }
       return; }
 
+    // Ctrl+X: Cut selection
+    if(key == "X"){
+      clip();
+      int y0, yf, x0, xf;
+      if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
+        y0 = c.y, yf = p.ymark, x0 = c.x, xf = p.xmark - 1;
+      else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
+        y0 = p.ymark, yf = c.y, x0 = p.xmark, xf = c.x - 1;
+      else return;
+      p.text[y0] = p.text[y0].substr(0, x0) + p.text[yf].substr(xf + 1);
+      p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf + 1);
+      for(int y = y0; y <= p.top_line + p.height / p.line_height
+          && y <= p.text.size(); ++y)
+        p.refresh_lines.insert(y - p.top_line);
+      if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
+        c.y = p.ymark, c.x = p.xmark;
+      p.ymark = p.xmark = -1;
+      return; }
+
+    // Ctrl+C: Copy selection
+    if(key == "C"){
+      clip();
+      p.ymark = p.xmark = -1;
+      return; }
+
+    // Ctrl+V: Paste seletion
+    if(key == "V"){
+
+      return; }
+
     // Ctrl+Q: Close application
     if(key == "Q")
       quit();

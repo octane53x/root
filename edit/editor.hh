@@ -38,6 +38,7 @@ const str
 
 enum Dir { UP, LEFT, DOWN, RIGHT };
 
+// Text editor application
 struct Editor : virtual window {
 
   struct Cursor : virtual polygon {
@@ -60,6 +61,7 @@ struct Editor : virtual window {
 
   bool shift, ctrl, alt;
   int default_line_height, default_char_width;
+  vec<str> clipboard;
   umap<char, image> default_font, font_base;
   Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
@@ -82,6 +84,7 @@ struct Editor : virtual window {
   void refresh_panel();
   void scroll(const bool down);
   void move_cursor(const Dir d);
+  void clip();
   void split_horizontal();
   void split_vertical();
   void close_panel(); };
@@ -205,7 +208,7 @@ void Editor::draw(){
         if(p.ymark > yl)
           xend = (int)p.text[yl].size();
         else if(p.ymark == yl)
-          xend = p.xmark;
+          xend = p.xmark - 1;
 
       // Mark before cursor
       }else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark)){
@@ -264,7 +267,7 @@ void Editor::draw(){
     color col = c.fill;
     c.fill =
         (p.ymark == -1 || ((c.y < c.yprev || (c.y == c.yprev && c.x < c.xprev))
-        && (p.ymark < c.yprev || (p.ymark == c.yprev && p.xmark < c.xprev)))
+        && (p.ymark < c.yprev || (p.ymark == c.yprev && p.xmark <= c.xprev)))
         || ((c.y > c.yprev || (c.y == c.yprev && c.x > c.xprev))
         && (p.ymark > c.yprev || (p.ymark == c.yprev && p.xmark > c.xprev))))
         ? p.col : SELECT_COLOR;
@@ -286,7 +289,7 @@ void Editor::draw(){
   // Clear cursor
   color col = c.fill;
   c.fill = (p.ymark == -1 || (c.y > p.ymark
-      || (c.y == p.ymark && c.x > p.xmark))) ? p.col : SELECT_COLOR;
+      || (c.y == p.ymark && c.x >= p.xmark))) ? p.col : SELECT_COLOR;
   c.draw(&frame, p.view);
   c.fill = col;
   // Draw current character
@@ -476,6 +479,27 @@ void Editor::move_cursor(const Dir d){
   default:
     err("move_cursor", "bad direction"); } }
 
+void Editor::clip(){
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  if(p.ymark == -1) return;
+  int y0, yf, x0, xf;
+  if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
+    y0 = c.y, yf = p.ymark, x0 = c.x, xf = p.xmark - 1;
+  else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
+    y0 = p.ymark, yf = c.y, x0 = p.xmark, xf = c.x - 1;
+  else return;
+  clipboard.clear();
+  clipboard.pb("");
+  while(y0 < yf || (y0 == yf && x0 <= xf)){
+    if(x0 < p.text[y0].size()){
+      clipboard.back() += str(1, p.text[y0][x0]);
+      ++x0; }
+    if(x0 == p.text[y0].size()){
+      clipboard.pb("");
+      ++y0;
+      x0 = 0; } } }
+
 void Editor::split_horizontal(){
   Panel& p = *focus;
   p.height = (p.height + default_line_height) / 2 - default_line_height;
@@ -511,6 +535,8 @@ void Editor::split_vertical(){
   refresh_panel(); }
 
 void Editor::close_panel(){
+  Panel& p = *focus;
+  //!
 
 }
 
