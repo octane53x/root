@@ -77,7 +77,7 @@ struct Editor : virtual window {
   void set_panel(Panel* panel);
   void add_char(const char c);
   void draw_char(const image& img, const point& p, const color& c);
-  void highlight_text();
+  void highlight_text(const int line);
   void refresh_panel();
   void scroll(const bool down);
   void move_cursor(const Dir d);
@@ -169,9 +169,7 @@ void Editor::update(const double ms){
     cmd.text_color.clear();
     cmd.text_color.pb(vec<color>());
     for(int i = 0; i < cmd.text[0].size(); ++i)
-      cmd.text_color.back().pb(CMD_TEXT_COLOR);
-  }else
-    highlight_text();
+      cmd.text_color.back().pb(CMD_TEXT_COLOR); }
   // Set cursor pos based on text pos
   Panel& p = *focus;
   Cursor& c = p.cursor;
@@ -199,6 +197,7 @@ void Editor::draw(){
     line.draw(&frame, p.view);
     if(y + p.top_line >= p.text.size()) continue;
     // Draw text
+    highlight_text(y + p.top_line);
     for(int x = 0; x < p.text[y + p.top_line].size(); ++x)
       draw_char(p.font[p.text[y + p.top_line][x]],
           point(p.pos.x + x * p.char_width, p.pos.y + y * p.line_height),
