@@ -40,6 +40,8 @@ void Editor::highlight_text(const int line){
     if(i < j)
       toks.pb(pair<int, int>(i, j));
     i = j; }
+  if(p.file.find(".txt") != str::npos)
+    return;
 
   // Process tokens
   while(!toks.empty()){

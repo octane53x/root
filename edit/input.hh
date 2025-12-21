@@ -203,7 +203,16 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     if(key == "MINUS" && focus != &cmd){
       scale_font(1.0 / SCALE_FACTOR);
       refresh_panel();
-      return; } }
+      return; }
+
+    // Ctrl+Space: Set/unset mark
+    if(key == "SPACE" && focus != &cmd){
+      if(p.ymark == -1)
+        p.ymark = c.y, p.xmark = c.x;
+      else{
+        for(int i = min(p.ymark, c.y); i <= max(p.ymark, c.y); ++i)
+          p.refresh_lines.insert(i - p.top_line);
+        p.ymark = p.xmark = -1; } } }
 
   if(ctrl && alt && !shift){
     // Ctrl+Alt+IJKL: Move cursor maximal position

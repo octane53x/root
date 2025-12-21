@@ -25,7 +25,8 @@ struct polygon : virtual object {
   double area() const;
 
   void add(const point& p);
-  void scale(const double s); };
+  void scale(const double s);
+  void set_box(const int& width, const int& height); };
 
 // Set default member state
 polygon::polygon(){
@@ -135,5 +136,13 @@ void polygon::scale(const double s){
   for(const point& p : points)
     new_points.pb(p * s);
   points = new_points; }
+
+// Set polygon to a rectangle
+void polygon::set_box(const int& width, const int& height){
+  points.clear();
+  add(point(0, 0));
+  add(point(width - 1, 0));
+  add(point(width - 1, height - 1));
+  add(point(0, height - 1)); }
 
 #endif
