@@ -77,7 +77,7 @@ struct Editor : virtual window {
   void scale_font(double factor);
   void draw_char(const image& img, const point& p, const color& c);
   void insert_text(const vec<str>& text, const int y, const int x);
-  void remove_text(const int y0, const int yf, const int x0, const int xf);
+  void remove_text(const int y0, const int x0, const int yf, const int xf);
   void refresh_panel();
   void scroll(const bool down);
   void move_cursor(const Dir d);
@@ -399,20 +399,25 @@ void Editor::insert_text(const vec<str>& text, const int y, const int x){
   p.refresh_file_bar = true; }
 
 void Editor::remove_text(
-    const int y0, const int yf, const int x0, const int xf){
+    const int y0, const int x0, const int yf, const int xf){
   Panel& p = *focus;
+  if(y0 == p.text.size() - 1 && x0 == p.text[y0].size()) return;
+  int xf2 = xf, yf2 = yf;
+  if(xf == -1){
+    --yf2;
+    xf2 = (int)p.text[yf2].size(); }
   str line = p.text[y0].substr(0, x0);
-  if(xf == p.text[yf].size()){
-    if(yf + 1 < p.text.size() && p.text[yf + 1] != "")
-      line += p.text[yf + 1];
-    p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf + 2);
-  }else{
-    line += p.text[yf].substr(xf + 1);
-    p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf + 1); }
-  p.text[y0] = line;
   for(int y = y0; y <= p.top_line + p.height / p.line_height
       && y <= p.text.size(); ++y)
     p.refresh_lines.insert(y - p.top_line);
+  if(xf2 == p.text[yf2].size()){
+    if(yf2 + 1 < p.text.size() && p.text[yf2 + 1] != "")
+      line += p.text[yf2 + 1];
+    p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf2 + 2);
+  }else{
+    line += p.text[yf2].substr(xf2 + 1);
+    p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf2 + 1); }
+  p.text[y0] = line;
   p.refresh_file_bar = true; }
 
 void Editor::refresh_panel(){

@@ -79,7 +79,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     // Backspace
     if(key == "BACKSPACE"){
       move_cursor(LEFT);
-      remove_text(c.y, c.y, c.x, c.x);
+      remove_text(c.y, c.x, c.y, c.x);
       return; }
 
     // Enter
@@ -90,13 +90,8 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         cmd.text[0] = "";
         cmd.hide = true;
       }else{
-        str tail = p.text[c.y].substr(c.x);
-        p.text[c.y] = p.text[c.y].substr(0, c.x);
-        p.text.insert(p.text.begin() + c.y + 1, tail);
-        move_cursor(RIGHT);
-        for(int y = c.y - 1; y <= p.top_line + p.height / p.line_height
-            && y <= p.text.size(); ++y)
-          p.refresh_lines.insert(y - p.top_line); }
+        insert_text(vec<str>({"", ""}), c.y, c.x);
+        move_cursor(RIGHT); }
       return; }
 
     // Escape: Close cmd bar
@@ -152,27 +147,17 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       int y0 = c.y, x0 = c.x;
       while(!(c.y == 0 && c.x == 0) && !name_or_val(c.y, c.x))
         move_cursor(LEFT);
-      while(!(c.y == 0 && c.x == 0) && name_or_val(c.y, c.x))
+      while(!(c.y == 0 && c.x == 0) && name_or_val(c.y, c.x)){
         move_cursor(LEFT);
-      move_cursor(RIGHT);
-      p.text[c.y] = p.text[c.y].substr(0, c.x) + p.text[y0].substr(x0);
-      for(int y = y0; y > c.y; --y)
-        p.text.erase(p.text.begin() + y);
-      for(int y = c.y; y <= p.top_line + p.height / p.line_height
-          && y <= p.text.size(); ++y)
-        p.refresh_lines.insert(y - p.top_line); }
+        if(c.x == p.text[c.y].size())
+          break; }
+      if(!(c.y == 0 && c.x == 0))
+        move_cursor(RIGHT);
+      remove_text(c.y, c.x, y0, x0 - 1); }
 
     // Ctrl+D: Delete a character
     if(key == "D"){
-      if(c.x < p.text[c.y].size()){
-        p.text[c.y] = p.text[c.y].substr(0, c.x) + p.text[c.y].substr(c.x + 1);
-        p.refresh_lines.insert(c.y - p.top_line);
-      }else if(c.y < p.text.size() - 1){
-        p.text[c.y] += p.text[c.y + 1];
-        p.text.erase(p.text.begin() + c.y + 1);
-        for(int y = c.y; y <= p.top_line + p.height / p.line_height
-            && y <= p.text.size(); ++y)
-          p.refresh_lines.insert(y - p.top_line); }
+      remove_text(c.y, c.x, c.y, c.x);
       return; }
 
     // Ctrl+Q: Close application
@@ -221,9 +206,9 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       if(p.ymark == -1) return;
       clip();
       if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
-        remove_text(c.y, p.ymark, c.x, p.xmark - 1);
+        remove_text(c.y, c.x, p.ymark, p.xmark - 1);
       else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
-        remove_text(p.ymark, c.y, p.xmark, c.x - 1);
+        remove_text(p.ymark, p.xmark, c.y, c.x - 1);
       else return;
       if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
         c.y = p.ymark, c.x = p.xmark;
