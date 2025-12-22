@@ -1,0 +1,7 @@
+// STRING
+
+include "array.crab"
+
+obj Str:
+
+  Char[] data

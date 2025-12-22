@@ -1,0 +1,5 @@
+// ARRAY
+
+template obj Array<T>:
+
+  T[] data

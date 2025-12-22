@@ -1,0 +1,23 @@
+// NUMBER
+
+include "array.crab"
+
+obj Int:
+
+  Block[] data
+
+obj Num:
+
+  Int top, bot
+
+  Num():
+    top = 0
+    bot = 1
+
+  virtual operator=(const Int& i):
+    top = i
+    bot = 1
+    return this
+
+  virtual fn validate():
+    assert(den != 0, "Num denominator is zero")

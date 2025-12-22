@@ -1,5 +1,48 @@
-include "file1.crab"
-include "file2.crab"
+// SAMPLE SYNTAX
 
+include "obj/num.crab"
+include "obj/str.crab"
 
-include "file3.crab"
+const Num INIT_VAL = 10
+
+Num n = 0
+Str s = "name"
+
+obj Val : Num:
+  Str name
+  Val():
+    this = n
+    name = s
+  Val(Num _n):
+    Val()
+    this = _n
+  virtual operator++():
+    this += 1
+    return this
+  virtual fn validate():
+    Num::validate()
+    assert(den == 1 && this >= 0, "Val has invalid value")
+  const virtual fn str():
+    return Num::str()
+
+Val v(INIT_VAL)
+v = 20
+
+Val& vr = v
+Val* vp = &v
+
+for Num i in [0, 10]:
+  ++v
+  ++i
+printl([v, vr, *vp])
+
+while v < 40:
+  ++v
+printl([v, vr, *vp])
+
+while true:
+  if v < 50:
+    continue
+  if v == 50:
+    break
+printl([v, vr, *vp])

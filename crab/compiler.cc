@@ -1,6 +1,8 @@
 // CRAB COMPILER MAIN
 
-#include "compiler.hh"
+#include "compile/syntax.hh"
+#include "compile/elements.hh"
+#include "compile/logic.hh"
 
 int main(int argc, const char** argv){
   if(argc != 2)
