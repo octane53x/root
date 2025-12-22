@@ -120,6 +120,10 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   case WM_SYSCHAR:
     // Stop beeping
     return 0;
+  case WM_ACTIVATE:
+    if(wParam == FALSE)
+      _win->process_key("ALT", false, point(p.x, p.y));
+    return 0;
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 

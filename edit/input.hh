@@ -121,6 +121,20 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
           move_cursor(RIGHT); } }
       return; }
 
+    // Arrow keys: Move cursor one position
+    if(key == "UP"){
+      move_cursor(UP);
+      return; }
+    if(key == "LEFT"){
+      move_cursor(LEFT);
+      return; }
+    if(key == "DOWN"){
+      move_cursor(DOWN);
+      return; }
+    if(key == "RIGHT"){
+      move_cursor(RIGHT);
+      return; }
+
     // Escape: Close cmd bar
     if(key == "ESCAPE"){
       if(focus != &cmd) return;
