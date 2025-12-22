@@ -216,10 +216,6 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         remove_text(c.y, c.x, c.y, c.x);
       return; }
 
-    // Ctrl+Q: Close application
-    if(key == "Q")
-      quit();
-
     // Ctrl+O: Open file
     if(key == "O" && focus != &cmd){
       prev_panel = focus;
@@ -256,6 +252,22 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       while(p.top_line != 0)
         scroll(false);
       refresh_panel();
+      return; }
+
+    // Ctrl+Tab: Move selection right
+    if(key == "TAB"){
+      if(p.ymark == -1) return;
+      for(int y = min(p.ymark, c.y); y <= max(p.ymark, c.y); ++y)
+        if(p.text[y] != "")
+          insert_text(vec<str>({"  "}), y, 0);
+      return; }
+
+    // Ctrl+Q: Move selection left
+    if(key == "Q"){
+      if(p.ymark == -1) return;
+      for(int y = min(p.ymark, c.y); y <= max(p.ymark, c.y); ++y)
+        if(p.text[y].size() > 1 && p.text[y][0] == ' ' && p.text[y][1] == ' ')
+          remove_text(y, 0, y, 1);
       return; }
 
     // Ctrl+X: Cut selection
@@ -308,7 +320,11 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     if(key == "L"){
       while(c.x < p.text[c.y].size())
         move_cursor(RIGHT);
-      return; } }
+      return; }
+
+    // Ctrl+Alt+Q: Close application
+    if(key == "Q")
+      quit(); }
 
   if(ctrl && !alt && shift){
     // Ctrl+Shift+I
