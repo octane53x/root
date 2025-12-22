@@ -76,6 +76,27 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         move_cursor(RIGHT); }
       return; }
 
+    // Tab
+    if(key == "TAB"){
+      if(c.y > 0){
+        int spaces = 0;
+        for(; spaces < p.text[c.y - 1].size(); ++spaces)
+          if(p.text[c.y - 1][spaces] != ' ') break;
+        if(c.x < spaces){
+          int x = spaces - c.x;
+          for(int i = 0; i < x; ++i){
+            insert_text(vec<str>({" "}), c.y, c.x);
+            move_cursor(RIGHT); }
+          return; } }
+      if(c.x & 1){
+        insert_text(vec<str>({" "}), c.y, c.x);
+        move_cursor(RIGHT);
+      }else{
+        insert_text(vec<str>({"  "}), c.y, c.x);
+        move_cursor(RIGHT);
+        move_cursor(RIGHT); }
+      return; }
+
     // Backspace
     if(key == "BACKSPACE"){
       move_cursor(LEFT);
@@ -91,7 +112,13 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         cmd.hide = true;
       }else{
         insert_text(vec<str>({"", ""}), c.y, c.x);
-        move_cursor(RIGHT); }
+        move_cursor(RIGHT);
+        int spaces = 0;
+        for(; spaces < p.text[c.y - 1].size(); ++spaces)
+          if(p.text[c.y - 1][spaces] != ' ') break;
+        for(int i = 0; i < spaces; ++i){
+          insert_text(vec<str>({" "}), c.y, c.x);
+          move_cursor(RIGHT); } }
       return; }
 
     // Escape: Close cmd bar
@@ -144,6 +171,11 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Ctrl+Backspace: Delete back several characters
     if(key == "BACKSPACE"){
+      if(c.x > 1 && p.text[c.y][c.x - 1] == ' ' && p.text[c.y][c.x - 2] == ' '){
+        remove_text(c.y, c.x - 2, c.y, c.x - 1);
+        move_cursor(LEFT);
+        move_cursor(LEFT);
+        return; }
       int y0 = c.y, x0 = c.x;
       while(!(c.y == 0 && c.x == 0) && !name_or_val(c.y, c.x))
         move_cursor(LEFT);
