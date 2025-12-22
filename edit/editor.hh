@@ -78,6 +78,7 @@ struct Editor : virtual window {
   void draw_char(const image& img, const point& p, const color& c);
   void insert_text(const vec<str>& text, const int y, const int x);
   void remove_text(const int y0, const int x0, const int yf, const int xf);
+  void delete_selection();
   void refresh_panel();
   void scroll(const bool down);
   void move_cursor(const Dir d);
@@ -419,6 +420,17 @@ void Editor::remove_text(
     p.text.erase(p.text.begin() + y0 + 1, p.text.begin() + yf2 + 1); }
   p.text[y0] = line;
   p.refresh_file_bar = true; }
+
+void Editor::delete_selection(){
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  if(p.ymark == -1) return;
+  if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
+    remove_text(c.y, c.x, p.ymark, p.xmark - 1);
+  else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark)){
+    remove_text(p.ymark, p.xmark, c.y, c.x - 1);
+    c.y = p.ymark, c.x = p.xmark; }
+  p.ymark = p.xmark = -1; }
 
 void Editor::refresh_panel(){
   Panel& p = *focus;

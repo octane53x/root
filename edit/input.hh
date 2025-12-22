@@ -28,7 +28,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     return; }
 
   if(!ctrl && !alt){
-    // Single character
+    // Parse character
     char co = 0;
     if(key.size() == 1){
       char ci = key[0];
@@ -62,18 +62,13 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     else if(key == "BACKSLASH") co = shift ? '|' : '\\';
     else if(key == "RBRACKET") co = shift ? '}' : ']';
     else if(key == "QUOTE") co = shift ? '"' : '\'';
+    else if(key == "SPACE") co = ' ';
+
+    // Single character
     if(co != 0){
+      delete_selection();
       insert_text(vec<str>({str(1, co)}), c.y, c.x);
       move_cursor(RIGHT);
-      return; }
-
-    // Space or two
-    if(key == "SPACE"){
-      insert_text(vec<str>({" "}), c.y, c.x);
-      move_cursor(RIGHT);
-      if(shift){
-        insert_text(vec<str>({" "}), c.y, c.x);
-        move_cursor(RIGHT); }
       return; }
 
     // Tab
@@ -99,8 +94,11 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Backspace
     if(key == "BACKSPACE"){
-      move_cursor(LEFT);
-      remove_text(c.y, c.x, c.y, c.x);
+      if(p.ymark == -1){
+        move_cursor(LEFT);
+        remove_text(c.y, c.x, c.y, c.x);
+      }else
+        delete_selection();
       return; }
 
     // Enter
@@ -203,7 +201,19 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
 
     // Ctrl+D: Delete a character
     if(key == "D"){
-      remove_text(c.y, c.x, c.y, c.x);
+      if(p.ymark == -1)
+        remove_text(c.y, c.x, c.y, c.x);
+      else
+        delete_selection();
+      return; }
+
+    // Ctrl+W: Delete spaces around cursor
+    if(key == "W"){
+      while(c.x > 0 && p.text[c.y][c.x - 1] == ' '){
+        move_cursor(LEFT);
+        remove_text(c.y, c.x, c.y, c.x); }
+      while(c.x < p.text[c.y].size() && p.text[c.y][c.x] == ' ')
+        remove_text(c.y, c.x, c.y, c.x);
       return; }
 
     // Ctrl+Q: Close application
@@ -245,20 +255,14 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
       c.y = c.x = 0;
       while(p.top_line != 0)
         scroll(false);
+      refresh_panel();
       return; }
 
     // Ctrl+X: Cut selection
     if(key == "X"){
       if(p.ymark == -1) return;
       clip();
-      if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
-        remove_text(c.y, c.x, p.ymark, p.xmark - 1);
-      else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
-        remove_text(p.ymark, p.xmark, c.y, c.x - 1);
-      else return;
-      if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
-        c.y = p.ymark, c.x = p.xmark;
-      p.ymark = p.xmark = -1;
+      delete_selection();
       return; }
 
     // Ctrl+C: Copy selection
