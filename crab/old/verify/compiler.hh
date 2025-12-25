@@ -45,13 +45,19 @@ struct Compiler {
 void Compiler::compile(const str& main_fname){
   load_file(main_fname);
   clean_code();
+  // Check for code errors
   reset_files();
   verify_syntax(main_fname);
   reset_files();
   verify_elements(main_fname);
   reset_files();
   verify_logic(main_fname);
-  reset_files(); }
+
+  // Process into engine components
+  //! output
+
+  // Compile into executable
+  system("g++ assembler.cc -o main
 
 // Load all included files
 Compiler::File* Compiler::load_file(const str& fname){
