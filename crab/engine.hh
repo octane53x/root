@@ -27,7 +27,6 @@ struct Engine {
   void process_script(const str& fname); };
 
 void Engine::init(){
-  compiler.init(&fns);
   allocator.init(); }
 
 void Engine::process_script(const str& fname){

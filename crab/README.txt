@@ -37,3 +37,9 @@ FUNCTIONAL DIFFERENCES FROM C++:
 - NO CASTING: Assignment operator must be inherent or implemented
     Downcasting handled in engine by referencing the type
 - block keyword: Cannot override this function
+
+
+NOTES:
+
+- Variable and function names starting with triple underscore are reserved
+    by system calls
