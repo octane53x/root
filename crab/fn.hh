@@ -14,15 +14,19 @@ struct Fn {
     Fn* fn;
     vec<FnCall> params; };
 
-  Language::Control control;
+  Control* control;
   ID id;
   str name;
   vec<FnCall> code;
-  static llu scope;
+  static llu next_id, scope;
   static Language* lang;
   static AccessMgr* access;
 
+  Fn();
+
   Var call(const vec<FnCall>& params); };
+
+Fn::Fn(): id(next_id++) {}
 
 Var Fn::call(const vec<FnCall>& params){
   vec<Var> param_values;
@@ -33,14 +37,14 @@ Var Fn::call(const vec<FnCall>& params){
   ++scope;
 
   Var r;
-  if(control == Language::USER){
+  if(*control == "USER"){
     for(const FnCall& instr : code){
       Var v = instr.fn->call(instr.params);
       //! Add declarations to access
       //! Set return var r
     }
   }else
-    r = lang->process_fn(control, param_values);
+    r = lang->process_fn(*control, param_values);
 
   //! Deallocate at scope
   //! Remove from access at scope

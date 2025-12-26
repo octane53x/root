@@ -1,0 +1,14 @@
+// ABSTRACT THING
+
+obj Thing:
+
+  Type type
+
+  virtual fn validate()
+  virtual fn to_str()
+
+Thing::validate():
+  assert(type != Void, "object has Void type")
+
+Thing::to_str():
+  return type.name

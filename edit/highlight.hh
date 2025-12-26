@@ -6,7 +6,7 @@
 const uset<str> KEYWORDS = {
     "obj", "fn", "if", "else", "for", "while", "return", "break", "continue",
     "const", "virtual", "block", "include", "this", "operator", "template",
-    "true", "false",
+    "abstract", "true", "false",
     "struct", "def", "delete", "in"}; // Other languages
 
 const color

@@ -2,4 +2,7 @@
 
 template obj Array<T>:
 
-  T[] data
+  Block size
+
+  // Defined in num.hh to return a Num
+  fn size()

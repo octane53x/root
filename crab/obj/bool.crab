@@ -1,0 +1,10 @@
+// BOOL
+
+obj Bool:
+
+  Char data
+
+  fn Bool()
+
+Bool::Bool():
+  data = 1

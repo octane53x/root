@@ -8,6 +8,7 @@ Engine eng;
 // Static members
 TypeMgr* Type::registry = &eng.types;
 Allocator* Var::allocator = &eng.allocator;
+llu Fn::next_id = 1;
 llu Fn::scope = 0;
 Language* Fn::lang = &eng.lang;
 AccessMgr* Fn::access = &eng.access;

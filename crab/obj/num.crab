@@ -10,14 +10,20 @@ obj Num:
 
   Int top, bot
 
-  Num():
-    top = 0
-    bot = 1
+  Num()
 
-  virtual operator=(const Int& i):
-    top = i
-    bot = 1
-    return this
+  virtual fn operator=(const Int& i)
 
-  virtual fn validate():
-    assert(den != 0, "Num denominator is zero")
+  virtual fn validate()
+
+fn Num::Num():
+  top = 0
+  bot = 1
+
+fn Num::operator=(const Int& i):
+  top = i
+  bot = 1
+  return this
+
+fn Num::validate():
+  assert(den != 0, "Num denominator is zero")
