@@ -3,33 +3,48 @@
 #ifndef FN_HH
 #define FN_HH
 
-#include "var.hh"
+#include "language.hh"
 #include "accessmgr.hh"
+
+typedef llu ID;
 
 struct Fn {
 
-  llu id;
+  struct FnCall {
+    Fn* fn;
+    vec<FnCall> params; };
+
+  Language::Control control;
+  ID id;
   str name;
-  vec<Fn*> code, params;
+  vec<FnCall> code;
   static llu scope;
+  static Language* lang;
   static AccessMgr* access;
 
-  Var call(); };
+  Var call(const vec<FnCall>& params); };
 
-Var Fn::call(){
-  for(Fn* param : params){
-    //! Add param->call() to access
+Var Fn::call(const vec<FnCall>& params){
+  vec<Var> param_values;
+  for(const FnCall& param : params){
+    Var v = param.fn->call(param.params);
+    //! Add param->call() to access and param_values
   }
   ++scope;
+
   Var r;
-  for(Fn* instr : code){
-    //! Call fns
-    //! Set return var r
-  }
+  if(control == Language::USER){
+    for(const FnCall& instr : code){
+      Var v = instr.fn->call(instr.params);
+      //! Add declarations to access
+      //! Set return var r
+    }
+  }else
+    r = lang->process_fn(control, param_values);
+
   //! Deallocate at scope
   //! Remove from access at scope
   --scope;
-  return r;
-}
+  return r; }
 
 #endif

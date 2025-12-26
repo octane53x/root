@@ -10,14 +10,15 @@
 struct Engine {
 
   umap<str, File> files;
-  umap<llu, Fn> fns;
+  umap<ID, Fn> fns;
 
-  // Pre-execution
+  // Execution prep
   Includer includer;
   Verifier verifier;
   Compiler compiler;
 
   // Execution
+  Language lang;
   TypeMgr types;
   Allocator allocator;
   AccessMgr access;
@@ -26,6 +27,7 @@ struct Engine {
   void process_script(const str& fname); };
 
 void Engine::init(){
+  compiler.init(&fns);
   allocator.init(); }
 
 void Engine::process_script(const str& fname){
@@ -34,6 +36,6 @@ void Engine::process_script(const str& fname){
   Fn* main_fn = compiler.compile(files, &fns);
   assert(main_fn != NULL, "Engine.process_script",
       "Compiler returned NULL main function");
-  main_fn->call(); }
+  main_fn->call(vec<Fn::FnCall>()); }
 
 #endif

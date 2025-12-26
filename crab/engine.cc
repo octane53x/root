@@ -9,6 +9,7 @@ Engine eng;
 TypeMgr* Type::registry = &eng.types;
 Allocator* Var::allocator = &eng.allocator;
 llu Fn::scope = 0;
+Language* Fn::lang = &eng.lang;
 AccessMgr* Fn::access = &eng.access;
 
 // Main function

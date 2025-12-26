@@ -4,10 +4,10 @@
 #define HIGHLIGHT_HH
 
 const uset<str> KEYWORDS = {
-    "obj", "fn", "if", "for", "while", "in", "return", "break", "continue",
+    "obj", "fn", "if", "else", "for", "while", "return", "break", "continue",
     "const", "virtual", "block", "include", "this", "operator", "template",
     "true", "false",
-    "struct", "def", "delete"}; // Other languages
+    "struct", "def", "delete", "in"}; // Other languages
 
 const color
     COLOR_KEYWORD = color(0, 208, 208),

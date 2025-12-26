@@ -8,10 +8,14 @@
 
 struct Compiler {
 
-  Fn* compile(const umap<str, File>& files, umap<llu, Fn>* fns); };
+  umap<Language::Control, Fn*> controls;
 
-Fn* Compiler::compile(const umap<str, File>& files, umap<llu, Fn>* fns){
+  void init(umap<ID, Fn>* fns);
+  Fn* compile(const umap<str, File>& files, umap<ID, Fn>* fns); };
 
-  return 0; }
+void Compiler::init(umap<ID, Fn>* fns){}
+
+Fn* Compiler::compile(const umap<str, File>& files, umap<ID, Fn>* fns){
+  return NULL; }
 
 #endif

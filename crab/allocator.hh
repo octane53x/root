@@ -15,10 +15,11 @@ struct Allocator {
   void* top; //! set of addrs
 
   void init();
-  void allocate(int size); };
+  void* allocate(int size); };
 
 void Allocator::init(){}
 
-void Allocator::allocate(int size){}
+void* Allocator::allocate(int size){
+  return NULL; }
 
 #endif
