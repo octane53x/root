@@ -13,7 +13,7 @@ struct AccessMgr {
   // Key 1: scope, Key 2: var name
   umap<llu, umap<str, Var> > scope_table;
 
-  Var get(const llu scope, const str& name);
+  Var get(const str& name);
   void add(const llu scope, const Var& var);
   void remove(const llu scope); };
 
@@ -28,20 +28,19 @@ void AccessMgr::add(const llu scope, const Var& var){
       "variable already added to access (declared twice?)");
   var_table[var.name] = var;
   umap<llu, umap<str, Var> >::iterator it2 = scope_table.find(scope);
-  if(it2 == scope_table.end())
-    it2 = (scope_table[scope] = umap<str, Var>());
-  //! Might slow down declarations
-  // else
-  //   assert(it2->second.find(var.name) == it2->second.end(), "AccessMgr.add",
-  //       "variable in scope_table but not var_table");
-  it2->second[var.name] = var; }
+  if(it2 == scope_table.end()){
+    umap<str, Var> m;
+    m[var.name] = var;
+    scope_table[scope] = m;
+  }else
+    it2->second[var.name] = var; }
 
 void AccessMgr::remove(const llu scope){
   umap<llu, umap<str, Var> >::iterator it = scope_table.find(scope);
   assert(it != scope_table.end(), "AccessMgr.remove",
       "removing nonexistent scope");
   for(pair<str, Var> p : it->second){
-    umap<str, Var> it2 = var_table.find(p.first);
+    umap<str, Var>::iterator it2 = var_table.find(p.first);
     assert(it2 != var_table.end(), "AccessMgr.remove",
         "variable in scope_table but not in var_table");
     var_table.erase(it2); }

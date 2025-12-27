@@ -48,8 +48,8 @@ Var Fn::call(const vec<FnCall>& params){
     if(control == Language::FOR && i == params.size() - 1) break;
     // Resolve parameter values
     Var v = params[i].fn->call(params[i].params);
-    assert(v.type != "Void", _fn, "parameter resolved to Void");
-    // Add return to access and param_values
+    assert(*v.type.name != "Void", _fn, "parameter resolved to Void");
+    // Add to access and param_values
     access->add(scope, v);
     param_values.pb(v); }
 
@@ -69,7 +69,7 @@ Var Fn::call(const vec<FnCall>& params){
     bool b = *((bool*)param_values[0].addr);
     if(b)
       run();
-    r = Var("Bool", b);
+    r = Var("Bool", (Char)b);
 
   // Else statement
   }else if(control == Language::ELSE){
@@ -138,18 +138,18 @@ Var Fn::run(){
 
     Language::Control ctrl = instr.fn->control;
     if(ctrl == Language::IF){
-      assert(v.type == "Bool", _fn, "if returned non-bool");
+      assert(*v.type.name == "Bool", _fn, "if returned non-bool");
       if_executed = *((bool*)v.addr);
 
     }else if(ctrl == Language::BREAK){
       assert(i == code.size() - 1, _fn, "break precedes dangling code");
-      assert(v.type == "Void", _fn, "break returned non-Void");
+      assert(*v.type.name == "Void", _fn, "break returned non-Void");
       break_loop = true;
       break;
 
     }else if(ctrl == Language::CONTINUE){
       assert(i == code.size() - 1, _fn, "continue precedes dangling code");
-      assert(v.type == "Void", _fn, "continue returned non-Void");
+      assert(*v.type.name == "Void", _fn, "continue returned non-Void");
       break;
 
     }else if(ctrl == Language::RETURN){

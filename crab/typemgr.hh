@@ -6,6 +6,7 @@
 #include "../core/util.hh"
 
 struct Type;
+struct Fn;
 
 struct TypeMgr {
 

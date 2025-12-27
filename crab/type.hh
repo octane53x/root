@@ -17,13 +17,12 @@ struct Type {
 
   size_t size() const; };
 
-Type::Type(): Type("void") {}
+Type::Type(): Type("Void") {}
 
 Type::Type(const str& s){
   *this = s; }
 
 Type& Type::operator=(const str& s){
-  registry->add(s, vec<str>());
   name = &registry->types[s].name;
   return *this; }
 
