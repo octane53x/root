@@ -13,7 +13,9 @@ struct Type {
   Type();
   Type(const str& s);
 
-  Type& operator=(const str& s); };
+  Type& operator=(const str& s);
+
+  size_t size() const; };
 
 Type::Type(): Type("void") {}
 
@@ -24,5 +26,8 @@ Type& Type::operator=(const str& s){
   registry->add(s, vec<str>());
   name = &registry->types[s].name;
   return *this; }
+
+size_t Type::size() const {
+  return registry->types[*name].size; }
 
 #endif

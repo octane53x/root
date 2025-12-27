@@ -11,7 +11,7 @@ struct Language {
   enum Control {
     INVALID,
     // User-defined in executed script
-    USER,
+    USER, DECL,
     // Handled by engine
     IF, ELSE, FOR, WHILE, BREAK, CONTINUE, RETURN,
     TYPENAME, EXIT, PRINT,

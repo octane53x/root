@@ -15,11 +15,19 @@ struct Allocator {
   void* top; //! set of addrs
 
   void init();
-  void* allocate(size_t size); };
+  void* allocate(size_t size);
+  void deallocate(void* addr, size_t size); };
 
-void Allocator::init(){}
+void Allocator::init(){
+  //! malloc ALLOCATION_MIN
+}
 
 void* Allocator::allocate(size_t size){
+  //! algorithm
   return NULL; }
+
+void deallocate(void* addr, size_t size){
+  //! algorithm
+}
 
 #endif

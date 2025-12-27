@@ -39,20 +39,31 @@ void Fn::validate(){
 Var Fn::call(const vec<FnCall>& params){
   validate();
   const str _fn = "Fn.call";
+  ++scope;
+
+  // Handle parameters
   vec<Var> param_values;
   for(int i = 0; i < params.size(); ++i){
     // Don't execute last for parameter (iteration)
     if(control == Language::FOR && i == params.size() - 1) break;
     // Resolve parameter values
     Var v = params[i].fn->call(params[i].params);
-    //! Add v to access and param_values
-  }
-  ++scope;
+    assert(v.type != "Void", _fn, "parameter resolved to Void");
+    // Add return to access and param_values
+    access->add(scope, v);
+    param_values.pb(v); }
 
+  // User-defined function call
   Var r;
   if(control == Language::USER){
     r = run();
 
+  // Variable declaration
+  }else if(control == Language::DECL){
+    r = run();
+    access->add(scope, r);
+
+  // If statement
   }else if(control == Language::IF){
     assert(param_values.size() == 1, _fn, "if didn't have one parameter");
     bool b = *((bool*)param_values[0].addr);
@@ -60,11 +71,13 @@ Var Fn::call(const vec<FnCall>& params){
       run();
     r = Var("Bool", b);
 
+  // Else statement
   }else if(control == Language::ELSE){
     assert(param_values.empty(), _fn, "else didn't have zero parameters");
     if(!if_executed)
       run();
 
+  // For loop
   // Params: 1. Variable declaration  2. Stop condition  3. Variable iteration
   }else if(control == Language::FOR){
     assert(param_values.size() == 3, _fn, "for didn't have three parameters");
@@ -77,6 +90,7 @@ Var Fn::call(const vec<FnCall>& params){
       // Check stop condition
       v = params[1].fn->call(params[1].params); }
 
+  // While loop
   }else if(control == Language::WHILE){
     assert(param_values.size() == 1, _fn, "while didn't have one parameter");
     Var v = param_values[0];
@@ -86,24 +100,32 @@ Var Fn::call(const vec<FnCall>& params){
       // Check stop condition
       v = params[0].fn->call(params[0].params); }
 
+  // Break loop
   }else if(control == Language::BREAK){
     assert(param_values.empty(), _fn, "break didn't have zero parameters");
     assert(code.empty(), _fn, "break had instructions");
 
+  // Continue loop
   }else if(control == Language::CONTINUE){
     assert(param_values.empty(), _fn, "continue didn't have zero parameters");
     assert(code.empty(), _fn, "continue had instructions");
 
+  // Return statement
   }else if(control == Language::RETURN){
     assert(param_values.size() == 1, _fn, "return didn't have one parameter");
     assert(code.empty(), _fn, "return had instructions");
     r = param_values[0];
 
+  // System call
   }else
     r = lang->process_fn(control, param_values);
 
-  //! Deallocate at scope
-  //! Remove from access at scope
+  // Deallocate all variables at scope
+  for(pair<str, Var> p : access->scope_table[scope])
+    p.second.deallocate();
+  // Remove from access all variables at scope
+  access->remove(scope);
+
   --scope;
   validate();
   return r; }
