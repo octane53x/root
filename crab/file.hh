@@ -7,7 +7,8 @@
 
 struct File {
 
+  bool main;
   str name, dir;
-  vec<str> code; };
+  vec<str> includes, code; };
 
 #endif

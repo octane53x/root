@@ -10,7 +10,7 @@
 struct Engine {
 
   umap<str, File> files;
-  umap<ID, Fn> fns;
+  umap<str, Fn> fns;
 
   // Execution prep
   Includer includer;

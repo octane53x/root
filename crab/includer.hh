@@ -3,6 +3,7 @@
 #ifndef INCLUDER_HH
 #define INCLUDER_HH
 
+#include "util.hh"
 #include "file.hh"
 
 struct Includer {

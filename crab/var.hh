@@ -15,6 +15,7 @@ const size_t
 
 struct Var {
 
+  bool constant;
   Type type;
   void* addr;
   str name;
@@ -28,7 +29,7 @@ struct Var {
 
   void deallocate(); };
 
-Var::Var(): addr(NULL) {}
+Var::Var(): constant(false), addr(NULL) {}
 
 Var::Var(const str& _type, const Char val): type(_type), name("") {
   addr = allocator->allocate(SIZE_CHAR);

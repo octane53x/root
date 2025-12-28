@@ -3,6 +3,7 @@
 #ifndef VERIFIER_HH
 #define VERIFIER_HH
 
+#include "util.hh"
 #include "file.hh"
 
 struct Verifier {

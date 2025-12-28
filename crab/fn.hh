@@ -6,8 +6,6 @@
 #include "language.hh"
 #include "accessmgr.hh"
 
-typedef llu ID;
-
 struct Fn {
 
   struct FnCall {
@@ -16,7 +14,6 @@ struct Fn {
 
   bool if_executed, break_loop;
   Language::Control control;
-  ID id;
   str name;
   vec<FnCall> code;
   static llu next_id, scope;
@@ -30,8 +27,7 @@ struct Fn {
   Var call(const vec<FnCall>& params);
   Var run(); };
 
-Fn::Fn(): if_executed(false), break_loop(false), control(Language::INVALID),
-    id(next_id++) {}
+Fn::Fn(): if_executed(false), break_loop(false), control(Language::INVALID) {}
 
 void Fn::validate(){
   assert(control != Language::INVALID, "Fn.validate", "invalid control"); }

@@ -1,0 +1,21 @@
+// UNORDERED MAP (HASH TABLE)
+
+template obj Umap<T, U>:
+
+  obj KeyVal:
+    T key
+    U val
+
+  KeyVal[][] table
+
+  fn hash(T key)
+  fn add(T key, U val)
+
+fn Umap::hash(T key):
+  return 0 //!
+
+fn Umap::add(T key, U val):
+  KeyVal kv
+  kv.key = key
+  kv.val = val
+  table[hash(key)] += [kv]
