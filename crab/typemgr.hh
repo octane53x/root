@@ -13,9 +13,9 @@ struct TypeMgr {
   struct Node {
     size_t size;
     str name;
-    // Key = var name
+    // Member: key = var name
     umap<str, Type> vars;
-    // Key = fn name
+    // Member: key = fn name
     umap<str, Fn*> fns;
     vec<Node*> parents; };
 

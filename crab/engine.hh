@@ -5,21 +5,23 @@
 
 #include "includer.hh"
 #include "verifier.hh"
+#include "cleaner.hh"
 #include "compiler.hh"
 
 struct Engine {
 
   umap<str, File> files;
-  umap<str, Fn> fns;
 
   // Execution prep
   Includer includer;
   Verifier verifier;
+  Cleaner cleaner;
   Compiler compiler;
 
   // Execution
   Language lang;
   TypeMgr types;
+  FnMgr fns;
   Allocator allocator;
   AccessMgr access;
 
@@ -32,7 +34,8 @@ void Engine::init(){
 void Engine::process_script(const str& fname){
   includer.process_file(fname, &files);
   verifier.verify_files(files);
-  Fn* main_fn = compiler.compile(files, &fns);
+  cleaner.clean_files(&files);
+  Fn* main_fn = compiler.compile(files, &fns.fns);
   assert(main_fn != NULL, "Engine.process_script",
       "Compiler returned NULL main function");
   main_fn->call(vec<Fn::FnCall>()); }

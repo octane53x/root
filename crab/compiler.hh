@@ -14,9 +14,10 @@ struct Compiler {
 
   Fn* compile(const umap<str, File>& files, umap<str, Fn>* fns);
   void process_file(const File& file, umap<str, Fn>* fns);
-  void process_obj_def(const vec<str>& code, const int line,
+  void process_obj_decl(const vec<str>& code, const int line,
       const bool _template);
-  void process_fn_def(const vec<str>& code, const int line, const bool _const,
+  void process_member_decl(const str& decl);
+  void process_fn_decl(const vec<str>& code, const int line, const bool _const,
       const bool _virtual, const bool _force, const bool _final);
   void process_fn_call(const str& call, const bool _const); };
 
@@ -33,73 +34,55 @@ Fn* Compiler::compile(const umap<str, File>& files, umap<str, Fn>* fns){
   return &(*fns)[MAIN_FILE]; }
 
 void Compiler::process_file(const File& file, umap<str, Fn>* fns){
+  // Process included files first
+  for(File* incl : file.includes)
+    process_file(*incl, fns);
+
+  // Process all code in file
   const str fn = "Compiler.process_file";
-  for(int i = 0; i < file.code.size(); ++i){
-    str line = strip(file.code[i]);
-    bool _template, _const, _virtual, _force, _final;
-    _template = _const = _virtual = _force = _final = false;
+  for(int line = 0; line < file.code.size(); ++line){
+    str s = strip(file.code[line]);
+    bool _template, _const;
+    _template = _const = false;
     while(1){
 
-      // Obj definition
-      if(starts_with(line, "obj")){
-        assert(!_const, fn, "const is for functions or declarations");
-        assert(!_virtual, fn, "virtual is for functions");
-        assert(!_force, fn, "force is for functions");
-        assert(!_final, fn, "final is for functions");
-        process_obj_def(file.code, i, _template);
+      // Obj declaration
+      if(starts_with(s, "obj")){
+        assert(!_const, fn, "invalid keyword");
+        process_obj_decl(file.code, line, _template);
         break;
 
-      // Fn definition
-      }else if(starts_with(line, "fn")){
-        assert(!_template, fn, "template is for objects");
-        process_fn_def(file.code, i, _const, _virtual, _force, _final);
+      // Fn declaration
+      }else if(starts_with(s, "fn")){
+        assert(!_template, fn, "invalid keyword");
+        process_fn_decl(file.code, line, _const, false, false, false);
         break;
 
       // Template keyword
-      }else if(starts_with(line, "template")){
-        assert(!_template, fn, "template declared twice");
-        line = strip(delete_tok(line));
+      }else if(starts_with(s, "template")){
+        assert(!_template, fn, "keyword declared twice");
+        s = strip(delete_tok(s));
         _template = true;
         continue;
 
       // Const keyword
-      }else if(starts_with(line, "const")){
-        assert(!_const, fn, "const declared twice");
-        line = strip(delete_tok(line));
+      }else if(starts_with(s, "const")){
+        assert(!_const, fn, "keyword declared twice");
+        s = strip(delete_tok(s));
         _const = true;
         continue;
 
-      // Virtual keyword
-      }else if(starts_with(line, "virtual")){
-        assert(!_virtual, fn, "virtual declared twice");
-        line = strip(delete_tok(line));
-        _virtual = true;
-        continue;
-
-      // Force keyword
-      }else if(starts_with(line, "force")){
-        assert(!_force, fn, "force declared twice");
-        line = strip(delete_tok(line));
-        _force = true;
-        continue;
-
-      // Final keyword
-      }else if(starts_with(line, "final")){
-        assert(!_final, fn, "final declared twice");
-        line = strip(delete_tok(line));
-        _final = true;
-        continue;
-
       // Function call
-      }else if(is_upper(line[i]) || is_lower(line[i]) || line[i] == '_'){
-        process_fn_call(line, _const);
+      }else if(s != "" && is_upper(s[0]) || is_lower(s[0]) || s[0] == '_'){
+        assert(!_template, fn, "invalid keyword");
+        process_fn_call(s, _const);
         break;
 
       // Otherwise error
       }else
         err(fn, "syntax error"); } } }
 
-void Compiler::process_obj_def(const vec<str>& code, const int line,
+void Compiler::process_obj_decl(const vec<str>& code, const int line,
     const bool _template){
   const str fn = "Compiler.process_obj_def";
   // Get type name
@@ -139,20 +122,80 @@ void Compiler::process_obj_def(const vec<str>& code, const int line,
     if(spaces2 <= spaces) break;
     ++end; }
 
+  // Process internal declarations
   for(int i = line; i < end; ++i){
-    //! fn defs and member decls
-  }
+    str s = strip(code[i]);
+    bool _template, _const, _virtual, _force, _final;
+    _template = _const = _virtual = _force = _final = false;
+    while(1){
+
+      // Obj declaration
+      if(starts_with(s, "obj")){
+        assert(!_const && !_virtual && !_force && !_final,
+            fn, "invalid keyword");
+        process_obj_decl(code, i, _template);
+        break;
+
+      // Fn, Constructor, Operator declaration
+      }else if(starts_with(s, "fn") || starts_with(s, type)
+          || starts_with(s, "operator")){
+        assert(!_template, fn, "invalid keyword");
+        process_fn_decl(code, i, _const, _virtual, _force, _final);
+        break;
+
+      // Template keyword
+      }else if(starts_with(s, "template")){
+        assert(!_template, fn, "keyword declared twice");
+        s = strip(delete_tok(s));
+        _template = true;
+        continue;
+
+      // Virtual keyword
+      }else if(starts_with(s, "virtual")){
+        assert(!_virtual, fn, "keyword declared twice");
+        s = strip(delete_tok(s));
+        _virtual = true;
+        continue;
+
+      // Force keyword
+      }else if(starts_with(s, "force")){
+        assert(!_force, fn, "keyword declared twice");
+        s = strip(delete_tok(s));
+        _force = true;
+        continue;
+
+      // Final keyword
+      }else if(starts_with(s, "final")){
+        assert(!_final, fn, "keyword declared twice");
+        s = strip(delete_tok(s));
+        _final = true;
+        continue;
+
+      // Member declaration
+      }else if(s != "" && (is_upper(s[0]) || s[0] == '_')){
+        assert(!_template && !_const && !_virtual && !_force && !_final,
+            fn, "invalid keyword");
+        process_member_decl(s);
+        break;
+
+      // Otherwise error
+      }else
+        err(fn, "syntax error"); } }
 
   //! log obj def in typemgr
 }
 
-void Compiler::process_fn_def(const vec<str>& code, const int line,
+void Compiler::process_member_decl(const str& decl){}
+
+void Compiler::process_fn_decl(const vec<str>& code, const int line,
     const bool _const, const bool _virtual, const bool _force,
     const bool _final){
 
-  //! log fn def in fns
+  //! log fn def in fnmgr
 }
 
-void Compiler::process_fn_call(const str& call, const bool _const){}
+void Compiler::process_fn_call(const str& call, const bool _const){
+  //! assert objs and fns have been defined and declared
+}
 
 #endif

@@ -9,6 +9,7 @@ struct File {
 
   bool main;
   str name, dir;
-  vec<str> includes, code; };
+  vec<str> code;
+  vec<File*> includes; };
 
 #endif

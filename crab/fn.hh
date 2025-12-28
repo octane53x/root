@@ -4,6 +4,7 @@
 #define FN_HH
 
 #include "language.hh"
+#include "fnmgr.hh"
 #include "accessmgr.hh"
 
 struct Fn {
@@ -18,6 +19,7 @@ struct Fn {
   vec<FnCall> code;
   static llu next_id, scope;
   static Language* lang;
+  static FnMgr* registry;
   static AccessMgr* access;
 
   Fn();

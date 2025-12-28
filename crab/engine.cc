@@ -11,6 +11,7 @@ Allocator* Var::allocator = &eng.allocator;
 llu Fn::next_id = 1;
 llu Fn::scope = 0;
 Language* Fn::lang = &eng.lang;
+FnMgr* Fn::registry = &eng.fns;
 AccessMgr* Fn::access = &eng.access;
 
 // Main function
