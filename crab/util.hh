@@ -16,26 +16,53 @@ str strip(const str& s){
     return s.substr(i, j - i + 1);
   return ""; }
 
+vec<str> split(str s, const str& delim){
+  vec<str> r;
+  int i;
+  while((i = s.find(delim)) != str::npos){
+    r.pb(s.substr(0, i));
+    s = s.substr(i + delim.size()); }
+  if(s != "")
+    r.pb(s);
+  return r; }
+
 bool starts_with(const str& s, const str& t){
   if(t.size() > s.size()) return false;
   for(int i = 0; i < t.size(); ++i)
     if(s[i] != t[i]) return false;
   return true; }
 
-bool is_upper(char c){
+bool ends_with(const str& s, const str& t){
+  if(t.size() > s.size()) return false;
+  for(int i = t.size() - 1; i >= 0; --i)
+    if(s[i] != t[i]) return false;
+  return true; }
+
+bool is_upper(const char c){
   return (c >= 'A' && c <= 'Z'); }
 
-bool is_lower(char c){
+bool is_lower(const char c){
   return (c >= 'a' && c <= 'z'); }
 
-bool is_alpha(char c){
+bool is_alpha(const char c){
   return is_upper(c) || is_lower(c); }
 
-bool is_digit(char c){
+bool is_digit(const char c){
   return (c >= '0' && c <= '9'); }
 
-bool is_name(char c){
-  return is_alpha(s[0]) || is_digit(s[0]) || s[0] == '_'; }
+bool is_name(const char c){
+  return is_alpha(c) || is_digit(c) || c == '_'; }
+
+bool is_type(const str& s){
+  if(s == "") return false;
+  int i = 0;
+  while(i < s.size() && s[i] == '_')
+    ++i;
+  if(i == s.size() || !is_upper(s[i])) return false;
+  ++i;
+  while(i < s.size() && (is_alpha(s[i]) || is_digit(s[i]) || s[i] == '_'))
+    ++i;
+  return i == s.size(); }
 
 // Token definition:
 // - Alphanumeric string (including underscore)
@@ -43,14 +70,14 @@ bool is_name(char c){
 // - Any number of other consecutive characters but space
 // Angle brackets are considered operators and must be handled with care
 str next_tok(str s){
-  s = s.strip();
+  s = strip(s);
   if(s == "") return "";
   int i = 0;
-  if(is_name(s[0])
+  if(is_name(s[0]))
     while(i < s.size() && is_name(s[i]))
       ++i;
   else if(s[0] == '(' || s[0] == ')' || s[0] == '[' || s[0] == ']'
-      || s[0] == '{' || s[0] == '}'
+      || s[0] == '{' || s[0] == '}')
     ++i;
   else
     while(!is_name(s[i]) && s[i] != '(' && s[i] != ')'
@@ -60,7 +87,7 @@ str next_tok(str s){
 
 str delete_tok(str s){
   str tok = next_tok(s);
-  s = s.strip();
+  s = strip(s);
   return s.substr(tok.size()); }
 
 #endif
