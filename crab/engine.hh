@@ -10,6 +10,7 @@
 
 struct Engine {
 
+  // Files
   umap<str, File> files;
 
   // Execution prep
@@ -35,7 +36,7 @@ void Engine::process_script(const str& fname){
   includer.process_file(fname, &files);
   verifier.verify_files(files);
   cleaner.clean_files(&files);
-  Fn* main_fn = compiler.compile(files, &fns.fns);
+  Fn* main_fn = compiler.compile(files);
   assert(main_fn != NULL, "Engine.process_script",
       "Compiler returned NULL main function");
   main_fn->call(vec<Fn::FnCall>()); }

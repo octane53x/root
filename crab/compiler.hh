@@ -1,5 +1,7 @@
 // COMPILER
 
+//! store keyword mods
+
 #ifndef COMPILER_HH
 #define COMPILER_HH
 
@@ -12,17 +14,18 @@ const str
 
 struct Compiler {
 
-  Fn* compile(const umap<str, File>& files, umap<str, Fn>* fns);
-  void process_file(const File& file, umap<str, Fn>* fns);
+  Fn* compile(const umap<str, File>& files);
+  void process_file(const File& file);
   void process_obj_decl(const vec<str>& code, const int line,
-      const bool _abstract, const bool _template);
-  void process_member_decl(const str& decl);
-  void process_fn_decl(const vec<str>& code, const int line, const bool _const,
-      const bool _virtual, const bool _force, const bool _final);
-  void process_fn_call(const str& call, const bool _const); };
+      const str& container, const umap<str, bool>& keywords);
+  pair<str, str> process_member_decl(const str& decl, const str& container,
+      const umap<str, bool>& keywords);
+  str process_fn_decl(const vec<str>& code, const int line,
+      const str& container, const umap<str, bool>& keywords);
+  void process_fn_call(const str& call, const umap<str, bool>& keywords); };
 
 // Returns pointer to main function
-Fn* Compiler::compile(const umap<str, File>& files, umap<str, Fn>* fns){
+Fn* Compiler::compile(const umap<str, File>& files){
   str main_file = "";
   for(pair<str, File> p : files)
     if(p.second.main){
@@ -30,59 +33,48 @@ Fn* Compiler::compile(const umap<str, File>& files, umap<str, Fn>* fns){
       break; }
   assert(main_file != "", "Compiler.compile",
       "main file not marked in includer");
-  process_file(files.at(main_file), fns);
-  return &(*fns)[MAIN_FILE]; }
+  process_file(files.at(main_file));
+  return &(Fn::registry->fns)[MAIN_FILE]; }
 
-void Compiler::process_file(const File& file, umap<str, Fn>* fns){
+void Compiler::process_file(const File& file){
   // Process included files first
   for(File* incl : file.includes)
-    process_file(*incl, fns);
+    process_file(*incl);
 
   // Process all code in file
   const str fn = "Compiler.process_file";
   for(int line = 0; line < file.code.size(); ++line){
     str s = strip(file.code[line]);
-    bool _abstract, _template, _const;
-    _abstract = _template = _const = false;
+    umap<str, bool> keywords =
+        {{"abstract", false}, {"template", false}, {"const", false}};
+    str tok;
     while(1){
 
       // Obj declaration
       if(starts_with(s, "obj")){
-        assert(!_const, fn, "invalid keyword");
-        process_obj_decl(file.code, line, _abstract, _template);
+        assert(!keywords["const"], fn, "invalid keyword");
+        process_obj_decl(file.code, line, "", keywords);
         break;
 
       // Fn declaration
       }else if(starts_with(s, "fn")){
-        assert(!_abstract && !_template, fn, "invalid keyword");
-        process_fn_decl(file.code, line, _const, false, false, false);
+        assert(!keywords["abstract"] && !keywords["template"],
+            fn, "invalid keyword");
+        process_fn_decl(file.code, line, "", keywords);
         break;
 
-      // Abstract keyword
-      }else if(starts_with(s, "abstract")){
-        assert(!_abstract, fn, "keyword declared twice");
+      // Keyword modifier
+      }else if(keywords.find(tok = next_tok(s)) != keywords.end()){
+        assert(!keywords[tok], fn, "keyword declared twice");
         s = strip(delete_tok(s));
-        _abstract = true;
-        continue;
-
-      // Template keyword
-      }else if(starts_with(s, "template")){
-        assert(!_template, fn, "keyword declared twice");
-        s = strip(delete_tok(s));
-        _template = true;
-        continue;
-
-      // Const keyword
-      }else if(starts_with(s, "const")){
-        assert(!_const, fn, "keyword declared twice");
-        s = strip(delete_tok(s));
-        _const = true;
-        continue;
+        keywords[tok] = true;
 
       // Function call
       }else if(s != "" && is_upper(s[0]) || is_lower(s[0]) || s[0] == '_'){
-        assert(!_template, fn, "invalid keyword");
-        process_fn_call(s, _const);
+        assert(!keywords["abstract"] && !keywords["template"],
+            fn, "invalid keyword");
+        assert(file.main, fn, "function call outside main file or function");
+        process_fn_call(s, keywords);
         break;
 
       // Otherwise error
@@ -90,7 +82,7 @@ void Compiler::process_file(const File& file, umap<str, Fn>* fns){
         err(fn, "syntax error"); } } }
 
 void Compiler::process_obj_decl(const vec<str>& code, const int line,
-    const bool _abstract, const bool _template){
+    const str& container, const umap<str, bool>& keywords){
   const str fn = "Compiler.process_obj_def";
   // Get type name
   str s = code[line];
@@ -103,14 +95,15 @@ void Compiler::process_obj_decl(const vec<str>& code, const int line,
 
   // Forward declaration, no definition
   if(s == ""){
-    assert(!Type::registry->declared(type), fn, "Type already declared");
-    Type::registry->declare(type);
+    assert(!Type::registry->declared(type, container),
+        fn, "Type already declared");
+    Type::registry->declare(type, container);
     return; }
 
   // Definition expected
-  assert(!Type::registry->defined(type), fn, "Type already defined");
-  str sym = next_tok(s);
-  assert(sym == ":", fn, "expected colon after type");
+  assert(!Type::registry->defined(type, container), fn, "Type already defined");
+  str tok = next_tok(s);
+  assert(tok == ":", fn, "expected colon after type");
   s = strip(delete_tok(s));
 
   // Get any inherited base types
@@ -139,87 +132,79 @@ void Compiler::process_obj_decl(const vec<str>& code, const int line,
     ++end; }
 
   // Process internal declarations
+  vec<pair<str, str> > vars;
+  vec<str> fns;
   for(int i = line; i < end; ++i){
     str s = strip(code[i]);
-    bool _abstract2, _template2, _const, _virtual, _force, _final;
-    _abstract2 = _template2 = _const = _virtual = _force = _final = false;
+    umap<str, bool> _keywords =
+        {{"abstract", false}, {"template", false}, {"const", false},
+        {"static", false}, {"virtual", false}, {"force", false},
+        {"final", false}};
     while(1){
 
       // Obj declaration
       if(starts_with(s, "obj")){
-        assert(!_const && !_virtual && !_force && !_final,
-            fn, "invalid keyword");
-        process_obj_decl(code, i, _abstract2, _template2);
+        assert(!_keywords["const"] && !_keywords["virtual"]
+            && !_keywords["force"] && !_keywords["final"]
+            && !_keywords["static"], fn, "invalid keyword");
+        process_obj_decl(code, i, container + "::" + type, _keywords);
         break;
 
       // Fn, Constructor, Operator declaration
       }else if(starts_with(s, "fn") || starts_with(s, type)
           || starts_with(s, "operator")){
-        assert(!_abstract2 && !_template2, fn, "invalid keyword");
-        process_fn_decl(code, i, _const, _virtual, _force, _final);
+        assert(!_keywords["abstract"] && !_keywords["template"]
+            && !_keywords["static"], fn, "invalid keyword");
+        fns.pb(process_fn_decl(code, i, container, _keywords));
         break;
 
-      // Abstract keyword
-      }else if(starts_with(s, "abstract")){
-        assert(!_abstract2, fn, "keyword declared twice");
+      // Keyword modifier
+      }else if(_keywords.find(tok = next_tok(s)) != _keywords.end()){
+        assert(!_keywords[tok], fn, "keyword declared twice");
         s = strip(delete_tok(s));
-        _abstract2 = true;
-        continue;
-
-      // Template keyword
-      }else if(starts_with(s, "template")){
-        assert(!_template2, fn, "keyword declared twice");
-        s = strip(delete_tok(s));
-        _template2 = true;
-        continue;
-
-      // Virtual keyword
-      }else if(starts_with(s, "virtual")){
-        assert(!_virtual, fn, "keyword declared twice");
-        s = strip(delete_tok(s));
-        _virtual = true;
-        continue;
-
-      // Force keyword
-      }else if(starts_with(s, "force")){
-        assert(!_force, fn, "keyword declared twice");
-        s = strip(delete_tok(s));
-        _force = true;
-        continue;
-
-      // Final keyword
-      }else if(starts_with(s, "final")){
-        assert(!_final, fn, "keyword declared twice");
-        s = strip(delete_tok(s));
-        _final = true;
-        continue;
+        _keywords[tok] = true;
 
       // Member declaration
       }else if(s != "" && (is_upper(s[0]) || s[0] == '_')){
-        assert(!_abstract2 && !_template2 && !_const && !_virtual && !_force
-            && !_final, fn, "invalid keyword");
-        process_member_decl(s);
+        assert(!_keywords["abstract"] && !_keywords["template"]
+            && !_keywords["virtual"] && !_keywords["force"]
+            && !_keywords["final"], fn, "invalid keyword");
+        vars.pb(process_member_decl(s, container + "::" + type, _keywords));
         break;
 
       // Otherwise error
       }else
         err(fn, "syntax error"); } }
 
-  //! log def in typemgr
-}
+  // Log definition in TypeMgr
+  Type::registry->define(type, container, bases, vars, fns); }
 
-void Compiler::process_member_decl(const str& decl){
+// Returns {full type name, var name}
+pair<str, str> Compiler::process_member_decl(const str& decl,
+    const str& container, const umap<str, bool>& keywords){
+  const str fn = "Compiler.process_member_decl";
+  assert(!(keywords.at("const") && keywords.at("static")),
+      fn, "const member variables are already static");
+  str s = decl;
+  str type = next_tok(s);
+  assert(is_type(type), fn, "expected type");
+  s = strip(delete_tok(s));
+  str name = next_tok(s);
+  assert(keywords.at("const") ? is_const_name(name) : is_mutable_name(name),
+      fn, "expected variable name");
+  str full_type = Type::registry->search(type, container);
+  assert(full_type != "", fn, "type not declared");
+  return pair<str, str>(full_type, name); }
 
-}
-
-void Compiler::process_fn_decl(const vec<str>& code, const int line,
-    const bool _const, const bool _virtual, const bool _force,
-    const bool _final){
+str Compiler::process_fn_decl(const vec<str>& code, const int line,
+    const str& container, const umap<str, bool>& keywords){
 
   //! log fn def in fnmgr
-}
+  return ""; }
 
-void Compiler::process_fn_call(const str& call, const bool _const){
+// Includes variable declarations (constructor call is a fn call)
+void Compiler::process_fn_call(const str& call,
+    const umap<str, bool>& keywords){
   //! assert objs and fns have been defined and declared
 }
 

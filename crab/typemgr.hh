@@ -17,6 +17,8 @@ struct TypeMgr {
     size_t size;
     // Type name
     str name;
+    // Containing class
+    str container;
     // Member vars: var name -> type name
     umap<str, str> vars;
     // Member fns: fn name
@@ -26,36 +28,57 @@ struct TypeMgr {
 
   umap<str, Node> types;
 
-  bool declared(const str& name);
-  bool defined(const str& name);
-  void declare(const str& name);
-  void define(const str& name, const vec<str>& parents,
+  bool contains(const str& full_name);
+  str search(const str& name, const str& container);
+  bool declared(const str& name, const str& container);
+  bool defined(const str& name, const str& container);
+  void declare(const str& name, const str& container);
+  void define(const str& name, const str& container, const vec<str>& parents,
       const vec<pair<str, str> >& vars, const vec<str>& fns); };
 
-bool TypeMgr::declared(const str& name){
-  return types.find(name) != types.end(); }
+bool TypeMgr::contains(const str& full_name){
+  return types.find(full_name) != types.end(); }
 
-bool TypeMgr::defined(const str& name){
-  return declared(name) && types[name].defined == true; }
+// Return full type name by searching all containing classes
+// Returns empty string if not found
+str TypeMgr::search(const str& name, const str& container){
+  if(contains(name)) return name;
+  vec<str> ctrs = split(container, "::");
+  for(int i = 0; i < ctrs.size(); ++i){
+    str type = ctrs[0];
+    for(int j = 1; j <= i; ++j)
+      type += "::" + ctrs[j];
+    if(contains(type)) return type; }
+  return ""; }
 
-void TypeMgr::declare(const str& name){
-  assert(!declared(name), "TypeMgr.add", "Type already declared");
+bool TypeMgr::declared(const str& name, const str& container){
+  return search(name, container) != ""; }
+
+bool TypeMgr::defined(const str& name, const str& container){
+  str type = search(name, container);
+  return type != "" && types[type].defined == true; }
+
+void TypeMgr::declare(const str& name, const str& container){
+  assert(!declared(name, container), "TypeMgr.add", "Type already declared");
   Node node;
   node.defined = false;
   node.name = name;
-  types[name] = node; }
+  node.container = container;
+  types[container + "::" + name] = node; }
 
-// vars[i] = {type name, var name}
-void TypeMgr::define(const str& name, const vec<str>& parents,
-    const vec<pair<str, str> >& vars, const vec<str>& fns){
+// vars[i] = {full type name, var name}
+void TypeMgr::define(const str& name, const str& container,
+    const vec<str>& parents, const vec<pair<str, str> >& vars,
+    const vec<str>& fns){
   const str _fn = "TypeMgr.add";
-  assert(!defined(name), _fn, "Type already defined");
+  assert(!defined(name, container), _fn, "Type already defined");
   Node node;
   node.defined = true;
   node.name = name;
+  node.container = container;
   node.size = 0;
   for(const pair<str, str>& p : vars){
-    assert(defined(p.first), _fn, "Member type does not exist");
+    assert(defined(p.first, container), _fn, "Member type does not exist");
     assert(node.vars.find(p.second) == node.vars.end(),
         _fn, "Member variable name already declared");
     node.vars[p.second] = p.first;
@@ -68,6 +91,6 @@ void TypeMgr::define(const str& name, const vec<str>& parents,
     umap<str, Node>::iterator it = types.find(s);
     assert(it != types.end(), "TypeMgr.add", "base class not yet added");
     node.parents.pb(&it->second); }
-  types[name] = node; }
+  types[container + "::" + name] = node; }
 
 #endif
