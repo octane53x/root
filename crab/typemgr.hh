@@ -5,28 +5,30 @@
 
 #include "../core/util.hh"
 
-struct Type;
-struct Fn;
-
 struct TypeMgr {
 
-  struct Node {
+  enum Keyword {ABSTRACT, TEMPLATE};
+
+  // Data stored here so Type can take minimal memory
+  struct _Type {
     // False if only forward declared
     bool defined;
     // Total size of member vars
     size_t size;
     // Type name
     str name;
-    // Containing class
+    // Containing classes
     str container;
+    // Keyword modifiers
+    uset<Keyword> keywords;
     // Member vars: var name -> type name
     umap<str, str> vars;
     // Member fns: fn name
     uset<str> fns;
     // Direct base classes
-    vec<Node*> parents; };
+    vec<_Type*> parents; };
 
-  umap<str, Node> types;
+  umap<str, _Type> types;
 
   bool contains(const str& full_name);
   str search(const str& name, const str& container);
@@ -60,7 +62,7 @@ bool TypeMgr::defined(const str& name, const str& container){
 
 void TypeMgr::declare(const str& name, const str& container){
   assert(!declared(name, container), "TypeMgr.add", "Type already declared");
-  Node node;
+  _Type node;
   node.defined = false;
   node.name = name;
   node.container = container;
@@ -72,7 +74,7 @@ void TypeMgr::define(const str& name, const str& container,
     const vec<str>& fns){
   const str _fn = "TypeMgr.add";
   assert(!defined(name, container), _fn, "Type already defined");
-  Node node;
+  _Type node;
   node.defined = true;
   node.name = name;
   node.container = container;
@@ -88,7 +90,7 @@ void TypeMgr::define(const str& name, const str& container,
         _fn, "Member function name already declared");
     node.fns.insert(fn); }
   for(const str& s : parents){
-    umap<str, Node>::iterator it = types.find(s);
+    umap<str, _Type>::iterator it = types.find(s);
     assert(it != types.end(), "TypeMgr.add", "base class not yet added");
     node.parents.pb(&it->second); }
   types[container + "::" + name] = node; }

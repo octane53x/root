@@ -9,6 +9,7 @@ struct Fn;
 
 struct FnMgr {
 
+  // Key = full name
   umap<str, Fn> fns; };
 
 #endif

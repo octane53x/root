@@ -19,19 +19,15 @@ struct Engine {
   Cleaner cleaner;
   Compiler compiler;
 
-  // Execution
-  Language lang;
-  TypeMgr types;
-  FnMgr fns;
-  Allocator allocator;
-  AccessMgr access;
-
   void init();
   void process_script(const str& fname); };
 
+// Initialize compiler and allocate initial memory
 void Engine::init(){
-  allocator.init(); }
+  compiler.init();
+  Var::allocator.init(); }
 
+// Process all files and execute code from main file
 void Engine::process_script(const str& fname){
   includer.process_file(fname, &files);
   verifier.verify_files(files);

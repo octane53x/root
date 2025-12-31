@@ -15,8 +15,9 @@ const size_t
 
 struct Var {
 
-  bool constant;
-  Type type;
+  enum Keywords {CONST, REF};
+
+  Type* type;
   void* addr;
   str name;
   // Key = var name
@@ -39,8 +40,8 @@ Var::Var(const str& _type, const Block val): type(_type), name("") {
   addr = allocator->allocate(SIZE_BLOCK);
   *((Block*)addr) = val; }
 
-void Var::deallocate(){
-  //! recursively deallocate members
-}
+// Recursively deallocate members
+// Does NOT follow references
+void Var::deallocate(){}
 
 #endif

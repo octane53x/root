@@ -9,30 +9,42 @@
 
 struct Fn {
 
+  enum Keyword {CONST, VIRTUAL, FORCE, FINAL};
+
   struct FnCall {
     Fn* fn;
     vec<FnCall> params; };
 
+  bool defined;
   bool if_executed, break_loop;
   Language::Control control;
-  str name;
+  str name, container;
+  uset<Mod> keywords;
+  // params[i] = {full type, var name}
+  vec<pair<Type*, str> > params;
   vec<FnCall> code;
-  static llu next_id, scope;
-  static Language* lang;
-  static FnMgr* registry;
-  static AccessMgr* access;
+  static llu scope;
+  static Driver driver;
 
   Fn();
 
   virtual void validate();
 
+  void define(const Driver::Control control, const str& name,
+      const str& container, const vec<pair<Type*, str> > params,
+      const vec<FnCall>& code, const uset<Mod> mods);
   Var call(const vec<FnCall>& params);
   Var run(); };
+
+llu Fn::scope = 0;
 
 Fn::Fn(): if_executed(false), break_loop(false), control(Language::INVALID) {}
 
 void Fn::validate(){
-  assert(control != Language::INVALID, "Fn.validate", "invalid control"); }
+  assert(control != Language::INVALID, "Fn.validate", "invalid control");
+  assert(!(container == "" && (contains(keywords, VIRTUAL)
+      || contains(keywords, FORCE) || contains(keywords, FINAL))),
+      "Fn.validate", "invalid keyword"); }
 
 Var Fn::call(const vec<FnCall>& params){
   validate();

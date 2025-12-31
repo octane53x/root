@@ -3,7 +3,7 @@
 #ifndef ACCESS_MGR_HH
 #define ACCESS_MGR_HH
 
-#include "../core/util.hh"
+#include "var.hh"
 
 struct AccessMgr {
 

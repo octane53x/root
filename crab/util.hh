@@ -60,16 +60,6 @@ bool is_type(const str& s){
     ++i;
   return i == s.size(); }
 
-bool is_mutable_name(const str& s){
-  int i = 0;
-  while(i < s.size() && s[i] == '_')
-    ++i;
-  if(i == s.size() || !is_lower(s[i])) return false;
-  ++i;
-  while(i < s.size() && (is_lower(s[i]) || is_digit(s[i]) || s[i] == '_'))
-    ++i;
-  return i == s.size(); }
-
 bool is_const_name(const str& s){
   int i = 0;
   while(i < s.size() && s[i] == '_')
@@ -79,6 +69,19 @@ bool is_const_name(const str& s){
   while(i < s.size() && (is_upper(s[i]) || is_digit(s[i]) || s[i] == '_'))
     ++i;
   return i == s.size(); }
+
+bool is_mutable_or_fn_name(const str& s){
+  int i = 0;
+  while(i < s.size() && s[i] == '_')
+    ++i;
+  if(i == s.size() || !is_lower(s[i])) return false;
+  ++i;
+  while(i < s.size() && (is_lower(s[i]) || is_digit(s[i]) || s[i] == '_'))
+    ++i;
+  return i == s.size(); }
+
+bool is_name(const str& s){
+  return is_const_name(s) || is_mutable_or_fn_name(s); }
 
 // Token definition:
 // - Alphanumeric string (including underscore)

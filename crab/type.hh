@@ -7,7 +7,7 @@
 
 struct Type {
 
-  str* name;
+  _Type* data;
   static TypeMgr* registry;
 
   Type();

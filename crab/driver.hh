@@ -23,6 +23,7 @@ struct Language {
   Var process_fn(const Control fn, const vec<Var>& params);
   bool fn_typename(const vec<Var>& params); };
 
+// System function
 Var Language::process_fn(const Control fn, const vec<Var>& params){
   if(fn == TYPENAME){
     //!
