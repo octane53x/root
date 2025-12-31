@@ -9,11 +9,12 @@
 
 struct Fn {
 
-  enum Keyword {CONST, VIRTUAL, FORCE, FINAL};
-
   struct FnCall {
     Fn* fn;
     vec<FnCall> params; };
+
+  static llu scope;
+  static Driver driver;
 
   bool defined;
   bool if_executed, break_loop;
@@ -22,17 +23,17 @@ struct Fn {
   uset<Mod> keywords;
   // params[i] = {full type, var name}
   vec<pair<Type*, str> > params;
+  uset<Type*> returns;
   vec<FnCall> code;
-  static llu scope;
-  static Driver driver;
 
   Fn();
 
+  static void define(const Driver::Control control, const str& name,
+      const str& container, const vec<pair<Type*, str> > params,
+      const uset<Type*> returns, const vec<FnCall>& code, const uset<Mod> mods);
+
   virtual void validate();
 
-  void define(const Driver::Control control, const str& name,
-      const str& container, const vec<pair<Type*, str> > params,
-      const vec<FnCall>& code, const uset<Mod> mods);
   Var call(const vec<FnCall>& params);
   Var run(); };
 

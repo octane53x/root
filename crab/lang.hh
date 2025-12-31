@@ -5,6 +5,13 @@
 
 #include "../core/util.hh"
 
+struct Type;
+typedef pair<Type*, str> VarDecl;
+
+const size_t
+    SIZE_CHAR = 8,
+    SIZE_BLOCK = 64;
+
 // Object, function, or variable modifier
 enum Mod {ABSTRACT, TEMPLATE, CONST, STATIC, VIRTUAL, FORCE, FINAL, REF};
 const umap<str, Mod> TOK_TO_MOD =

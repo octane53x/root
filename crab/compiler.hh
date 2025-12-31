@@ -19,7 +19,7 @@ struct Compiler {
   void process_file(const File& file);
   void process_obj_decl(const vec<str>& code, const int line,
       const str& container, const uset<Mod>& mods);
-  pair<str, str> process_member_decl(const str& decl, const str& container,
+  VarDecl process_member_decl(const str& decl, const str& container,
       const uset<Mod>& mods);
   str process_fn_decl(const vec<str>& code, const int line,
       const str& container, const uset<Mod>& mods);
@@ -76,8 +76,9 @@ void Compiler::process_file(const File& file){
 
       // Keyword modifier
       }else if(contains(TOK_TO_MOD, tok)){
-        assert(!contains(mods, tok), _fn, "keyword declared twice");
-        mods.insert(TOK_TO_MOD[tok]);
+        Mod mod = TOK_TO_MOD[tok];
+        assert(!contains(mods, mod), _fn, "keyword declared twice");
+        mods.insert(mod);
         s = strip(delete_tok(s));
         tok = next_tok(s);
 
@@ -93,7 +94,7 @@ void Compiler::process_file(const File& file){
 
   // Add main function
   if(file.main)
-    Fn::define(Driver::USER, MAIN_FN, "", {}, code, {}); }
+    Fn::define(Driver::USER, MAIN_FN, "", {}, {}, code, {}); }
 
 void Compiler::process_obj_decl(const vec<str>& code, const int line,
     const str& container, const uset<Mod>& mods){
@@ -109,13 +110,12 @@ void Compiler::process_obj_decl(const vec<str>& code, const int line,
 
   // Forward declaration, no definition
   if(s == ""){
-    assert(!Type::registry->declared(type, container),
-        _fn, "Type already declared");
-    Type::registry->declare(type, container);
+    assert(!Type::declared(type, container), _fn, "Type already declared");
+    Type::declare(type, container);
     return; }
 
   // Definition expected
-  assert(!Type::registry->defined(type, container), _fn, "Type already defined");
+  assert(!Type::defined(type, container), _fn, "Type already defined");
   str tok = next_tok(s);
   assert(tok == ":", _fn, "expected colon after type");
   s = strip(delete_tok(s));
@@ -146,44 +146,39 @@ void Compiler::process_obj_decl(const vec<str>& code, const int line,
     ++end; }
 
   // Process internal declarations
-  vec<pair<str, str> > vars;
+  vec<pair<str, Type*> > vars;
   vec<str> fns;
   for(int i = line; i < end; ++i){
     str s = strip(code[i]);
-    umap<str, bool> _mods =
-        {{"abstract", false}, {"template", false}, {"const", false},
-        {"static", false}, {"virtual", false}, {"force", false},
-        {"final", false}};
+    str tok = next_tok(s);
     str location = (container == "") ? type : container + "::" + type;
+    uset<Mod> _mods;
     while(1){
 
+      // Empty line
+      if(s == "" && mods.empty())
+        break;
+
       // Obj declaration
-      if(starts_with(s, "obj")){
-        assert(!_mods["const"] && !_mods["virtual"]
-            && !_mods["force"] && !_mods["final"]
-            && !_mods["static"], _fn, "invalid keyword");
+      if(tok == "obj"){
         process_obj_decl(code, i, location, _mods);
         break;
 
-      // _fn, Constructor, Operator declaration
-      }else if(starts_with(s, "fn") || starts_with(s, type)
-          || starts_with(s, "operator")){
-        assert(!_mods["abstract"] && !_mods["template"]
-            && !_mods["static"], _fn, "invalid keyword");
+      // Fn, Constructor, Operator declaration
+      }else if(tok == "fn" || tok == "operator" || tok == type){
         fns.pb(process_fn_decl(code, i, location, _mods));
         break;
 
       // Keyword modifier
-      }else if(_mods.find(tok = next_tok(s)) != _mods.end()){
-        assert(!_mods[tok], _fn, "keyword declared twice");
+      }else if(contains(TOK_TO_MOD, tok)){
+        Mod mod = TOK_TO_MOD[tok]
+        assert(!contains(_mods, mod, _fn, "keyword declared twice");
+        _mods.insert(mod);
         s = strip(delete_tok(s));
-        _mods[tok] = true;
+        tok = next_tok(s);
 
       // Member declaration
       }else if(s != "" && (is_upper(s[0]) || s[0] == '_')){
-        assert(!_mods["abstract"] && !_mods["template"]
-            && !_mods["virtual"] && !_mods["force"]
-            && !_mods["final"], _fn, "invalid keyword");
         vars.pb(process_member_decl(s, location, _mods));
         break;
 
@@ -192,32 +187,31 @@ void Compiler::process_obj_decl(const vec<str>& code, const int line,
         err(fn, "syntax error"); } }
 
   // Log definition in TypeMgr
-  Type::registry->define(type, container, bases, vars, fns); }
+  Type::define(type, container, bases, vars, fns); }
 
-// Returns {full type name, var name}
-pair<str, str> Compiler::process_member_decl(const str& decl,
-    const str& container, const umap<str, bool>& mods){
+VarDecl Compiler::process_member_decl(const str& decl,
+    const str& container, const uset<Mod>& mods){
   const str fn = "Compiler.process_member_decl";
-  assert(!(mods.at("const") && mods.at("static")),
+  assert(!(contains(mods, CONST) && contains(mods, STATIC)),
       _fn, "const member variables are already static");
   str s = decl;
   str type = next_tok(s);
   assert(is_type(type), _fn, "expected type");
   s = strip(delete_tok(s));
   str name = next_tok(s);
-  assert(mods.at("const") ? is_const_name(name)
+  assert(contains(mods, CONST) ? is_const_name(name)
       : is_mutable_or_fn_name(name), _fn, "expected variable name");
-  str full_type = Type::registry->search(type, container);
-  assert(full_type != "", _fn, "type not declared");
-  return pair<str, str>(full_type, name); }
+  Type* t = Type::search(type, container);
+  assert(t != NULL, _fn, "type not declared");
+  return VarDecl(t, name); }
 
 str Compiler::process_fn_decl(const vec<str>& code, const int line,
-    const str& container, const umap<str, bool>& mods){
+    const str& container, const umap<Mod>& mods){
   const str _fn = "Compiler.process_fn_decl";
   // Get function name
   str s = code[line];
   str name = next_tok(s);
-  while(mods.find(name) != mods.end() || name == "fn"){
+  while(contains(mods, TOK_TO_MOD[name]) || name == "fn"){
     s = strip(delete_tok(s));
     name = next_tok(s); }
   assert(is_mutable_or_fn_name(name), _fn, "expected function name");
@@ -226,18 +220,18 @@ str Compiler::process_fn_decl(const vec<str>& code, const int line,
   s = strip(delete_tok(s));
   str tok = next_tok(s);
   assert(tok == "(", _fn, "expected parenthesis");
-  vec<pair<str, str> > params;
+  VarDecl params;
   while(1){
     s = strip(delete_tok(s));
     tok = next_tok(s);
     if(tok == ")") break;
     assert(s != "", _fn, "missing parenthesis");
     assert(is_type(tok), _fn, "expected type");
-    str type = (container == "") ? tok : container + "::" + tok;
+    Type* type = Type::search(type, container);
     s = strip(delete_tok(s));
     tok = next_tok(s);
     assert(is_name(tok), _fn, "expected variable name");
-    params.pb(pair<str, str>(type, tok));
+    params.pb(VarDecl(type, tok));
     s = strip(delete_tok(s));
     tok = next_tok(s);
     if(tok == ")") break;
@@ -280,7 +274,7 @@ str Compiler::process_fn_decl(const vec<str>& code, const int line,
 
 // Includes variable declarations (constructor call is a fn call)
 void Compiler::process_fn_call(const str& call,
-    const umap<str, bool>& mods){
+    const uset<Mod>& mods){
   //! assert objs and fns have been defined and declared
 }
 
