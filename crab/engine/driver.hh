@@ -1,17 +1,17 @@
 // LANGUAGE DEPENDENCIES
 
-#ifndef LANGUAGE_HH
-#define LANGUAGE_HH
+#ifndef DRIVER_HH
+#define DRIVER_HH
 
 #include "var.hh"
 
-struct Language {
+struct Driver {
 
   // Function type
   enum Control {
     INVALID,
     // User-defined in executed script
-    USER, DECL,
+    USER, /*DECL, !! i think this is a FnCall */
     // Handled by engine
     IF, ELSE, FOR, WHILE, BREAK, CONTINUE, RETURN,
     TYPENAME, EXIT, PRINT,
@@ -24,12 +24,12 @@ struct Language {
   bool fn_typename(const vec<Var>& params); };
 
 // System function
-Var Language::process_fn(const Control fn, const vec<Var>& params){
+Var Driver::process_fn(const Control fn, const vec<Var>& params){
   if(fn == TYPENAME){
     //!
   }
   //! more
-  err("Language.process_fn", "control fn not handled");
+  err("Driver.process_fn", "control fn not handled");
   // Unreachable
   return Var(); }
 

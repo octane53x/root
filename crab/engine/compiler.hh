@@ -14,6 +14,8 @@ const str
 // Stores type and function declarations and interprets function calls
 struct Compiler {
 
+  virtual void validate();
+
   void init();
   Fn* compile(const umap<str, File>& files);
   void process_file(const File& file);
@@ -24,6 +26,14 @@ struct Compiler {
   str process_fn_decl(const vec<str>& code, const int line,
       const str& container, const uset<Mod>& mods);
   Fn::FnCall process_fn_call(const str& call, const uset<Mod>& mods); };
+
+// Ensure valid state, O(N)
+// Called between compilation and execution
+void Compiler::validate(){
+  for(pair<str, Type> p : Type::registry)
+    p.second.validate();
+  for(pair<str, Fn> p : Fn::registry)
+    p.second.validate(); }
 
 // Initialize compiler
 void Compiler::init(){
@@ -43,6 +53,7 @@ Fn* Compiler::compile(const umap<str, File>& files){
   assert(main_file != "", "Compiler.compile",
       "main file not marked in includer");
   process_file(files.at(main_file));
+  validate();
   return &Fn::registry[MAIN_FN]; }
 
 // Depth-first recursively process each file
@@ -96,6 +107,7 @@ void Compiler::process_file(const File& file){
   if(file.main)
     Fn::define(Driver::USER, MAIN_FN, "", {}, {}, code, {}); }
 
+// Object declaration or definition, recursive for nested objects
 void Compiler::process_obj_decl(const vec<str>& code, const int line,
     const str& container, const uset<Mod>& mods){
   const str fn = "Compiler.process_obj_def";
@@ -189,11 +201,10 @@ void Compiler::process_obj_decl(const vec<str>& code, const int line,
   // Log definition in TypeMgr
   Type::define(type, container, bases, vars, fns); }
 
+// Object member variable
 VarDecl Compiler::process_member_decl(const str& decl,
     const str& container, const uset<Mod>& mods){
-  const str fn = "Compiler.process_member_decl";
-  assert(!(contains(mods, CONST) && contains(mods, STATIC)),
-      _fn, "const member variables are already static");
+  const str _fn = "Compiler.process_member_decl";
   str s = decl;
   str type = next_tok(s);
   assert(is_type(type), _fn, "expected type");
@@ -205,6 +216,7 @@ VarDecl Compiler::process_member_decl(const str& decl,
   assert(t != NULL, _fn, "type not declared");
   return VarDecl(t, name); }
 
+// Function declaration or definition
 str Compiler::process_fn_decl(const vec<str>& code, const int line,
     const str& container, const umap<Mod>& mods){
   const str _fn = "Compiler.process_fn_decl";

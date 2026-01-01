@@ -3,52 +3,136 @@
 #ifndef FN_HH
 #define FN_HH
 
-#include "language.hh"
-#include "fnmgr.hh"
-#include "accessmgr.hh"
+#include "driver.hh"
 
+// Function
 struct Fn {
 
+  // Function call
   struct FnCall {
     Fn* fn;
-    vec<FnCall> params; };
+    vec<FnCall> params;
 
+    virtual void validate(); };
+
+  // Used to destruct all variables at scope when leaving a function
   static llu scope;
+  // Language dependencies
   static Driver driver;
+  // Container for all functions
+  static umap<str, Fn> registry;
 
+  // False if only declared
   bool defined;
+  // Used for control flow
   bool if_executed, break_loop;
-  Language::Control control;
+  // Function type
+  Driver::Control control;
+  // Function name and containing classes
   str name, container;
+  // Keyword modifiers
   uset<Mod> keywords;
-  // params[i] = {full type, var name}
-  vec<pair<Type*, str> > params;
+  // Parameters: {Type, var name}
+  vec<VarDecl> params;
+  // Possible return types
   uset<Type*> returns;
+  // Each line of operational code
   vec<FnCall> code;
 
   Fn();
 
-  static void define(const Driver::Control control, const str& name,
-      const str& container, const vec<pair<Type*, str> > params,
-      const uset<Type*> returns, const vec<FnCall>& code, const uset<Mod> mods);
-
   virtual void validate();
+
+  static Fn* search(const str& name, const str& container) const;
+  static void declared(const str& name, const str& container) const;
+  static void defined(const str& name, const str& container) const;
+
+  static void declare(const str& name, const str& container);
+  static void define(const Driver::Control control, const str& name,
+      const str& container, const vec<VarDecl> params,
+      const uset<Type*> returns, const vec<FnCall>& code, const uset<Mod> mods);
 
   Var call(const vec<FnCall>& params);
   Var run(); };
 
+// Scope starts at 0, becomes 1 in main function, etc
 llu Fn::scope = 0;
 
-Fn::Fn(): if_executed(false), break_loop(false), control(Language::INVALID) {}
+// Set default member state
+Fn::Fn(): defined(false), if_executed(false), break_loop(false),
+    control(Language::INVALID) {}
 
+// Ensure valid state, O(N)
+// To be called when definition is expected
 void Fn::validate(){
-  assert(control != Language::INVALID, "Fn.validate", "invalid control");
-  assert(!(container == "" && (contains(keywords, VIRTUAL)
-      || contains(keywords, FORCE) || contains(keywords, FINAL))),
-      "Fn.validate", "invalid keyword"); }
+  const str& _fn = "Fn.validate";
+  assert(defined, _fn, "function not defined");
+  assert(control != Language::INVALID, _fn, "invalid control");
+  assert(name != "", _fn, "function has no name");
+  for(const VarDecl& vd : params)
+    assert(vd.first != NULL && vd->defined, _fn, "param type not defined");
+  for(Type* type : returns)
+    assert(type != NULL && type->defined, _fn, "return type not defined");
+  for(const FnCall& fc : code)
+    fc.validate(); }
 
+// Ensure valid state, O(N) recursive
+void Fn::FnCall::validate(){
+  assert(fn != NULL && fn->defined,
+      "FnCall.validate", "function is not defined");
+  for(const FnCall& fc : params)
+    fc.validate(); }
+
+// Searches all containing classes
+// Returns NULL if not found
+Fn* Type::search(const str& name, const str& container) const {
+  if(contains(registry, name)) return &registry[name];
+  vec<str> ctrs = split(container, "::");
+  str ctr = "";
+  for(int i = 0; i < ctrs.size(); ++i){
+    ctr += ctrs[i] + "::";
+    if(contains(registry, ctr + type)) return &registry[ctr + type]; }
+  return NULL; }
+
+void Fn::declared(const str& name, const str& container) const {
+  return search(name, container) != NULL; }
+
+void Fn::defined(const str& name, const str& container) const {
+  Fn* fn = search(name, container);
+  return fn != NULL && fn->defined; }
+
+void Fn::declare(const str& name, const str& container){
+  assert(!declared(name, container), "Fn.declare", "Function already declared");
+  Fn fn;
+  fn.defined = false;
+  fn.name = name;
+  fn.container = container;
+  registry[container + "::" + name] = fn; }
+
+void Fn::define(const Driver::Control control, const str& name,
+    const str& container, const vec<VarDecl> params, const uset<Type*> returns,
+    const vec<FnCall>& code, const uset<Mod> mods){
+  const str& _fn = "Fn.define";
+  assert(!defined(name, container), _fn, "function already defined");
+  Fn fn;
+  fn.defined = true;
+  fn.control = control;
+  fn.name = name;
+  fn.container = container;
+  for(const VarDecl& vd : params){
+    assert(vd.first != NULL && vd.first->defined,
+        _fn, "param type not defined");
+    fn.params.pb(vd); }
+  for(Type* type : returns){
+    assert(type != NULL && type->defined, _fn, "return type not defined");
+    fn.returns.insert(type); }
+  for(const FnCall& fc : code){
+    assert(fc.fn != NULL && fc.fn->defined, _fn, "function not defined");
+    fn.code.pb(fc); }
+  registry[container + "::" + name] = fn; }
+
+// Execute the function
 Var Fn::call(const vec<FnCall>& params){
-  validate();
   const str _fn = "Fn.call";
   ++scope;
 
@@ -138,7 +222,6 @@ Var Fn::call(const vec<FnCall>& params){
   access->remove(scope);
 
   --scope;
-  validate();
   return r; }
 
 Var Fn::run(){

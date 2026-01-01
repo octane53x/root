@@ -14,7 +14,7 @@ struct Var {
   // Memory allocator
   static Allocator allocator;
   // All variables in scope to fetch the memory address
-  static umap<str, Var> var_table;
+  static umap<str, Var> access;
   // Variables per scope so we know what to remove when a function completes
   // Key 1: scope, Key 2: var name
   static umap<llu, umap<str, Var> > scope_table;
@@ -46,15 +46,15 @@ Var::Var(const str& _type, const Block val): type(_type), name("") {
   *((Block*)addr) = val; }
 
 Var Var::get(const str& name){
-  umap<str, Var>::iterator it = var_table.find(name);
-  assert(it != var_table.end(), "Var.get", "variable not accessible");
+  umap<str, Var>::iterator it = access.find(name);
+  assert(it != access.end(), "Var.get", "variable not accessible");
   return it->second; }
 
 void Var::add(const llu scope, const Var& var){
-  umap<str, Var>::iterator it = var_table.find(var.name);
-  assert(it == var_table.end(), "Var.add",
+  umap<str, Var>::iterator it = access.find(var.name);
+  assert(it == access.end(), "Var.add",
       "variable already added to access (declared twice?)");
-  var_table[var.name] = var;
+  access[var.name] = var;
   umap<llu, umap<str, Var> >::iterator it2 = scope_table.find(scope);
   if(it2 == scope_table.end()){
     umap<str, Var> m;
@@ -68,10 +68,10 @@ void Var::remove(const llu scope){
   assert(it != scope_table.end(), "Var.remove",
       "removing nonexistent scope");
   for(pair<str, Var> p : it->second){
-    umap<str, Var>::iterator it2 = var_table.find(p.first);
-    assert(it2 != var_table.end(), "Var.remove",
-        "variable in scope_table but not in var_table");
-    var_table.erase(it2); }
+    umap<str, Var>::iterator it2 = access.find(p.first);
+    assert(it2 != access.end(), "Var.remove",
+        "variable in scope_table but not in access");
+    access.erase(it2); }
   scope_table.erase(it); }
 
 // Recursively deallocate members

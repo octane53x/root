@@ -6,8 +6,10 @@
 #include "../core/util.hh"
 
 struct Type;
+// Value = variable name
 typedef pair<Type*, str> VarDecl;
 
+// Used by allocator
 const size_t
     SIZE_CHAR = 8,
     SIZE_BLOCK = 64;
