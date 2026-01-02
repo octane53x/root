@@ -1,6 +1,6 @@
 // CRAB ENGINE MAIN
 
-#include "engine.hh"
+#include "engine/engine.hh"
 
 // Main function
 int main(int argc, const char** argv){

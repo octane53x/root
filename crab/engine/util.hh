@@ -3,7 +3,7 @@
 #ifndef CRAB_UTIL_HH
 #define CRAB_UTIL_HH
 
-#include "../core/util.hh"
+#include "../../core/util.hh"
 
 str strip(const str& s){
   int i = 0;

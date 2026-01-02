@@ -11,7 +11,7 @@ struct Driver {
   enum Control {
     INVALID,
     // User-defined in executed script
-    USER, /*DECL, !! i think this is a FnCall */
+    USER, DECL,
     // Handled by engine
     IF, ELSE, FOR, WHILE, BREAK, CONTINUE, RETURN,
     TYPENAME, EXIT, PRINT,

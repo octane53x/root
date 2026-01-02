@@ -1,5 +1,7 @@
 // FUNCTION
 
+//! Returns destruct
+
 #ifndef FN_HH
 #define FN_HH
 
@@ -23,17 +25,19 @@ struct Fn {
   static umap<str, Fn> registry;
 
   // False if only declared
-  bool defined;
+  bool _defined;
   // Used for control flow
   bool if_executed, break_loop;
   // Function type
   Driver::Control control;
-  // Function name and containing classes
-  str name, container;
+  // Containing class
+  Type* container;
+  // Function name
+  str name;
   // Keyword modifiers
-  uset<Mod> keywords;
-  // Parameters: {Type, var name}
-  vec<VarDecl> params;
+  uset<Mod> mods;
+  // Parameters
+  vec<Type::_Var> params;
   // Possible return types
   uset<Type*> returns;
   // Each line of operational code
@@ -43,93 +47,118 @@ struct Fn {
 
   virtual void validate();
 
-  static Fn* search(const str& name, const str& container) const;
-  static void declared(const str& name, const str& container) const;
-  static void defined(const str& name, const str& container) const;
-
-  static void declare(const str& name, const str& container);
-  static void define(const Driver::Control control, const str& name,
-      const str& container, const vec<VarDecl> params,
-      const uset<Type*> returns, const vec<FnCall>& code, const uset<Mod> mods);
+  static Fn* search(const str& name, Type* container);
+  static bool declared(const str& name, Type* container);
+  static bool defined(const str& name, Type* container);
+  static Fn* declare(const str& name, Type* container);
+  static Fn* define(const Driver::Control control, const str& name,
+      Type* container, const vec<Type::_Var> params, const uset<Type*> returns,
+      const vec<FnCall>& code, const uset<Mod> mods);
 
   Var call(const vec<FnCall>& params);
   Var run(); };
 
-// Scope starts at 0, becomes 1 in main function, etc
 llu Fn::scope = 0;
+Driver Fn::driver;
+umap<str, Fn> Fn::registry;
 
 // Set default member state
-Fn::Fn(): defined(false), if_executed(false), break_loop(false),
-    control(Language::INVALID) {}
+Fn::Fn(): _defined(false), if_executed(false), break_loop(false),
+    control(Driver::INVALID) {}
 
 // Ensure valid state, O(N)
 // To be called when definition is expected
 void Fn::validate(){
   const str& _fn = "Fn.validate";
-  assert(defined, _fn, "function not defined");
-  assert(control != Language::INVALID, _fn, "invalid control");
+  assert(_defined, _fn, "function not defined");
+  assert(control != Driver::INVALID, _fn, "invalid control");
   assert(name != "", _fn, "function has no name");
-  for(const VarDecl& vd : params)
-    assert(vd.first != NULL && vd->defined, _fn, "param type not defined");
+  for(const Type::_Var& var : params)
+    assert(var.type != NULL && var.type->_defined,
+        _fn, "param type not defined");
   for(Type* type : returns)
-    assert(type != NULL && type->defined, _fn, "return type not defined");
-  for(const FnCall& fc : code)
+    assert(type != NULL && type->_defined, _fn, "return type not defined");
+  for(FnCall& fc : code)
     fc.validate(); }
 
 // Ensure valid state, O(N) recursive
 void Fn::FnCall::validate(){
-  assert(fn != NULL && fn->defined,
+  assert(fn != NULL && fn->_defined,
       "FnCall.validate", "function is not defined");
-  for(const FnCall& fc : params)
+  for(FnCall& fc : params)
     fc.validate(); }
+
+// Ensure valid state, O(N)
+// To be called when full definition is expected
+void Type::validate(){
+  const str& _fn = "Type.validate";
+  assert(_defined, _fn, "type not defined");
+  assert(name != "", _fn, "type has no name");
+  for(const pair<str, _Var>& p : vars)
+    assert(p.second.type != NULL && p.second.type->_defined,
+        _fn, "member variable type not defined");
+  for(Fn* fn : fns)
+    assert(fn != NULL && fn->_defined, _fn, "member function not defined");
+  for(Type* type : parents)
+    assert(type != NULL && type->_defined, _fn, "base type not defined"); }
 
 // Searches all containing classes
 // Returns NULL if not found
-Fn* Type::search(const str& name, const str& container) const {
+Fn* Fn::search(const str& name, Type* container){
   if(contains(registry, name)) return &registry[name];
-  vec<str> ctrs = split(container, "::");
+  if(container == NULL) return NULL;
+  vec<str> ctrs =
+      split(Type::full_name(container->name, container->container), "::");
   str ctr = "";
   for(int i = 0; i < ctrs.size(); ++i){
     ctr += ctrs[i] + "::";
-    if(contains(registry, ctr + type)) return &registry[ctr + type]; }
+    if(contains(registry, ctr + name)) return &registry[ctr + name]; }
   return NULL; }
 
-void Fn::declared(const str& name, const str& container) const {
+// Has the function been declared
+bool Fn::declared(const str& name, Type* container){
   return search(name, container) != NULL; }
 
-void Fn::defined(const str& name, const str& container) const {
+// Has the function been defined
+bool Fn::defined(const str& name, Type* container){
   Fn* fn = search(name, container);
-  return fn != NULL && fn->defined; }
+  return fn != NULL && fn->_defined; }
 
-void Fn::declare(const str& name, const str& container){
+// Declare the function
+Fn* Fn::declare(const str& name, Type* container){
   assert(!declared(name, container), "Fn.declare", "Function already declared");
   Fn fn;
-  fn.defined = false;
+  fn._defined = false;
   fn.name = name;
   fn.container = container;
-  registry[container + "::" + name] = fn; }
+  return &(registry[Type::full_name(name, container)] = fn); }
 
-void Fn::define(const Driver::Control control, const str& name,
-    const str& container, const vec<VarDecl> params, const uset<Type*> returns,
+// Define the function
+Fn* Fn::define(const Driver::Control control, const str& name,
+    Type* container, const vec<Type::_Var> params, const uset<Type*> returns,
     const vec<FnCall>& code, const uset<Mod> mods){
   const str& _fn = "Fn.define";
   assert(!defined(name, container), _fn, "function already defined");
-  Fn fn;
-  fn.defined = true;
-  fn.control = control;
-  fn.name = name;
-  fn.container = container;
-  for(const VarDecl& vd : params){
-    assert(vd.first != NULL && vd.first->defined,
+  Fn* fn;
+  if(declared(name, container))
+    fn = search(name, container);
+  else
+    fn = &(registry[Type::full_name(name, container)] = Fn());
+  fn->_defined = true;
+  fn->control = control;
+  fn->name = name;
+  fn->container = container;
+  for(const Type::_Var& var : params){
+    assert(var.type != NULL && var.type->_defined,
         _fn, "param type not defined");
-    fn.params.pb(vd); }
+    fn->params.pb(var); }
   for(Type* type : returns){
-    assert(type != NULL && type->defined, _fn, "return type not defined");
-    fn.returns.insert(type); }
+    assert(type != NULL && type->_defined, _fn, "return type not defined");
+    fn->returns.insert(type); }
   for(const FnCall& fc : code){
-    assert(fc.fn != NULL && fc.fn->defined, _fn, "function not defined");
-    fn.code.pb(fc); }
-  registry[container + "::" + name] = fn; }
+    assert(fc.fn != NULL && fc.fn->_defined, _fn, "function not defined");
+    fn->code.pb(fc); }
+  return fn; }
 
 // Execute the function
 Var Fn::call(const vec<FnCall>& params){
@@ -140,41 +169,42 @@ Var Fn::call(const vec<FnCall>& params){
   vec<Var> param_values;
   for(int i = 0; i < params.size(); ++i){
     // Don't execute last for parameter (iteration)
-    if(control == Language::FOR && i == params.size() - 1) break;
+    if(control == Driver::FOR && i == params.size() - 1) break;
     // Resolve parameter values
     Var v = params[i].fn->call(params[i].params);
-    assert(*v.type.name != "Void", _fn, "parameter resolved to Void");
+    assert(v.type != NULL && v.type != &Type::registry["Void"],
+        _fn, "parameter resolved to Void");
     // Add to access and param_values
-    access->add(scope, v);
+    Var::declare(scope, v);
     param_values.pb(v); }
 
   // User-defined function call
   Var r;
-  if(control == Language::USER){
+  if(control == Driver::USER){
     r = run();
 
   // Variable declaration
-  }else if(control == Language::DECL){
+  }else if(control == Driver::DECL){
     r = run();
-    access->add(scope, r);
+    Var::declare(scope, r);
 
   // If statement
-  }else if(control == Language::IF){
+  }else if(control == Driver::IF){
     assert(param_values.size() == 1, _fn, "if didn't have one parameter");
     bool b = *((bool*)param_values[0].addr);
     if(b)
       run();
-    r = Var("Bool", (Char)b);
+    r = Var("Bool", (void*)&b, sizeof(bool));
 
   // Else statement
-  }else if(control == Language::ELSE){
+  }else if(control == Driver::ELSE){
     assert(param_values.empty(), _fn, "else didn't have zero parameters");
     if(!if_executed)
       run();
 
   // For loop
   // Params: 1. Variable declaration  2. Stop condition  3. Variable iteration
-  }else if(control == Language::FOR){
+  }else if(control == Driver::FOR){
     assert(param_values.size() == 3, _fn, "for didn't have three parameters");
     Var v = param_values[1];
     while(*((bool*)v.addr)){
@@ -186,7 +216,7 @@ Var Fn::call(const vec<FnCall>& params){
       v = params[1].fn->call(params[1].params); }
 
   // While loop
-  }else if(control == Language::WHILE){
+  }else if(control == Driver::WHILE){
     assert(param_values.size() == 1, _fn, "while didn't have one parameter");
     Var v = param_values[0];
     while(*((bool*)v.addr)){
@@ -196,59 +226,64 @@ Var Fn::call(const vec<FnCall>& params){
       v = params[0].fn->call(params[0].params); }
 
   // Break loop
-  }else if(control == Language::BREAK){
+  }else if(control == Driver::BREAK){
     assert(param_values.empty(), _fn, "break didn't have zero parameters");
     assert(code.empty(), _fn, "break had instructions");
 
   // Continue loop
-  }else if(control == Language::CONTINUE){
+  }else if(control == Driver::CONTINUE){
     assert(param_values.empty(), _fn, "continue didn't have zero parameters");
     assert(code.empty(), _fn, "continue had instructions");
 
   // Return statement
-  }else if(control == Language::RETURN){
+  }else if(control == Driver::RETURN){
     assert(param_values.size() == 1, _fn, "return didn't have one parameter");
     assert(code.empty(), _fn, "return had instructions");
     r = param_values[0];
 
   // System call
   }else
-    r = lang->process_fn(control, param_values);
+    r = driver.process_fn(control, param_values);
 
   // Deallocate all variables at scope
-  for(pair<str, Var> p : access->scope_table[scope])
-    p.second.deallocate();
+  for(Var* var : Var::scope_table[scope])
+    var->destruct();
   // Remove from access all variables at scope
-  access->remove(scope);
+  Var::descope(scope);
 
   --scope;
   return r; }
 
+// Execute the code within the function
 Var Fn::run(){
   const str _fn = "Fn.run";
   for(int i = 0; i < code.size(); ++i){
     const FnCall& instr = code[i];
     Var v = instr.fn->call(instr.params);
 
-    Language::Control ctrl = instr.fn->control;
-    if(ctrl == Language::IF){
-      assert(*v.type.name == "Bool", _fn, "if returned non-bool");
+    Driver::Control ctrl = instr.fn->control;
+    // If statement
+    if(ctrl == Driver::IF){
+      assert(v.type->name == "Bool", _fn, "if returned non-bool");
       if_executed = *((bool*)v.addr);
 
-    }else if(ctrl == Language::BREAK){
+    // Break loop
+    }else if(ctrl == Driver::BREAK){
       assert(i == code.size() - 1, _fn, "break precedes dangling code");
-      assert(*v.type.name == "Void", _fn, "break returned non-Void");
+      assert(v.type->name == "Void", _fn, "break returned non-Void");
       break_loop = true;
       break;
 
-    }else if(ctrl == Language::CONTINUE){
+    // Continue loop
+    }else if(ctrl == Driver::CONTINUE){
       assert(i == code.size() - 1, _fn, "continue precedes dangling code");
-      assert(*v.type.name == "Void", _fn, "continue returned non-Void");
+      assert(v.type->name == "Void", _fn, "continue returned non-Void");
       break;
 
-    }else if(ctrl == Language::RETURN){
+    // Return from function
+    }else if(ctrl == Driver::RETURN){
       assert(i == code.size() - 1, _fn, "return precedes dangling code");
-      assert(control == Language::USER, _fn,
+      assert(control == Driver::USER, _fn,
           "returning from non-user-defined function");
       return v; }
 

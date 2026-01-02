@@ -3,7 +3,7 @@
 #ifndef ALLOCATOR_HH
 #define ALLOCATOR_HH
 
-#include "../core/util.hh"
+#include "../../core/util.hh"
 
 const size_t
     ALLOCATION_MIN = (size_t)1024 * 1024 * 8, // 1 MB

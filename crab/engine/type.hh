@@ -5,102 +5,119 @@
 
 #include "lang.hh"
 
+struct Var;
+struct Fn;
+
 // Object type
 struct Type {
+
+  // Member variable
+  struct _Var {
+    Type* type;
+    str name; };
 
   // Container for all types
   // Key = full name (container::name)
   static umap<str, Type> registry;
 
   // False if only forward declared
-  bool defined;
+  bool _defined;
   // Total size of member vars
   size_t size;
-  // Type name and containing classes
-  str name, container;
+  // Containing class
+  Type* container;
+  // Type name
+  str name;
   // Keyword modifiers
-  uset<Mod> keywords;
-  // Member vars: Key = var name
-  umap<str, Type*> vars;
-  // Member fns
-  uset<Fn*> fns;
-  // Direct base classes
+  uset<Mod> mods;
+  // Direct base classes, pointers to Type::registry
   uset<Type*> parents;
+  // Member vars, key = var name
+  umap<str, _Var> vars;
+  // Member fns, pointers to Fn::registry
+  uset<Fn*> fns;
 
+  Type();
+
+  // Defined in fn.hh
   virtual void validate();
 
-  static Type* search(const str& name, const str& container) const;
-  static bool declared(const str& name, const str& container) const;
-  static bool defined(const str& name, const str& container) const;
+  static str full_name(const str& name, Type* container);
+  static Type* search(const str& name, Type* container);
+  static bool declared(const str& name, Type* container);
+  static bool defined(const str& name, Type* container);
+  static Type* declare(const str& name, Type* container);
+  static Type* define(const str& name, Type* container,
+      const vec<Type*>& parents, const vec<_Var>& vars, const vec<Fn*>& fns); };
 
-  static void declare(const str& name, const str& container);
-  static void define(const str& name, const str& container,
-      const vec<str>& parents, const vec<pair<str, str> >& vars,
-      const vec<str>& fns); };
+umap<str, Type> Type::registry;
 
-// Ensure valid state, O(N)
-// To be called when full definition is expected
-void Type::validate(){
-  const str& _fn = "Type.validate";
-  assert(defined, _fn, "type not defined");
-  assert(name != "", _fn, "type has no name");
-  for(pair<str, Type*> p : vars)
-    assert(p.second != NULL && p.second->defined,
-        _fn, "member variable type not defined");
-  for(Fn* fn : fns)
-    assert(fn != NULL && fn->defined, _fn, "member function not defined");
-  for(Type* type : parents)
-    assert(type != NULL && type->defined, _fn, "base type not defined"); }
+// Set default member state
+Type::Type(): _defined(false), size(0) {}
+
+// Recursively determine the full name (Obj::Obj::etc)
+str Type::full_name(const str& name, Type* container){
+  if(container == NULL) return name;
+  return full_name(container->name, container->container) + "::" + name; }
 
 // Searches all containing classes
 // Returns NULL if not found
-Type* Type::search(const str& name, const str& container) const {
+Type* Type::search(const str& name, Type* container){
   if(contains(registry, name)) return &registry[name];
-  vec<str> ctrs = split(container, "::");
+  if(container == NULL) return NULL;
+  vec<str> ctrs = split(full_name(container->name, container->container), "::");
   str ctr = "";
   for(int i = 0; i < ctrs.size(); ++i){
     ctr += ctrs[i] + "::";
-    if(contains(registry, ctr + type)) return &registry[ctr + type]; }
+    if(contains(registry, ctr + name)) return &registry[ctr + name]; }
   return NULL; }
 
-bool Type::declared(const str& name, const str& container) const {
+// Has the type been declared
+bool Type::declared(const str& name, Type* container){
   return search(name, container) != NULL; }
 
-bool Type::defined(const str& name, const str& container) const {
+// Has the type been defined
+bool Type::defined(const str& name, Type* container){
   Type* type = search(name, container);
-  return type != NULL && type->defined; }
+  return type != NULL && type->_defined; }
 
-void Type::declare(const str& name, const str& container){
+// Declare the type
+Type* Type::declare(const str& name, Type* container){
   assert(!declared(name, container), "Type.declare", "type already declared");
   Type type;
-  type.defined = false;
+  type._defined = false;
   type.name = name;
   type.container = container;
-  registry[container + "::" + name] = type; }
+  return &(registry[full_name(name, container)] = type); }
 
-void Type::define(const str& name, const str& container,
-    const vec<Type*>& parents, const vec<VarDecl>& vars, const vec<Fn*>& fns){
+// Define the type
+Type* Type::define(const str& name, Type* container, const vec<Type*>& parents,
+    const vec<_Var>& vars, const vec<Fn*>& fns){
   const str _fn = "Type.define";
   assert(!defined(name, container), _fn, "type already defined");
-  Type type;
-  type.defined = true;
-  type.name = name;
-  type.container = container;
-  type.size = 0;
-  for(const VarDecl& vd : vars){
-    assert(vd.first != NULL && vd.first->defined,
+  Type* type;
+  if(declared(name, container))
+    type = search(name, container);
+  else
+    type = &(registry[full_name(name, container)] = Type());
+  type->_defined = true;
+  type->name = name;
+  type->container = container;
+  type->size = 0;
+  for(const _Var& var : vars){
+    assert(var.type != NULL && var.type->_defined,
         _fn, "member type is not defined");
-    assert(!contains(type.vars, vd.second),
+    assert(var.name != "" && !contains(type->vars, var.name),
         _fn, "member variable name already declared");
-    type.vars[vd.second] = vd.first;
-    type.size += vd.first->size; }
+    type->vars[var.name] = var;
+    type->size += var.type->size; }
   for(Fn* fn : fns){
-    assert(fn != NULL && !contains(type.fns, fn),
+    assert(fn != NULL && !contains(type->fns, fn),
         _fn, "member function name already declared");
-    type.fns.insert(fn); }
+    type->fns.insert(fn); }
   for(Type* base : parents){
-    assert(base != NULL && base->defined, _fn, "base class not defined");
-    type.parents.insert(base); }
-  registry[container + "::" + name] = type; }
+    assert(base != NULL && base->_defined, _fn, "base class not defined");
+    type->parents.insert(base); }
+  return type; }
 
 #endif

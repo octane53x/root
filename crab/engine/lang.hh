@@ -3,11 +3,11 @@
 #ifndef LANG_HH
 #define LANG_HH
 
-#include "../core/util.hh"
+#include "../../core/util.hh"
 
-struct Type;
-// Value = variable name
-typedef pair<Type*, str> VarDecl;
+// Primitives
+typedef uchar Char;
+typedef llu Block;
 
 // Used by allocator
 const size_t
