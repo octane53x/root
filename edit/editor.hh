@@ -13,6 +13,7 @@ const int
     WIDTH_OFFSET = -16,
     HEIGHT_OFFSET = -38,
     WINDOW_OFFSET = 10,
+    PANEL_OFFSET = 12,
     LINE_HEIGHT_SCALE_1 = 18,
     CHAR_WIDTH_SCALE_1 = 9,
     VERTICAL_DIVIDE = 20,
@@ -73,7 +74,7 @@ struct Editor : virtual window {
   void run();
   void update(const double ms);
   void draw();
-  void resize(const point& p, const int w, const int h);
+  void resize(const point& pos, const int w, const int h);
 
   bool name_or_val(int y, int x) const;
 
@@ -107,8 +108,8 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   shift = ctrl = alt = false;
 
   // Window init
-  width = 2 * (PANEL_CHARS * (int)ceil(INIT_TEXT_SCALE * CHAR_WIDTH_SCALE_1)
-      + VERTICAL_DIVIDE);
+  width = 2 * (PANEL_CHARS * (int)round(INIT_TEXT_SCALE * CHAR_WIDTH_SCALE_1)
+      + VERTICAL_DIVIDE + PANEL_OFFSET);
   RECT rect;
   SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
   height = rect.bottom - rect.top;
@@ -184,7 +185,10 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
       frame.set_pixel(x, y, BKGD_COLOR);
 
   // Preference setup
-  panels[0].text[0] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz**";
+  p.text[0] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz**";
+  refresh_panel();
+  update(0);
+  draw();
   split_vertical(); }
 
 void Editor::run(){
@@ -280,10 +284,16 @@ void Editor::draw(){
     if(yl >= p.text.size()) continue;
     if(&p != &cmd)
       highlight_text(yl);
-    for(int x = 0; x < p.text[yl].size(); ++x)
+    for(int x = 0; x < p.text[yl].size(); ++x){
+      debug("Panel "+to_string((llu)&p)+" draw char "+str(1, p.text[yl][x])
+          +" at "+point(p.pos.x + x * p.char_width,
+          p.pos.y + y * p.line_height).to_str()+" \n  with color "
+          +p.text_color[yl][x].to_str()+" size "
+          +to_string(p.font[p.text[yl][x]].width)+","
+          +to_string(p.font[p.text[yl][x]].height));
       draw_char(p.font[p.text[yl][x]],
           point(p.pos.x + x * p.char_width, p.pos.y + y * p.line_height),
-          p.text_color[yl][x], p.col); }
+          p.text_color[yl][x], p.col); } }
   p.refresh_lines.clear();
 
   if(c.xprev != c.x || c.yprev != c.y){
@@ -340,7 +350,7 @@ void Editor::draw(){
     if(!t.refresh_file_bar) continue;
     polygon bar;
     bar.pos = point(t.pos.x, t.pos.y + t.height);
-    bar.set_box(t.width, default_line_height);
+    bar.set_box(t.width + VERTICAL_DIVIDE, default_line_height);
     bar.fill = (focus == &t) ? FOCUS_FILE_BAR_COLOR : UNFOCUS_FILE_BAR_COLOR;
     bar.draw(&frame, t.view);
     str bar_text = str(t.saved ? "-----" : "*****") + "     ";
@@ -364,12 +374,28 @@ void Editor::draw(){
     line.draw(&frame, cmd.view);
     cmd.hide = false; } }
 
-void Editor::resize(const point& p, const int w, const int h){
+void Editor::resize(const point& pos, const int w, const int h){
+  if(w == width && h == height){
+    win_pos = pos;
+    return; }
   frame.set_size(w, h);
   for(int y = 0; y < h; ++y)
     for(int x = 0; x < w; ++x)
       frame.set_pixel(x, y, BKGD_COLOR);
-  win_pos = p, width = w, height = h; }
+  Panel* foc = focus;
+  double xr = (double)w / width;
+  double yr = (double)h / height;
+  for(Panel& p : panels){
+    p.pos.x *= xr, p.pos.y *= yr;
+    p.width = (int)round(xr * p.width);
+    p.height = (int)round(yr * p.height);
+    focus = &p;
+    refresh_panel();
+    update(0);
+    draw();
+    p.refresh_file_bar = true; }
+  focus = foc;
+  win_pos = pos, width = w, height = h; }
 
 bool Editor::name_or_val(int y, int x) const {
   const Panel& p = *focus;
@@ -514,7 +540,7 @@ void Editor::refresh_panel(){
   Panel& p = *focus;
   for(int y = 0; y <= p.height / p.line_height; ++y)
     p.refresh_lines.insert(y);
-  p.refresh_file_bar = cmd.hide = true; }
+  p.refresh_file_bar = p.refresh_divider = cmd.hide = true; }
 
 void Editor::scroll(const bool down){
   Panel& p = *focus;
