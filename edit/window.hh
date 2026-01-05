@@ -4,6 +4,7 @@
 #define WINDOW_HH
 
 #include "../gl/image.hh"
+#include "../os/win/util.hh"
 
 struct window {
 
@@ -19,6 +20,7 @@ struct window {
 
   virtual void update(const double ms) = 0;
   virtual void draw() = 0;
+  virtual void resize(const point& p, const int w, const int h) = 0;
   virtual void process_key(
       const str& key, const bool down, const point& mouse) = 0; };
 
@@ -34,6 +36,7 @@ void _win_paint(HWND hwnd){
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
   BitBlt(hdc, 0, 0, _win->width, _win->height, hdcMem, 0, 0, SRCCOPY);
   SelectObject(hdcMem, bmpPrev);
+  DeleteObject(bmp);
   DeleteDC(hdcMem);
   EndPaint(hwnd, &ps);
   _win->updated = false; }
@@ -41,10 +44,6 @@ void _win_paint(HWND hwnd){
 str _win_key(WPARAM wParam){
   str s;
   switch(wParam){
-    // Mouse clicks not handled like this:
-    // case VK_LBUTTON: s = "LCLICK"; break;
-    // case VK_RBUTTON: s = "RCLICK"; break;
-    // case VK_MBUTTON: s = "MCLICK"; break;
     case VK_BACK: s = "BACKSPACE"; break;
     case VK_TAB: s = "TAB"; break;
     case VK_RETURN: s = "ENTER"; break;
@@ -89,8 +88,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   case WM_MOVE:
   case WM_SIZE:
     GetWindowRect(hwnd, &r);
-    _win->win_pos = point(r.left, r.top);
-    _win->width = r.right - r.left, _win->height = r.bottom - r.top;
+    _win->resize(point(r.left, r.top), r.right - r.left, r.bottom - r.top);
     return 0;
   case WM_MOUSEMOVE:
     return 0;
@@ -134,9 +132,9 @@ void _win_init(){
   wc.hInstance = _win->win_param_1;
   wc.lpszClassName = CLASS;
   RegisterClass(&wc);
-  _win->hwnd = CreateWindowEx(
-      0, CLASS, L"Window", WS_OVERLAPPEDWINDOW, 0, 0,
-      _win->width, _win->height, NULL, NULL, _win->win_param_1, NULL);
+  _win->hwnd = CreateWindowEx(0, CLASS, L"Window", WS_OVERLAPPEDWINDOW,
+      (int)_win->win_pos.x, (int)_win->win_pos.y, _win->width, _win->height,
+      NULL, NULL, _win->win_param_1, NULL);
   assert(_win->hwnd != NULL, "window.display", "could not create window");
   ShowWindow(_win->hwnd, _win->win_param_2); }
 

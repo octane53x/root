@@ -32,7 +32,7 @@ Note many structures inherit from these and are not listed here.
 
 TODO
 
-! dynamic_cast -> functional cast OR c-style cast
+! Window stops displaying after several minutes
 
 ! imp console
 ! demo square rotate
@@ -49,13 +49,13 @@ TODO
 ! point/uvec rotate
 ! orbit around uvec
 ! button click manager?
-! fix image.scale
 ! resize window
 ! delete objects properly
 ! call validates
 ! scene draw time
 ! root scene objs onto scene (make scene an object?)
 ! Planet.move_unit around obstacles
+! dynamic_cast -> functional cast OR c-style cast
 
 ! Comments
 ! Scene: Title Screen

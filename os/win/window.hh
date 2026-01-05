@@ -60,6 +60,7 @@ void _win_paint(HWND hwnd){
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
   BitBlt(hdc, 0, 0, frame->width, frame->height, hdcMem, 0, 0, SRCCOPY);
   SelectObject(hdcMem, bmpPrev);
+  DeleteObject(bmp);
   DeleteDC(hdcMem);
   EndPaint(hwnd, &ps);
   _win->frame_updated = false; }

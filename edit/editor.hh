@@ -1,21 +1,23 @@
 // EDITOR
 
+// Depends on libpng/zlib - loaded in Visual Studio
+
 #ifndef EDITOR_HH
 #define EDITOR_HH
 
-#include "../os/win/util.hh" // load_bmp
+#include <png.h>
 #include "../gl/polygon.hh"
 #include "window.hh"
 
 const int
-    INIT_WIN_W = 1500,
-    INIT_WIN_H = 750,
     WIDTH_OFFSET = -16,
     HEIGHT_OFFSET = -38,
-    LINE_HEIGHT_SCALE_1 = 20,
-    CHAR_WIDTH_SCALE_1 = 10,
+    WINDOW_OFFSET = 10,
+    LINE_HEIGHT_SCALE_1 = 18,
+    CHAR_WIDTH_SCALE_1 = 9,
     VERTICAL_DIVIDE = 20,
-    SCROLL_LINES = 10;
+    SCROLL_LINES = 10,
+    PANEL_CHARS = 80;
 
 const double
     INIT_TEXT_SCALE = 1.0,
@@ -29,12 +31,13 @@ const color
     CMD_TEXT_COLOR = BLACK,
     FOCUS_FILE_BAR_COLOR = LTGRAY,
     UNFOCUS_FILE_BAR_COLOR = DKGRAY,
+    FILE_BAR_TEXT_COLOR = BLACK,
     SELECT_COLOR = BLUE;
 
 const str
-    _FONT_LOC = "../symbols.bmp",
+    _FONT_LOC = "../symbols.png",
     _SYMBOLS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-        ".,/?:;'\"+=-_\\|~!@#$%^&*()[]{}<>";
+        " .,/?:;'\"+=-_\\|~!@#$%^&*()[]{}<>";
 
 enum Dir { UP, LEFT, DOWN, RIGHT };
 
@@ -70,12 +73,14 @@ struct Editor : virtual window {
   void run();
   void update(const double ms);
   void draw();
+  void resize(const point& p, const int w, const int h);
 
   bool name_or_val(int y, int x) const;
 
   void load_font();
   void scale_font(double factor);
-  void draw_char(const image& img, const point& p, const color& c);
+  void draw_char(const image& img, const point& p, const color& ctext,
+      const color& cbkgd);
   void insert_text(const vec<str>& text, const int y, const int x);
   void remove_text(const int y0, const int x0, const int yf, const int xf);
   void delete_selection();
@@ -97,10 +102,20 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
 
   // Small members
   win_param_1 = wp1, win_param_2 = wp2;
-  width = INIT_WIN_W, height = INIT_WIN_H;
   updated = true;
   last_update = 0;
   shift = ctrl = alt = false;
+
+  // Window init
+  width = 2 * (PANEL_CHARS * (int)ceil(INIT_TEXT_SCALE * CHAR_WIDTH_SCALE_1)
+      + VERTICAL_DIVIDE);
+  RECT rect;
+  SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+  height = rect.bottom - rect.top;
+  win_pos.x = rect.right - width;
+  win_pos.y = 0;
+  width += WINDOW_OFFSET;
+  height += WINDOW_OFFSET;
 
   // Initial panel
   panels.pb(Panel());
@@ -166,7 +181,11 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   frame.set_size(width, height);
   for(int y = 0; y < height; ++y)
     for(int x = 0; x < width; ++x)
-      frame.set_pixel(x, y, BKGD_COLOR); }
+      frame.set_pixel(x, y, BKGD_COLOR);
+
+  // Preference setup
+  panels[0].text[0] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz**";
+  split_vertical(); }
 
 void Editor::run(){
   _win_init();
@@ -264,7 +283,7 @@ void Editor::draw(){
     for(int x = 0; x < p.text[yl].size(); ++x)
       draw_char(p.font[p.text[yl][x]],
           point(p.pos.x + x * p.char_width, p.pos.y + y * p.line_height),
-          p.text_color[yl][x]); }
+          p.text_color[yl][x], p.col); }
   p.refresh_lines.clear();
 
   if(c.xprev != c.x || c.yprev != c.y){
@@ -288,7 +307,7 @@ void Editor::draw(){
       draw_char(p.font[p.text[c.yprev][c.xprev]],
           point(p.pos.x + c.xprev * p.char_width,
           p.pos.y + (c.yprev - p.top_line) * p.line_height),
-          p.text_color[c.yprev][c.xprev]);
+          p.text_color[c.yprev][c.xprev], p.col);
     c.xprev = c.x, c.yprev = c.y; }
 
   // Clear cursor
@@ -301,7 +320,8 @@ void Editor::draw(){
   if(c.y < p.text.size() && c.x < p.text[c.y].size())
     draw_char(p.font[p.text[c.y][c.x]],
         point(p.pos.x + c.x * p.char_width,
-        p.pos.y + (c.y - p.top_line) * p.line_height), p.text_color[c.y][c.x]);
+        p.pos.y + (c.y - p.top_line) * p.line_height),
+        p.text_color[c.y][c.x], p.col);
   // Draw cursor
   c.draw(&frame, p.view);
 
@@ -330,7 +350,8 @@ void Editor::draw(){
         + to_string(t.cursor.x + 1) + ")";
     for(int x = 0; x < bar_text.size(); ++x)
       draw_char(default_font[bar_text[x]],
-          point(bar.pos.x + x * default_char_width, bar.pos.y), BLACK);
+          point(bar.pos.x + x * default_char_width, bar.pos.y),
+          FILE_BAR_TEXT_COLOR, bar.fill);
     t.refresh_file_bar = false; }
 
   // Hide cmd bar
@@ -343,6 +364,13 @@ void Editor::draw(){
     line.draw(&frame, cmd.view);
     cmd.hide = false; } }
 
+void Editor::resize(const point& p, const int w, const int h){
+  frame.set_size(w, h);
+  for(int y = 0; y < h; ++y)
+    for(int x = 0; x < w; ++x)
+      frame.set_pixel(x, y, BKGD_COLOR);
+  win_pos = p, width = w, height = h; }
+
 bool Editor::name_or_val(int y, int x) const {
   const Panel& p = *focus;
   if(y >= p.text.size() || x >= p.text[y].size())
@@ -352,19 +380,60 @@ bool Editor::name_or_val(int y, int x) const {
       || (c >= 'a' && c <= 'z') || c == '_'; }
 
 void Editor::load_font(){
-  image font_img = load_bmp(_FONT_LOC);
+  // Load the font PNG with libpng
+  FILE* fp;
+  fopen_s(&fp, _FONT_LOC.c_str(), "rb");
+  uchar header[8];
+  fread(header, 1, 8, fp);
+  png_sig_cmp(header, 0, 8);
+  png_structp png_ptr = png_create_read_struct(
+      PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  png_infop info_ptr = png_create_info_struct(png_ptr);
+  setjmp(png_jmpbuf(png_ptr));
+  png_init_io(png_ptr, fp);
+  png_set_sig_bytes(png_ptr, 8);
+  png_read_info(png_ptr, info_ptr);
+  int w = png_get_image_width(png_ptr, info_ptr);
+  int h = png_get_image_height(png_ptr, info_ptr);
+  png_byte color_type = png_get_color_type(png_ptr, info_ptr);
+  png_byte bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+  if(bit_depth == 16)
+    png_set_strip_16(png_ptr);
+  if(color_type == PNG_COLOR_TYPE_PALETTE)
+    png_set_palette_to_rgb(png_ptr);
+  if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+    png_set_expand_gray_1_2_4_to_8(png_ptr);
+  if(png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+    png_set_tRNS_to_alpha(png_ptr);
+  png_read_update_info(png_ptr, info_ptr);
+  int channels = png_get_channels(png_ptr, info_ptr);
+  size_t rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+  unsigned char* image_data = new unsigned char[rowbytes * h];
+  png_bytep* row_pointers = new png_bytep[h];
+  for(int i = 0; i < h; ++i)
+    row_pointers[i] = image_data + i * rowbytes;
+  png_read_image(png_ptr, row_pointers);
+  delete[] row_pointers;
+  png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+  fclose(fp);
+
+  // Create the image from buffer
+  image font_img;
+  font_img.set_size(width, height);
+  for(int y = 0; y < h; ++y)
+    for(int x = 0; x < w; ++x)
+      font_img.set_pixel(x, y, color(
+          image_data[y * w * 4 + x * 4],
+          image_data[y * w * 4 + x * 4 + 1],
+          image_data[y * w * 4 + x * 4 + 2]));
+
+  // Split characters from image
   for(int i = 0; i < _SYMBOLS.size(); ++i){
     image c(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
     for(int xi = i * c.width, xo = 0; xo < c.width; ++xi, ++xo)
       for(int y = 0; y < c.height; ++y)
         c.set_pixel(xo, y, font_img.data[y][xi]);
-    font_base[_SYMBOLS[i]] = c; }
-  // Add space manually //! add to symbols
-  image space(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
-  for(int y = 0; y < space.height; ++y)
-    for(int x = 0; x < space.width; ++x)
-      space.data[y][x] = CLEAR;
-  font_base[' '] = space; }
+    font_base[_SYMBOLS[i]] = c; } }
 
 void Editor::scale_font(double factor){
   Panel& p = *focus;
@@ -376,16 +445,25 @@ void Editor::scale_font(double factor){
     p.font[f.first] = f.second.scale(p.text_scale);
   p.cursor.scale(factor); }
 
-void Editor::draw_char(const image& img, const point& p, const color& c){
+void Editor::draw_char(const image& img, const point& p, const color& ctext,
+    const color& cbkgd){
   image r = img;
   r.pos = p;
   for(int y = 0; y < img.height; ++y)
     for(int x = 0; x < img.width; ++x){
       color ci = img.data[y][x];
-      if(ci.r > 128 || ci.g > 128 || ci.b > 128)
-        r.set_pixel(x, y, (c == BLACK) ? BLACK : ci.avg(c));
-      else
-        r.data[y][x] = CLEAR; }
+      double brt = (double)((int)ci.r + ci.g + ci.b) / (255 * 3);
+      color co;
+      if(brt > 0.2){
+        brt = min(1.0, brt * 1.2);
+        co = color((uchar)floor(brt * ctext.r),
+                   (uchar)floor(brt * ctext.g),
+                   (uchar)floor(brt * ctext.b));
+      }else
+        co = color((uchar)floor((1.0 - brt) * cbkgd.r),
+                   (uchar)floor((1.0 - brt) * cbkgd.g),
+                   (uchar)floor((1.0 - brt) * cbkgd.b));
+      r.set_pixel(x, y, co); }
   r.draw(&frame, focus->view); }
 
 void Editor::insert_text(const vec<str>& text, const int y, const int x){
