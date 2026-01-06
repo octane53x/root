@@ -7,6 +7,7 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
   debug_init();
   Editor edit;
-  edit.init(hInst, nCmdShow);
+  edit.init_members(hInst, nCmdShow);
+  edit.init();
   edit.run();
   return 0; }

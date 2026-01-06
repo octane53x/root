@@ -6,21 +6,24 @@
 #include "../gl/image.hh"
 #include "../os/win/util.hh"
 
-struct window {
+struct window : system {
 
   HINSTANCE win_param_1;
   int win_param_2;
   HWND hwnd;
 
-  bool updated;
   int width, height;
   clock_t last_update;
   point win_pos, mouse_pos;
   image frame;
 
-  virtual void update(const double ms) = 0;
+  // Inherits:
+  // void init()
+  // void run()
+  // void update(ms)
+
   virtual void draw() = 0;
-  virtual void resize(const point& p, const int w, const int h) = 0;
+  virtual void resize(const point& pos, const int w, const int h) = 0;
   virtual void process_key(
       const str& key, const bool down, const point& mouse) = 0; };
 

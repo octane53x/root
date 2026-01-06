@@ -23,6 +23,8 @@ struct system : virtual thing {
   bool initialized;
   // Whether it is running
   bool active;
+  // Whether it has been updated
+  bool updated;
   // Unique id used as a map key for efficient storage
   llu id;
   // Next id to assign to a new system

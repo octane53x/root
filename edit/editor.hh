@@ -6,8 +6,8 @@
 #define EDITOR_HH
 
 #include <png.h>
-#include "../gl/polygon.hh"
 #include "window.hh"
+#include "panel.hh"
 
 const int
     WIDTH_OFFSET = -16,
@@ -21,13 +21,10 @@ const int
     PANEL_CHARS = 80;
 
 const double
-    INIT_TEXT_SCALE = 1.0,
-    SCALE_FACTOR = 1.1,
-    CURSOR_BLINK = 0.5;
+    SCALE_FACTOR = 1.1;
 
 const color
     BKGD_COLOR = BLACK,
-    CURSOR_COLOR = CYAN,
     CMD_BAR_COLOR = RED,
     CMD_TEXT_COLOR = BLACK,
     FOCUS_FILE_BAR_COLOR = LTGRAY,
@@ -45,24 +42,6 @@ enum Dir { UP, LEFT, DOWN, RIGHT };
 // Text editor application
 struct Editor : virtual window {
 
-  struct Cursor : virtual polygon {
-    bool blink;
-    int x, y, xprev, yprev; // text position
-    color col; };
-
-  struct Panel : virtual polygon {
-    bool hide, saved, refresh_file_bar, refresh_divider, split_ready;
-    int width, height, top_line, line_height, char_width, ymark, xmark;
-    double text_scale;
-    str file;
-    color col;
-    vec<str> text;
-    vec<vec<color> > text_color;
-    uset<int> refresh_lines;
-    umap<char, image> font;
-    viewport view;
-    Cursor cursor; };
-
   bool shift, ctrl, alt;
   int default_line_height, default_char_width;
   vec<str> clipboard;
@@ -70,11 +49,13 @@ struct Editor : virtual window {
   Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
 
-  void init(const HINSTANCE wp1, const int wp2);
-  void run();
-  void update(const double ms);
-  void draw();
-  void resize(const point& pos, const int w, const int h);
+  void init_members(const HINSTANCE wp1, const int wp2);
+
+  virtual void init();
+  virtual void run();
+  virtual void update(const double ms);
+  virtual void draw();
+  virtual void resize(const point& pos, const int w, const int h);
 
   bool name_or_val(int y, int x) const;
 
@@ -98,13 +79,13 @@ struct Editor : virtual window {
   void process_cmd(const str& cmd);
   void highlight_text(const int line); };
 
-void Editor::init(const HINSTANCE wp1, const int wp2){
-  _win = this;
+void Editor::init_members(const HINSTANCE wp1, const int wp2){
+  win_param_1 = wp1, win_param_2 = wp2; }
 
-  // Small members
-  win_param_1 = wp1, win_param_2 = wp2;
+void Editor::init(){
+  system::init();
+  _win = this;
   updated = true;
-  last_update = 0;
   shift = ctrl = alt = false;
 
   // Window init
@@ -123,98 +104,46 @@ void Editor::init(const HINSTANCE wp1, const int wp2){
   Panel& p = panels.back();
   p.line_height = LINE_HEIGHT_SCALE_1;
   p.char_width = CHAR_WIDTH_SCALE_1;
-  p.text_scale = 1.0;
-  p.pos = point(0, 0);
   p.width = width - VERTICAL_DIVIDE + WIDTH_OFFSET;
   p.height = height - p.line_height * 2 + HEIGHT_OFFSET;
   p.set_box(p.width, p.height);
-  p.top_line = 0;
-  p.file = "";
-  p.col = BKGD_COLOR;
-  p.text.pb("");
-  p.ymark = p.xmark = -1;
-  p.saved = true;
-  p.refresh_file_bar = true;
-  p.refresh_divider = true;
-  p.split_ready = false;
   focus = &p;
-
-  // Initial panel cursor
-  Cursor& c = focus->cursor;
-  c.x = c.y = 0;
-  c.xprev = c.yprev = 0;
-  c.add(point(0, 0));
-  c.add(point(p.char_width-1, 0));
-  c.add(point(p.char_width-1, p.line_height-1));
-  c.add(point(0, p.line_height-1));
-  c.col = CURSOR_COLOR;
-  c.blink = true;
-  c.last_update = 0;
 
   // Command bar
   cmd.line_height = LINE_HEIGHT_SCALE_1;
   cmd.char_width = CHAR_WIDTH_SCALE_1;
-  cmd.text_scale = 1.0;
-  cmd.pos = point(0, p.height + p.line_height);
   cmd.width = width;
   cmd.height = cmd.line_height;
   cmd.set_box(cmd.width, cmd.height);
-  cmd.hide = false;
-  cmd.top_line = 0;
-  cmd.col = CMD_BAR_COLOR;
-  cmd.text.pb("");
-  cmd.ymark = p.xmark = -1;
-  cmd.cursor = c;
+  cmd.pos = point(0, p.height + p.line_height);
+  cmd.fill = CMD_BAR_COLOR;
   cmd.cursor.blink = false;
-  cmd.split_ready = false;
 
   // Font
   load_font();
-  scale_font(INIT_TEXT_SCALE);
+  default_font = p.font = font_base;
   default_line_height = p.line_height;
   default_char_width = p.char_width;
-  default_font = p.font;
-  focus = &cmd;
-  scale_font(INIT_TEXT_SCALE);
-  focus = &p;
 
   // Display frame
   frame.set_size(width, height);
   for(int y = 0; y < height; ++y)
     for(int x = 0; x < width; ++x)
-      frame.set_pixel(x, y, BKGD_COLOR);
-
-  // Preference setup
-  p.text[0] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz**";
-  refresh_panel();
-  update(0);
-  draw();
-  split_vertical(); }
+      frame.set_pixel(x, y, BKGD_COLOR); }
 
 void Editor::run(){
+  system::run();
   _win_init();
   _win_run(); }
 
 void Editor::update(const double ms){
-  assert(cmd.ymark == -1, "update", "mark set in cmd bar");
-  // Update text color
-  if(focus == &cmd){
-    cmd.text_color.clear();
-    cmd.text_color.pb(vec<color>());
-    for(int i = 0; i < cmd.text[0].size(); ++i)
-      cmd.text_color.back().pb(CMD_TEXT_COLOR); }
-  // Set cursor pos based on text pos
-  Panel& p = *focus;
-  Cursor& c = p.cursor;
-  c.pos = point(p.pos.x + c.x * p.char_width,
-      p.pos.y + (c.y - p.top_line) * p.line_height);
-  // Blink cursor
-  double sec = (double)(clock() - c.last_update) / CLOCKS_PER_SEC;
-  if(sec >= CURSOR_BLINK){
-    c.blink = !c.blink;
-    c.fill = c.blink ? c.col : CLEAR;
-    c.last_update = clock(); }
-  updated = true; }
+  system::update(ms);
+  focus->cursor.update(ms);
+  for(Panel& p : panels)
+    if(p.refresh)
+      p.update(ms);
+  updated = true;
+  last_update = clock(); }
 
 void Editor::draw(){
   Panel& p = *focus;
