@@ -1,11 +1,18 @@
-// PROCESS EDITOR COMMAND
+// COMMAND PROCESSOR
 
-#ifndef CMD_HH
-#define CMD_HH
+#ifndef CMDPROC_HH
+#define CMDPROC_HH
 
 #include "editor.hh"
 
-void Editor::process_cmd(const str& cmd){
+struct CmdProc {
+
+  void process_cmd(const str& cmd);
+
+
+};
+
+void CmdProc::process_cmd(const str& cmd){
   // Open file
   if(cmd.find("Open") == 0){
     focus->file = cmd.substr(6);

@@ -27,6 +27,7 @@ struct image : virtual object {
   void set_size(const int w, const int h);
   void set_pixel(const int x, const int y, const color& c);
   void fix(const color& c);
+  void fill(const color& c);
   void replace(const color& src, const color& dest);
   void replace_except(const color& src, const color& dest);
 
@@ -85,6 +86,7 @@ void image::set_size(const int w, const int h){
   data.clear();
   for(int i = 0; i < height; ++i){
     data.pb(vec<color>());
+    data[i].reserve(width);
     for(int j = 0; j < width; ++j)
       data[i].pb(DEFAULT_COLOR); }
   validate("image.set_size"); }
@@ -128,6 +130,12 @@ void image::fix(const color& c){
       r.data[i-top][j-left] = data[i][j];
   *this = r;
   validate("image.fix"); }
+
+// Fill the image with one color
+void image::fill(const color& c){
+  for(int y = 0; y < height; ++y)
+    for(int x = 0; x < width; ++x)
+      frame.data[y][x] = c; }
 
 // Replace all pixels of src color with dest color
 void image::replace(const color& src, const color& dest){

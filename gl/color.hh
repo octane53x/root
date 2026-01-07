@@ -35,7 +35,8 @@ struct color : virtual thing {
 
   bool approximately(const color& c1) const ;
   color avg(const color& c) const;
-  color random() const; };
+
+  static color random(); };
 
 const color CLEAR = color(color::CLEAR),
             CLEAR_PEN = color(color::CLEAR_PEN),
@@ -106,8 +107,19 @@ color color::avg(const color& c) const {
   return color(((ui)r+c.r)>>1, ((ui)g+c.g)>>1, ((ui)b+c.b)>>1); }
 
 // Return a random RGB
-color color::random() const {
+color color::random(){
   return color((uchar)(rand() % 256), (uchar)(rand() % 256),
       (uchar)(rand() % 256)); }
+
+// Allow color to be hashed as a map key
+// Does not regard custom colors
+namespace std {
+  template <>
+  struct hash<color> {
+    size_t operator()(const color& c) const {
+      size_t h1 = hash<uchar>()(c.r);
+      size_t h2 = hash<uchar>()(c.g);
+      size_t h3 = hash<uchar>()(c.b);
+      return h1 ^ (h2 << 1) ^ (h3 << 2); } }; }
 
 #endif

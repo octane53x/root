@@ -88,7 +88,8 @@ void system::stop(){
 // Set last_update to clock() at the end of the update
 void system::update(const double ms){
   if(!initialized) err(type+".update", "called before init");
-  if(!active) err(type+".update", "called when not running"); }
+  if(!active) err(type+".update", "called when not running");
+  updated = false; }
 
 // Return a unique object id
 llu system::new_id(){

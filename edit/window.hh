@@ -12,9 +12,7 @@ struct window : system {
   int win_param_2;
   HWND hwnd;
 
-  int width, height;
-  clock_t last_update;
-  point win_pos, mouse_pos;
+  ipoint size, win_pos, mouse_pos;
   image frame;
 
   // Inherits:
@@ -23,9 +21,9 @@ struct window : system {
   // void update(ms)
 
   virtual void draw() = 0;
-  virtual void resize(const point& pos, const int w, const int h) = 0;
+  virtual void resize(const ipoint& pos, const ipoint& _size) = 0;
   virtual void process_key(
-      const str& key, const bool down, const point& mouse) = 0; };
+      const str& key, const bool down, const ipoint& mouse) = 0; };
 
 // GLOBAL WINDOW POINTER: SET IN EDITOR INIT
 window* _win;
@@ -37,7 +35,7 @@ void _win_paint(HWND hwnd){
   HBITMAP bmp = image_to_bmp(hdc, &_win->frame);
   HDC hdcMem = CreateCompatibleDC(NULL);
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
-  BitBlt(hdc, 0, 0, _win->width, _win->height, hdcMem, 0, 0, SRCCOPY);
+  BitBlt(hdc, 0, 0, _win->size.x, _win->size.y, hdcMem, 0, 0, SRCCOPY);
   SelectObject(hdcMem, bmpPrev);
   DeleteObject(bmp);
   DeleteDC(hdcMem);
@@ -79,7 +77,7 @@ str _win_key(WPARAM wParam){
 LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   POINT p;
   GetCursorPos(&p);
-  _win->mouse_pos = point(p.x, p.y);
+  _win->mouse_pos = ipoint(p.x, p.y);
   RECT r;
   switch(uMsg){
   case WM_DESTROY:
@@ -91,21 +89,23 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   case WM_MOVE:
   case WM_SIZE:
     GetWindowRect(hwnd, &r);
-    _win->resize(point(r.left, r.top), r.right - r.left, r.bottom - r.top);
+    _win->resize(
+        ipoint(r.left, r.top),
+        ipoint(r.right - r.left, r.bottom - r.top));
     return 0;
   case WM_MOUSEMOVE:
     return 0;
   case WM_LBUTTONDOWN:
   case WM_LBUTTONUP:
-    _win->process_key("LCLICK", uMsg == WM_LBUTTONDOWN, point(p.x, p.y));
+    _win->process_key("LCLICK", uMsg == WM_LBUTTONDOWN, ipoint(p.x, p.y));
     return 0;
   case WM_RBUTTONDOWN:
   case WM_RBUTTONUP:
-    _win->process_key("RCLICK", uMsg == WM_RBUTTONDOWN, point(p.x, p.y));
+    _win->process_key("RCLICK", uMsg == WM_RBUTTONDOWN, ipoint(p.x, p.y));
     return 0;
   case WM_MBUTTONDOWN:
   case WM_MBUTTONUP:
-    _win->process_key("MCLICK", uMsg == WM_MBUTTONDOWN, point(p.x, p.y));
+    _win->process_key("MCLICK", uMsg == WM_MBUTTONDOWN, ipoint(p.x, p.y));
     return 0;
   case WM_MOUSEWHEEL:
     //!
@@ -115,7 +115,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   case WM_SYSKEYDOWN:
   case WM_SYSKEYUP:
     _win->process_key(_win_key(wParam),
-        uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN, point(p.x, p.y));
+        uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN, ipoint(p.x, p.y));
     return 0;
   case WM_CHAR:
   case WM_SYSCHAR:
@@ -123,7 +123,7 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     return 0;
   case WM_ACTIVATE:
     if(wParam == FALSE)
-      _win->process_key("ALT", false, point(p.x, p.y));
+      _win->process_key("ALT", false, ipoint(p.x, p.y));
     return 0;
   default:
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
@@ -136,7 +136,7 @@ void _win_init(){
   wc.lpszClassName = CLASS;
   RegisterClass(&wc);
   _win->hwnd = CreateWindowEx(0, CLASS, L"Window", WS_OVERLAPPEDWINDOW,
-      (int)_win->win_pos.x, (int)_win->win_pos.y, _win->width, _win->height,
+      _win->win_pos.x, _win->win_pos.y, _win->size.x, _win->size.y,
       NULL, NULL, _win->win_param_1, NULL);
   assert(_win->hwnd != NULL, "window.display", "could not create window");
   ShowWindow(_win->hwnd, _win->win_param_2); }

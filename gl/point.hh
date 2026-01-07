@@ -4,6 +4,7 @@
 #define POINT_HH
 
 #include "uvec.hh"
+#include "ipoint.hh"
 
 // A 2D or 3D coordinate point
 struct point : virtual thing {
@@ -14,6 +15,7 @@ struct point : virtual thing {
   point();
   point(const double _x, const double _y);
   point(const double _x, const double _y, const double _z);
+  point(const ipoint& ipt);
 
   bool operator==(const point& p) const;
   bool operator!=(const point& p) const;
@@ -29,6 +31,7 @@ struct point : virtual thing {
   virtual void validate(const str& func);
   virtual str to_str() const;
 
+  ipoint to_ipt() const;
   double dist(const point& p) const;
 
   void rotate(const point& p, const uvec& uv, const double deg); };
@@ -40,11 +43,16 @@ const point NULL_POINT = point(DBL_MIN, DBL_MIN, DBL_MIN);
 point::point(): x(0.0), y(0.0), z(0.0) {}
 
 // Construct as a 2D point with (x,y)
-point::point(const double _x, const double _y): x(_x), y(_y), z(0.0) {}
+point::point(const double _x, const double _y):
+    x(_x), y(_y), z(0.0) {}
 
 // Construct as a 3D point with (x,y,z)
 point::point(const double _x, const double _y, const double _z):
     x(_x), y(_y), z(_z) {}
+
+// Construct from an integer point
+point::point(const ipoint& ipt):
+    x(ipt.x), y(ipt.y), z(0.0) {}
 
 // Equals comparator
 bool point::operator==(const point& p) const {
@@ -105,6 +113,10 @@ void point::validate(const str& func){}
 str point::to_str() const {
   return str("(") + to_string(x) + str(", ") + to_string(y) + str(", ")
       + to_string(z) + str(")"); }
+
+// Get integer point
+ipoint point::to_ipt() const {
+  return ipoint((int)round(x), (int)round(y)); }
 
 // Distance from this point to another
 double point::dist(const point& p) const {

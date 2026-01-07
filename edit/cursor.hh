@@ -5,31 +5,34 @@
 
 #include "../gl/polygon.hh"
 
-const double
-    CURSOR_BLINK = 0.5;
-const color
-    CURSOR_COLOR = CYAN;
-
-struct Cursor : virtual polygon {
+struct Cursor : virtual system {
 
   // Inherits:
+  // bool updated
   // clock_t last_update
-  // color fill
-  // point pos
-  // vec<point> points
 
   bool blink, focus;
-  int y, x, yprev, xprev, width, height;
-  color bkgd;
+  color fill, bkgd;
+  ipoint pos, ppos, size;
 
   Cursor();
 
+  virtual void init();
   virtual void update(const double ms);
-  virtual void draw(image* frame, const viewport& view); };
+
+  void draw(image* frame, const viewport& view); };
 
 Cursor::Cursor():
     fill(CURSOR_COLOR), blink(true), focus(true),
     x(0), y(0), xprev(0), yprev(0) {}
+
+void Cursor::init(){
+  system::init();
+  blink = focus = true;
+  fill = CURSOR_COLOR;
+  bkgd = BKGD_COLOR;
+  pos = ppos = ipoint(0, 0);
+  size = ipoint(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1); }
 
 void Cursor::update(const double ms){
   system::update(ms);

@@ -1,15 +1,18 @@
 // SYNTAX HIGHLIGHTING
 
-#ifndef HIGHLIGHT_HH
-#define HIGHLIGHT_HH
+#ifndef HIGHLIGHTER_HH
+#define HIGHLIGHTER_HH
+
+#include "../core/util.hh"
 
 const uset<str> KEYWORDS = {
     "obj", "fn", "if", "else", "for", "while", "return", "break", "continue",
     "const", "virtual", "final", "include", "this", "operator", "static",
     "template", "abstract", "force", "true", "false",
-    "struct", "def", "delete", "in"}; // Other languages
+    "struct", "enum", "def", "delete", "in"}; // Other languages
 
 const color
+    COLOR_CODE = color(255, 255, 255),
     COLOR_KEYWORD = color(0, 208, 208),
     COLOR_TYPE = color(0, 208, 82),
     COLOR_NAME = color(242, 242, 82),
@@ -17,7 +20,17 @@ const color
     COLOR_STRING = color(242, 64, 76),
     COLOR_COMMENT = color(255, 92, 0);
 
-void Editor::highlight_text(const int line){
+const vec<color> TEXT_COLORS =
+    {COLOR_CODE, COLOR_KEYWORD, COLOR_TYPE, COLOR_NAME, COLOR_FUNCTION,
+    COLOR_STRING, COLOR_COMMENT};
+
+struct Highlighter {
+
+  void highlight_text(const vec<str>& text, vec<vec<color> >* text_color); };
+
+void Highlighter::highlight_text(
+    const vec<str>& text, vec<vec<color> >* text_color){
+  //!
   Panel& p = *focus;
   while(p.text_color.size() < p.text.size())
     p.text_color.pb(vec<color>());
@@ -31,13 +44,13 @@ void Editor::highlight_text(const int line){
     while(i < t.size() && !((t[i] >= '0' && t[i] <= '9')
         || (t[i] >= 'A' && t[i] <= 'Z') || (t[i] >= 'a' && t[i] <= 'z')
         || t[i] == '_')){
-      p.text_color[line].pb(WHITE);
+      p.text_color[line].pb(COLOR_CODE);
       ++i; }
     j = i;
     while(j < t.size() && ((t[j] >= '0' && t[j] <= '9')
         || (t[j] >= 'A' && t[j] <= 'Z') || (t[j] >= 'a' && t[j] <= 'z')
         || t[j] == '_')){
-      p.text_color[line].pb(WHITE);
+      p.text_color[line].pb(COLOR_CODE);
       ++j; }
     if(i < j)
       toks.pb(pair<int, int>(i, j));

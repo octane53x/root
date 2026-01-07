@@ -1,12 +1,16 @@
-// PROCESS EDITOR INPUT
+// KEY PROCESSOR
 
-#ifndef INPUT_HH
-#define INPUT_HH
+#ifndef KEYPROC_HH
+#define KEYPROC_HH
 
-#include "cmd.hh"
-#include "highlight.hh" // Not used here
+struct KeyProc {
 
-void Editor::process_key(const str& key, const bool down, const point& mouse){
+  void process_key(const str& key, const bool down, const point& mouse);
+
+
+};
+
+void KeyProc::process_key(const str& key, const bool down, const point& mouse){
   // Modifiers
   if(key == "SHIFT"){
     shift = down;
