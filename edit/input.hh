@@ -5,7 +5,7 @@
 
 #include "editor.hh"
 
-void Editor::process_key(const str& key, const bool down, const point& mouse){
+void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
   // Modifiers
   if(key == "SHIFT"){
     shift = down;
@@ -39,24 +39,24 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
     else if(key == "ESCAPE")
       proc_escape();
     else if(key == "UP")
-      move_cursor(UP);
+      p.move_cursor(UP);
     else if(key == "LEFT")
-      move_cursor(LEFT);
+      p.move_cursor(LEFT);
     else if(key == "DOWN")
-      move_cursor(DOWN);
+      p.move_cursor(DOWN);
     else if(key == "RIGHT")
-      move_cursor(RIGHT); }
+      p.move_cursor(RIGHT); }
 
   // Alt + Key
   if(!ctrl && alt && !shift){
     if(key == "I")
-      move_cursor(UP);
+      p.move_cursor(UP);
     else if(key == "J")
-      move_cursor(LEFT);
+      p.move_cursor(LEFT);
     else if(key == "K")
-      move_cursor(DOWN);
+      p.move_cursor(DOWN);
     else if(key == "L")
-      move_cursor(RIGHT); }
+      p.move_cursor(RIGHT); }
 
   // Ctrl + Key
   if(ctrl && !alt && !shift){
@@ -126,7 +126,7 @@ void Editor::process_key(const str& key, const bool down, const point& mouse){
         proc_split_vertical();
       }else
         proc_right_panel();
-        return; } } } }
+        return; } } }
 
 // Returns true if action was taken
 bool Editor::parse_char(const str& key){
@@ -199,7 +199,7 @@ void Editor::proc_indent(){
 void Editor::proc_backspace(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  if(p.ymark == -1){
+  if(p.mark.y == -1){
     p.move_cursor(LEFT);
     p.remove_text(c.pos, c.pos);
   }else
@@ -212,7 +212,6 @@ void Editor::proc_enter(){
     focus = prev_panel;
     process_cmd(p.text[0]);
     p.text[0] = "";
-    p.hide = true;
   }else{
     p.insert_text(vec<str>({"", ""}), c.pos);
     p.move_cursor(RIGHT);
@@ -227,8 +226,8 @@ void Editor::proc_escape(){
   Panel& p = *focus;
   if(&p != &cmd) return;
   focus = prev_panel;
-  for(int y = p.y; y < p.y + p.size.y; ++y)
-    for(int x = p.x; x < p.x + p.size.x; ++x)
+  for(int y = p.pos.y; y < p.pos.y + p.size.y; ++y)
+    for(int x = p.pos.x; x < p.pos.x + p.size.x; ++x)
       frame.data[y][x] = BKGD_COLOR; }
 
 void Editor::proc_ctrl_move(const Dir d){
@@ -242,7 +241,7 @@ void Editor::proc_ctrl_move(const Dir d){
     while(!(c.pos.y == 0 && c.pos.x == 0)
         && !name_or_val(p.text[c.pos.y][c.pos.x]))
       p.move_cursor(LEFT);
-    while(!(c.y == 0 && c.x == 0) && name_or_val(p.text[c.pos.y][c.pos.x]))
+    while(!(c.pos.y == 0 && c.pos.x == 0) && name_or_val(p.text[c.pos.y][c.pos.x]))
       p.move_cursor(LEFT);
   }else if(d == DOWN){
     p.move_cursor(DOWN);
@@ -259,26 +258,26 @@ void Editor::proc_ctrl_move(const Dir d){
 void Editor::proc_ctrl_backspace(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  if(c.x > 1 && p.text[c.y][c.x - 1] == ' ' && p.text[c.y][c.x - 2] == ' '){
-    p.remove_text(c.y, c.x - 2, c.y, c.x - 1);
+  if(c.pos.x > 1 && p.text[c.pos.y][c.pos.x - 1] == ' ' && p.text[c.pos.y][c.pos.x - 2] == ' '){
+    p.remove_text(ipoint(c.pos.x - 2, c.pos.y), ipoint(c.pos.x - 1, c.pos.y));
     p.move_cursor(LEFT);
     p.move_cursor(LEFT);
     return; }
-  int y0 = c.y, x0 = c.x;
-  while(!(c.y == 0 && c.x == 0) && !name_or_val(c.y, c.x))
+  int y0 = c.pos.y, x0 = c.pos.x;
+  while(!(c.pos.y == 0 && c.pos.x == 0) && !name_or_val(p.text[c.pos.y][c.pos.x]))
     p.move_cursor(LEFT);
-  while(!(c.y == 0 && c.x == 0) && name_or_val(c.y, c.x)){
+  while(!(c.pos.y == 0 && c.pos.x == 0) && name_or_val(p.text[c.pos.y][c.pos.x])){
     p.move_cursor(LEFT);
-    if(c.x == p.text[c.y].size())
+    if(c.pos.x == p.text[c.pos.y].size())
       break; }
-  if(!(c.y == 0 && c.x == 0))
+  if(!(c.pos.y == 0 && c.pos.x == 0))
     p.move_cursor(RIGHT);
-  p.remove_text(c.y, c.x, y0, x0 - 1); }
+  p.remove_text(c.pos, ipoint(x0 - 1, y0)); }
 
 void Editor::proc_delete(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  if(p.ymark == -1)
+  if(p.mark.y == -1)
     p.remove_text(c.pos, c.pos);
   else
     p.delete_selection(); }
@@ -353,7 +352,7 @@ void Editor::proc_copy(){
   ipoint p0 = (p.mark.y < c.pos.y
       || (p.mark.y == c.pos.y && p.mark.x < c.pos.x)) ? p.mark : c.pos;
   ipoint pf = (p.mark == p0) ? c.pos : p.mark;
-  p.ymark = p.xmark = -1;
+  p.mark = ipoint(-1, -1);
   p.draw_selection(p0, pf); }
 
 void Editor::proc_paste(){
@@ -376,14 +375,14 @@ void Editor::proc_move_max(const Dir d){
     p.draw();
   }else if(d == LEFT){
     while(c.pos.x > 0)
-      move_cursor(LEFT);
+      p.move_cursor(LEFT);
   }else if(d == DOWN){
-    c.pos = ipoint(p.text.back.size(), p.text.size() - 1);
-    p.top_line = max(0, p.text.size() - (p.size.y / p.line_height));
+    c.pos = ipoint((int)p.text.back().size(), (int)p.text.size() - 1);
+    p.top_line = max(0, (int)p.text.size() - (p.size.y / p.line_height));
     p.draw();
   }else if(d == RIGHT){
     while(c.pos.x < p.text[c.pos.y].size())
-      move_cursor(RIGHT); } }
+      p.move_cursor(RIGHT); } }
 
 void Editor::proc_left_panel(){
   int i;

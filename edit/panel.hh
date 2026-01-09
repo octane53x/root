@@ -4,7 +4,6 @@
 #define PANEL_HH
 
 #include "cursor.hh"
-#include "highlighter.hh"
 
 struct Panel : virtual system {
 
@@ -26,7 +25,6 @@ struct Panel : virtual system {
   static image* frame;
   // Key 1: Scale, Key 2: Bkgd color, Key 3: Text color, Key 4: Character
   static umap<double, umap<color, umap<color, font> > > fonts;
-  static Highlighter highlighter;
 
   Panel();
 
@@ -41,15 +39,15 @@ struct Panel : virtual system {
   void draw_file_bar();
 
   void resize(const ipoint& _pos, const ipoint& _size);
-  void scale_font(const double factor, const umap<char, image>& font_base);
   void insert_text(const vec<str>& ins, const ipoint& p);
   void remove_text(const ipoint& p0, const ipoint& pf);
   void delete_selection();
-  void scroll(const bool down);
-  void move_cursor(const Dir d); };
+  void scroll(const Dir d);
+  void move_cursor(const Dir d);
+  // Defined in highlight.hh
+  void highlight_text(); };
 
 image* Panel::frame;
-Highlighter Panel::highlighter;
 umap<double, umap<color, umap<color, umap<char, image> > > > Panel::fonts;
 
 Panel::Panel():
@@ -75,20 +73,21 @@ void Panel::init(){
 
 void Panel::update(const double ms){
   system::update(ms);
+  Cursor& c = cursor;
+  ipoint cpos = ipoint(c.pos.x * char_width + pos.x,
+      (c.pos.y - top_line) * line_height + pos.y);
   if(focus){
-    cursor.update(ms);
-    if(cursor.updated){
+    c.update(ms);
+    if(c.updated){
+      c.updated = false;
+      char ch = (c.pos.x == text[c.pos.y].size())
+          ? ' ' : text[c.pos.y][c.pos.x];
+      color tc = (ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x];
+      draw_char(fonts[text_scale][c.fill][tc][ch], cpos);
       updated = true;
-      last_update = clock(); } } }
-
-void Panel::scale_font(const double factor, const umap<char, image>& font_base){
-  text_scale *= factor;
-  line_height = (int)ceil(text_scale * LINE_HEIGHT_SCALE_1);
-  char_width = (int)ceil(text_scale * CHAR_WIDTH_SCALE_1);
-  font.clear();
-  for(pair<char, image> f : font_base)
-    font[f.first] = f.second.scale(text_scale);
-  cursor.scale(factor); }
+      last_update = clock(); }
+  }else
+    c.draw(cpos); }
 
 void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   // Modify text
@@ -96,7 +95,7 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   text[p.y] = text[p.y].substr(0, p.x) + text[0];
   text.insert(text.begin() + p.y + 1, ins.begin() + 1, ins.end());
   text[p.y + text.size() - 1] += tail;
-  highlighter.highlight_text(text, &text_color);
+  highlight_text();
 
   // Draw single character at end of line
   if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
@@ -120,7 +119,8 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   if(p0.y == text.size() - 1 && p0.x == text[p0.y].size()) return;
   // Draw over end of line
   if(p0.y == pf.y)
-    for(int x = text[p0.y].size() - (pf.x - p0.x); x < text[p0.y].size; ++x)
+    for(int x = (int)text[p0.y].size() - (pf.x - p0.x);
+        x < text[p0.y].size(); ++x)
       draw_char(fonts[text_scale][bkgd][COLOR_CODE][' '],
           ipoint(x * char_width + pos.x,
           (p0.y - top_line) * line_height + pos.y));
@@ -139,6 +139,7 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
     line += text[pf2.y].substr(pf2.x + 1);
     text.erase(text.begin() + p0.y + 1, text.begin() + pf2.y + 1); }
   text[p0.y] = line;
+  highlight_text();
 
   // Draw chars after deletion
   if(p0.y == pf.y){
@@ -155,82 +156,78 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
 void Panel::delete_selection(){
   if(mark.y == -1) return;
   Cursor& c = cursor;
-  if(c.y < mark.y || (c.y == mark.y && c.x < mark.x))
-    remove_text(c.y, c.x, mark.y, mark.x - 1);
-  else if(c.y > mark.y || (c.y == mark.y && c.x > mark.x)){
-    remove_text(mark.y, mark.x, c.y, c.x - 1);
-    c.y = mark.y, c.x = mark.x; }
+  if(c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
+    remove_text(c.pos, ipoint(mark.x - 1, mark.y));
+  else if(c.pos.y > mark.y || (c.pos.y == mark.y && c.pos.x > mark.x)){
+    remove_text(mark, ipoint(c.pos.x - 1, c.pos.y));
+    c.pos.y = mark.y, c.pos.x = mark.x; }
   mark.y = mark.x = -1; }
 
-void Panel::scroll(const bool down){
+void Panel::scroll(const Dir d){
   int lines = min((int)text.size() - top_line - 1, scroll_lines);
-  if(!down)
+  if(d == UP)
     lines = min(lines, top_line);
-  top_line += down ? lines : -lines;
-  // draw
-  }
+  top_line += (d == DOWN) ? lines : -lines;
+  draw(); }
 
 void Panel::move_cursor(const Dir d){
   Cursor& c = cursor;
   c.blink = true;
-  if(mark.y != -1)
-    refresh_lines.insert(c.y - top_line);
+
+  // Draw char at previous position
+  color b = (mark.y != -1 && (c.pos.y < mark.y
+      || (c.pos.y == mark.y && c.pos.x < mark.x))) ? SELECT_COLOR : bkgd;
+  draw_char(fonts[text_scale][b][text_color[c.pos.y][c.pos.x]]
+      [text[c.pos.y][c.pos.x]], ipoint(c.pos.x * char_width + pos.x,
+      (c.pos.y - top_line) * line_height + pos.y));
 
   switch(d){
   case UP:
-    if(c.y == 0){
-      if(c.x > 0)
-        c.x = 0;
+    if(c.pos.y == 0){
+      if(c.pos.x > 0)
+        c.pos.x = 0;
       return; }
-    --c.y;
-    if(c.x > text[c.y].size())
-      c.x = (int)text[c.y].size();
-    if(c.y < top_line)
-      scroll(false);
-    if(mark.y != -1)
-      refresh_lines.insert(c.y - top_line);
+    --c.pos.y;
+    if(c.pos.x > text[c.pos.y].size())
+      c.pos.x = (int)text[c.pos.y].size();
+    if(c.pos.y < top_line)
+      scroll(UP);
     return;
 
   case LEFT:
-    if(c.x == 0){
-      if(c.y == 0) return;
-      --c.y;
-      c.x = (int)text[c.y].size();
-      if(c.y < top_line)
-        scroll(false);
-      if(mark.y != -1)
-        refresh_lines.insert(c.y - top_line);
+    if(c.pos.x == 0){
+      if(c.pos.y == 0) return;
+      --c.pos.y;
+      c.pos.x = (int)text[c.pos.y].size();
+      if(c.pos.y < top_line)
+        scroll(UP);
     }else
-      --c.x;
+      --c.pos.x;
     return;
 
   case DOWN:
-    if(c.y == text.size() - 1){
-      if(c.x < text[c.y].size())
-        c.x = (int)text[c.y].size();
+    if(c.pos.y == text.size() - 1){
+      if(c.pos.x < text[c.pos.y].size())
+        c.pos.x = (int)text[c.pos.y].size();
       return; }
-    ++c.y;
-    if(c.x > text[c.y].size())
-      c.x = (int)text[c.y].size();
-    if(c.y - top_line >= height / line_height - 1)
-      scroll(true);
-    if(mark.y != -1)
-      refresh_lines.insert(c.y - top_line);
+    ++c.pos.y;
+    if(c.pos.x > text[c.pos.y].size())
+      c.pos.x = (int)text[c.pos.y].size();
+    if(c.pos.y - top_line >= size.y / line_height - 1)
+      scroll(DOWN);
     return;
 
   case RIGHT:
-    if(c.x == text[c.y].size()){
-      if(c.y == text.size() - 1) return;
-      ++c.y;
-      c.x = 0;
-      if(c.y - top_line >= height / line_height - 1)
-        scroll(true);
-      if(mark.y != -1)
-        refresh_lines.insert(c.y - top_line);
+    if(c.pos.x == text[c.pos.y].size()){
+      if(c.pos.y == text.size() - 1) return;
+      ++c.pos.y;
+      c.pos.x = 0;
+      if(c.pos.y - top_line >= size.y / line_height - 1)
+        scroll(DOWN);
     }else
-      ++c.x;
+      ++c.pos.x;
     return;
   default:
-    err("move_cursor", "bad direction"); } }
+    err("move_cursor", "impossible direction"); } }
 
 #endif

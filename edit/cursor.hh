@@ -3,7 +3,7 @@
 #ifndef CURSOR_HH
 #define CURSOR_HH
 
-#include "../gl/polygon.hh"
+#include "util.hh"
 
 struct Cursor : virtual system {
 
@@ -11,22 +11,25 @@ struct Cursor : virtual system {
   // bool updated
   // clock_t last_update
 
-  bool blink, focus;
+  bool blink;
   color fill, bkgd;
-  ipoint pos, ppos, size;
+  ipoint pos, size;
+  static image* frame;
 
   virtual void init();
   virtual void update(const double ms);
 
   // Defined in draw.hh
-  void draw(image* frame, const viewport& view); };
+  void draw(const ipoint& win_pos); };
+
+image* Cursor::frame;
 
 void Cursor::init(){
   system::init();
-  blink = focus = true;
+  blink = true;
   fill = CURSOR_COLOR;
   bkgd = BKGD_COLOR;
-  pos = ppos = ipoint(0, 0);
+  pos = ipoint(0, 0);
   size = ipoint(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1); }
 
 void Cursor::update(const double ms){

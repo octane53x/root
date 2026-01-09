@@ -26,17 +26,19 @@ struct Editor : virtual window {
   virtual void run();
   virtual void update(const double ms);
   // Defined in input.hh
-  virtual void process_key(const str& key, const bool down, const point& mouse);
+  virtual void process_key(const str& key, const bool down,
+      const ipoint& mouse);
 
   // Defined in draw.hh
   void draw();
   // Defined in cmd.hh
   void process_cmd(const str& cmd);
 
-  void resize(const point& pos, const int w, const int h);
+  void resize(const ipoint& npos, const ipoint& nsize);
   void load_font();
   void color_font(const double scale);
   image color_char(const image& img, const color& ctext, const color& cbkgd);
+  void scale_font(const double factor);
   void clip();
 
   // Defined in input.hh
@@ -71,14 +73,13 @@ void Editor::init(){
   system::init();
   _win = this;
   shift = ctrl = alt = false;
-  Panel::frame = &frame;
+  Panel::frame = Cursor::frame = &frame;
 
   // Window init
   RECT rect;
   SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
-  size = ipoint(2 * (PANEL_CHARS * (int)round(INIT_TEXT_SCALE
-      * CHAR_WIDTH_SCALE_1) + VERTICAL_DIVIDE + PANEL_OFFSET),
-      rect.bottom - rect.top);
+  size = ipoint(2 * (PANEL_CHARS * CHAR_WIDTH_SCALE_1)
+      + VERTICAL_DIVIDE + PANEL_OFFSET, rect.bottom - rect.top);
   win_pos = ipoint(rect.right - size.x, 0);
   size.x += WINDOW_OFFSET;
   size.y += WINDOW_OFFSET;
@@ -86,18 +87,17 @@ void Editor::init(){
   // Initial panel
   panels.pb(Panel());
   Panel& p = panels.back();
-  p.size = ipoint(width - VERTICAL_DIVIDE + WIDTH_OFFSET,
-      height - p.line_height * 2 + HEIGHT_OFFSET);
+  p.size = ipoint(size.x - VERTICAL_DIVIDE + WIDTH_OFFSET,
+      size.y - p.line_height * 2 + HEIGHT_OFFSET);
   p.init();
   focus = &p;
 
   // Command bar
   cmd.size = ipoint(size.x, LINE_HEIGHT_SCALE_1);
-  cmd.pos = point(0, p.height + p.line_height);
+  cmd.pos = ipoint(0, p.size.y + p.line_height);
   cmd.init();
   cmd.bkgd = cmd.cursor.bkgd = CMD_BAR_COLOR;
   cmd.focus = cmd.cursor.blink = false;
-  cmd.hide = true;
 
   // Font
   load_font();
@@ -105,7 +105,7 @@ void Editor::init(){
 
   // Display frame
   frame.set_size(size.x, size.y);
-  frame.fill(BKGD_COLOR); }
+  draw(); }
 
 void Editor::run(){
   system::run();
@@ -124,22 +124,22 @@ void Editor::update(const double ms){
   if(updated)
     last_update = clock(); }
 
-void Editor::resize(const point& pos, const int w, const int h){
-  if(w == width && h == height){
-    win_pos = pos;
+void Editor::resize(const ipoint& npos, const ipoint& nsize){
+  if(nsize.x == size.x && nsize.y == size.y){
+    win_pos = npos;
     return; }
-  frame.set_size(w, h);
-  for(int y = 0; y < h; ++y)
-    for(int x = 0; x < w; ++x)
-      frame.set_pixel(x, y, BKGD_COLOR);
-  double xr = (double)w / width;
-  double yr = (double)h / height;
+  frame.set_size(npos.x, npos.y);
+  for(int y = 0; y < npos.y; ++y)
+    for(int x = 0; x < npos.x; ++x)
+      frame.data[y][x] = BKGD_COLOR;
+  double xr = (double)nsize.x / size.x;
+  double yr = (double)nsize.y / size.y;
   for(Panel& p : panels){
-    p.pos.x = round(p.pos.x * xr);
-    p.pos.y = round(p.pos.y * yr);
-    p.width = (int)round(xr * p.width);
-    p.height = (int)round(yr * p.height); }
-  win_pos = pos, width = w, height = h; }
+    p.pos.x = (int)round(p.pos.x * xr);
+    p.pos.y = (int)round(p.pos.y * yr);
+    p.size.x = (int)round(xr * p.size.x);
+    p.size.y = (int)round(yr * p.size.y); }
+  win_pos = npos, size = nsize; }
 
 void Editor::load_font(){
   // Load the font PNG with libpng
@@ -151,7 +151,7 @@ void Editor::load_font(){
   png_structp png_ptr = png_create_read_struct(
       PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
   png_infop info_ptr = png_create_info_struct(png_ptr);
-  setjmp(png_jmpbuf(png_ptr));
+  //setjmp(png_jmpbuf(png_ptr));
   png_init_io(png_ptr, fp);
   png_set_sig_bytes(png_ptr, 8);
   png_read_info(png_ptr, info_ptr);
@@ -181,7 +181,7 @@ void Editor::load_font(){
 
   // Create the image from buffer
   image font_img;
-  font_img.set_size(width, height);
+  font_img.set_size(size.x, size.y);
   for(int y = 0; y < h; ++y)
     for(int x = 0; x < w; ++x)
       font_img.set_pixel(x, y, color(
@@ -198,6 +198,7 @@ void Editor::load_font(){
     font_base[_SYMBOLS[i]] = c; } }
 
 void Editor::color_font(const double scale){
+  if(Panel::fonts.find(scale) != Panel::fonts.end()) return;
   umap<color, umap<color, font> > cmbkgd;
   // Code colors
   vec<color> bkgds = {BKGD_COLOR, SELECT_COLOR};
@@ -241,15 +242,23 @@ image Editor::color_char(const image& img, const color& ctext,
       r.data[y][x] = co; }
   return r; }
 
+void Editor::scale_font(const double factor){
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  p.text_scale *= factor;
+  c.size.y = p.line_height = (int)ceil(p.text_scale * LINE_HEIGHT_SCALE_1);
+  c.size.x = p.char_width = (int)ceil(p.text_scale * CHAR_WIDTH_SCALE_1);
+  color_font(p.text_scale); }
+
 void Editor::clip(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  if(p.ymark == -1) return;
+  if(p.mark.y == -1) return;
   int y0, yf, x0, xf;
-  if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark))
-    y0 = c.y, yf = p.ymark, x0 = c.x, xf = p.xmark - 1;
-  else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark))
-    y0 = p.ymark, yf = c.y, x0 = p.xmark, xf = c.x - 1;
+  if(c.pos.y < p.mark.y || (c.pos.y == p.mark.y && c.pos.x < p.mark.x))
+    y0 = c.pos.y, yf = p.mark.y, x0 = c.pos.x, xf = p.mark.x - 1;
+  else if(c.pos.y > p.mark.y || (c.pos.y == p.mark.y && c.pos.x > p.mark.x))
+    y0 = p.mark.y, yf = c.pos.y, x0 = p.mark.x, xf = c.pos.x - 1;
   else return;
   clipboard.clear();
   clipboard.pb("");

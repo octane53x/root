@@ -7,30 +7,37 @@
 
 void Editor::draw(){
   updated = false;
-  frame.fill(BKGD_COLOR);
   for(Panel& p : panels)
-    p.draw(&frame);
-  if(!cmd.hide)
-    cmd.draw(&frame); }
+    p.draw();
+  if(&cmd == focus)
+    cmd.draw(); }
 
 void Panel::draw(){
   updated = false;
+debug(1);
   // Draw text
-  int yf = (int)ceil((double)size.y / line_height);
-  draw_selection(ipoint(0, top_line), ipoint(text[yf].size() - 1, yf));
+  int yf = min(text.size() - 1, (int)ceil((double)size.y / line_height));
+  draw_selection(ipoint(0, top_line), ipoint((int)text[yf].size() - 1, yf));
+debug(2);
   // Draw empty space after last line
   for(int y = pos.y + max(0, (yf - top_line) * line_height);
       y < pos.y + min(size.y, (yf - top_line) * (line_height + 1)); ++y)
-    for(int x = pos.x + text[yf].size() * char_width; x < pos.x + size.x; ++x)
+    for(int x = pos.x + (int)text[yf].size() * char_width;
+        x < pos.x + size.x; ++x)
       frame->data[y][x] = bkgd;
+debug(3);
   // Draw past last line of text
   for(int y = pos.y + max(0, (yf + 1 - top_line) * line_height);
       y < pos.y + size.y; ++y)
     for(int x = pos.x; x < pos.x + size.x; ++x)
       frame->data[y][x] = bkgd;
+debug(4);
   // Draw divider and file bar
   draw_divider();
-  draw_file_bar(); }
+debug(5);
+  draw_file_bar();
+debug(6);
+}
 
 // Draw one character
 void Panel::draw_char(const image& img, const ipoint& p){
@@ -46,7 +53,6 @@ void Panel::draw_selection(const ipoint& p0, const ipoint& pf){
   if(p0.y == pf.y){
     for(int x = p0.x; x <= pf.x; ++x)
       draw_char(fonts[text_scale][b][text_color[p0.y][x]][text[p0.y][x]],
-          ipoint(x * char_width, p0.y * line_height),
           ipoint(x * char_width + pos.x,
           (p0.y - top_line) * line_height + pos.y));
     return; }
@@ -54,26 +60,22 @@ void Panel::draw_selection(const ipoint& p0, const ipoint& pf){
   // Draw several lines
   for(int x = p0.x; x < text[p0.y].size(); ++x)
     draw_char(fonts[text_scale][b][text_color[p0.y][x]][text[p0.y][x]],
-        ipoint(x * char_width, p0.y * line_height),
         ipoint(x * char_width + pos.x,
         (p0.y - top_line) * line_height + pos.y));
   for(int y = p0.y + 1; y <= pf.y - 1; ++y)
     for(int x = 0; x < text[y].size(); ++x)
       draw_char(fonts[text_scale][b][text_color[y][x]][text[y][x]],
-        ipoint(x * char_width, y * line_height),
         ipoint(x * char_width + pos.x,
         (y - top_line) * line_height + pos.y));
   for(int x = 0; x <= pf.x; ++x)
     draw_char(fonts[text_scale][b][text_color[pf.y][x]][text[pf.y][x]],
-        ipoint(x * char_width, pf.y * line_height),
         ipoint(x * char_width + pos.x,
         (pf.y - top_line) * line_height + pos.y));
 
   // Draw empty space
   for(int y = p0.y; y < pf.y; ++y)
-    for(int x = text[y].size(); x <= PANEL_CHARS; ++x)
+    for(int x = (int)text[y].size(); x <= PANEL_CHARS; ++x)
       draw_char(fonts[text_scale][b][COLOR_CODE][' '],
-          ipoint(x * char_width, y * line_height),
           ipoint(x * char_width + pos.x,
           (y - top_line) * line_height + pos.y)); }
 
@@ -94,23 +96,21 @@ void Panel::draw_file_bar(){
   str bar_text = str(saved ? "-----" : "*****") + "     ";
   if(file.find("\\root\\") != str::npos)
     bar_text += file.substr(file.find("\\root\\") + 6) + "     ";
-  bar_text +=
-      "(" + to_string(cursor.y + 1) + "," + to_string(cursor.x + 1) + ")";
+  bar_text += "(" + to_string(cursor.pos.y + 1) + ","
+      + to_string(cursor.pos.x + 1) + ")";
   // Draw text
   for(int x = 0; x < bar_text.size(); ++x)
-    draw_char(fonts[text_scale][cbkgd][FILE_BAR_TEXT_COLOR][bar_text[x]],
-        ipoint(-1, -1), ipoint(pos.x, pos.y + size.y)); }
+    draw_char(fonts[text_scale][cbkgd][BAR_TEXT_COLOR][bar_text[x]],
+        ipoint(pos.x, pos.y + size.y)); }
 
-void Cursor::draw(image* frame, const viewport& view){
+// Handled by panel.update when in focus
+void Cursor::draw(const ipoint& win_pos){
   updated = false;
-  if(focus)
-    polygon::draw(frame, view);
-  else{
-    line(pos, point(pos.x + width, pos.y)).draw(frame, view);
-    line(point(pos.x + width, pos.y),
-        point(pos.x + width, pos.y + height)).draw(frame, view);
-    line(point(pos.x + width, pos.y + height),
-        point(pos.x, pos.y + height)).draw(frame, view);
-    line(point(pos.x, pos.y + height), pos).draw(frame, view); } }
+  for(int y = win_pos.y; y < win_pos.y + size.y; ++y){
+    frame->data[y][win_pos.x] = CURSOR_COLOR;
+    frame->data[y][win_pos.x + size.x - 1] = CURSOR_COLOR; }
+  for(int x = win_pos.x; x < win_pos.x + size.x; ++x){
+    frame->data[win_pos.y][x] = CURSOR_COLOR;
+    frame->data[win_pos.y + size.y - 1][x] = CURSOR_COLOR; } }
 
 #endif

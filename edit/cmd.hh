@@ -6,21 +6,21 @@
 #include "editor.hh"
 
 void Editor::process_cmd(const str& cmd){
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
   // Open file
   if(cmd.find("Open") == 0){
-    focus->file = cmd.substr(6);
+    p.file = cmd.substr(6);
     // Clear panel
-    focus->text.clear();
-    focus->cursor.x = focus->cursor.y = 0;
-    focus->top_line = 0;
-    refresh_panel();
+    p.text.clear();
+    c.pos = ipoint(0, 0);
     // Load file text
-    if(exists(focus->file)){
-      ifstream fs(focus->file);
+    if(exists(p.file)){
+      ifstream fs(p.file);
       str line;
       while(getline(fs, line))
-        focus->text.pb(line);
+        p.text.pb(line);
     }else
-      focus->text.pb(""); } }
+      p.text.pb(""); } }
 
 #endif

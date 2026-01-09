@@ -135,7 +135,7 @@ void image::fix(const color& c){
 void image::fill(const color& c){
   for(int y = 0; y < height; ++y)
     for(int x = 0; x < width; ++x)
-      frame.data[y][x] = c; }
+      data[y][x] = c; }
 
 // Replace all pixels of src color with dest color
 void image::replace(const color& src, const color& dest){

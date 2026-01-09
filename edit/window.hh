@@ -20,7 +20,7 @@ struct window : system {
   // void run()
   // void update(ms)
 
-  virtual void resize(const ipoint& pos, const ipoint& _size) = 0;
+  virtual void resize(const ipoint& npos, const ipoint& nsize) = 0;
   virtual void process_key(
       const str& key, const bool down, const ipoint& mouse) = 0; };
 

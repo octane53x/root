@@ -28,7 +28,7 @@ bool ipoint::operator==(const ipoint& o) const {
 
 void ipoint::validate(const str& func){}
 
-str ipoint::to_str(){
+str ipoint::to_str() const {
   return "(" + to_string(x) + ", " + to_string(y) + ")"; }
 
 // Allow ipoint to be hashed as a map key

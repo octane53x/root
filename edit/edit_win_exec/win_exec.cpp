@@ -3,6 +3,7 @@
 #include "../draw.hh"
 #include "../input.hh"
 #include "../cmd.hh"
+#include "../highlight.hh"
 
 // Main function called on application execution
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,

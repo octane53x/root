@@ -29,16 +29,35 @@ const color
     BAR_TEXT_COLOR = BLACK,
     DIVIDER_COLOR = DKDKGRAY,
     SELECT_COLOR = BLUE,
-    CURSOR_COLOR = CYAN;
+    CURSOR_COLOR = CYAN,
+
+    // Highlighting
+    COLOR_CODE = color(255, 255, 255),
+    COLOR_KEYWORD = color(0, 208, 208),
+    COLOR_TYPE = color(0, 208, 82),
+    COLOR_NAME = color(242, 242, 82),
+    COLOR_FUNCTION = color(120, 132, 176),
+    COLOR_STRING = color(242, 64, 76),
+    COLOR_COMMENT = color(255, 92, 0);
+
+const vec<color> TEXT_COLORS =
+    {COLOR_CODE, COLOR_KEYWORD, COLOR_TYPE, COLOR_NAME, COLOR_FUNCTION,
+    COLOR_STRING, COLOR_COMMENT};
 
 const str
     _FONT_LOC = "../symbols.png",
     _SYMBOLS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         " .,/?:;'\"+=-_\\|~!@#$%^&*()[]{}<>";
 
+const uset<str> KEYWORDS = {
+    "obj", "fn", "if", "else", "for", "while", "return", "break", "continue",
+    "const", "virtual", "final", "include", "this", "operator", "static",
+    "template", "abstract", "force", "true", "false",
+    "struct", "enum", "def", "delete", "in"}; // Other languages
+
 enum Dir { UP, LEFT, DOWN, RIGHT };
 
-bool name_or_val(const char c) const {
+bool name_or_val(const char c){
   return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
       || (c >= 'a' && c <= 'z') || c == '_'; }
 

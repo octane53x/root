@@ -67,6 +67,9 @@ void debug(const str& msg){
   printl(msg);
   print_time(); }
 
+void debug(const int n){
+  debug(to_string(n)); }
+
 // Print debug ints
 void debug(const initializer_list<int>& ints){
   str msg = "";
