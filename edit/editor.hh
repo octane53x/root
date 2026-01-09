@@ -96,6 +96,7 @@ void Editor::init(){
   cmd.size = ipoint(size.x, LINE_HEIGHT_SCALE_1);
   cmd.pos = ipoint(0, p.size.y + p.line_height);
   cmd.init();
+  cmd.cmd = true;
   cmd.bkgd = cmd.cursor.bkgd = CMD_BAR_COLOR;
   cmd.focus = cmd.cursor.blink = false;
 
@@ -112,6 +113,8 @@ void Editor::run(){
   for(Panel& p : panels){
     p.run();
     p.cursor.run(); }
+  cmd.run();
+  cmd.cursor.run();
   _win_init();
   _win_run(); }
 
@@ -121,6 +124,9 @@ void Editor::update(const double ms){
     p.update(ms);
     if(p.updated)
       updated = true; }
+  cmd.update(ms);
+  if(cmd.updated)
+    updated = true;
   if(updated)
     last_update = clock(); }
 

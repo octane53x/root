@@ -225,10 +225,14 @@ void Editor::proc_enter(){
 void Editor::proc_escape(){
   Panel& p = *focus;
   if(&p != &cmd) return;
+  p.focus = false;
   focus = prev_panel;
+  focus->focus = true;
   for(int y = p.pos.y; y < p.pos.y + p.size.y; ++y)
     for(int x = p.pos.x; x < p.pos.x + p.size.x; ++x)
-      frame.data[y][x] = BKGD_COLOR; }
+      frame.data[y][x] = BKGD_COLOR;
+  p.text[0] = "";
+  p.cursor.pos = ipoint(0, 0); }
 
 void Editor::proc_ctrl_move(const Dir d){
   Panel& p = *focus;
@@ -241,7 +245,8 @@ void Editor::proc_ctrl_move(const Dir d){
     while(!(c.pos.y == 0 && c.pos.x == 0)
         && !name_or_val(p.text[c.pos.y][c.pos.x]))
       p.move_cursor(LEFT);
-    while(!(c.pos.y == 0 && c.pos.x == 0) && name_or_val(p.text[c.pos.y][c.pos.x]))
+    while(!(c.pos.y == 0 && c.pos.x == 0)
+        && name_or_val(p.text[c.pos.y][c.pos.x]))
       p.move_cursor(LEFT);
   }else if(d == DOWN){
     p.move_cursor(DOWN);
@@ -258,15 +263,18 @@ void Editor::proc_ctrl_move(const Dir d){
 void Editor::proc_ctrl_backspace(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  if(c.pos.x > 1 && p.text[c.pos.y][c.pos.x - 1] == ' ' && p.text[c.pos.y][c.pos.x - 2] == ' '){
+  if(c.pos.x > 1 && p.text[c.pos.y][c.pos.x - 1] == ' '
+      && p.text[c.pos.y][c.pos.x - 2] == ' '){
     p.remove_text(ipoint(c.pos.x - 2, c.pos.y), ipoint(c.pos.x - 1, c.pos.y));
     p.move_cursor(LEFT);
     p.move_cursor(LEFT);
     return; }
   int y0 = c.pos.y, x0 = c.pos.x;
-  while(!(c.pos.y == 0 && c.pos.x == 0) && !name_or_val(p.text[c.pos.y][c.pos.x]))
+  while(!(c.pos.y == 0 && c.pos.x == 0)
+      && !name_or_val(p.text[c.pos.y][c.pos.x]))
     p.move_cursor(LEFT);
-  while(!(c.pos.y == 0 && c.pos.x == 0) && name_or_val(p.text[c.pos.y][c.pos.x])){
+  while(!(c.pos.y == 0 && c.pos.x == 0)
+      && name_or_val(p.text[c.pos.y][c.pos.x])){
     p.move_cursor(LEFT);
     if(c.pos.x == p.text[c.pos.y].size())
       break; }
@@ -294,9 +302,12 @@ void Editor::proc_del_space(){
 void Editor::proc_open_file(){
   if(focus == &cmd) return;
   prev_panel = focus;
+  focus->focus = false;
   focus = &cmd;
+  focus->focus = true;
   Panel& p = *focus;
   Cursor& c = p.cursor;
+  p.draw();
   str cwd = current_path().string();
   p.insert_text({"Open: " + cwd.substr(0, cwd.find("\\root\\") + 6)}, c.pos);
   c.pos.x = (int)p.text[0].size(); }

@@ -11,7 +11,7 @@ struct Panel : virtual system {
   // bool updated
   // clock_t last_update
 
-  bool saved, focus, split_ready;
+  bool cmd, saved, focus, split_ready;
   int line_height, char_width, scroll_lines, top_line;
   double text_scale;
   color bkgd;
@@ -56,7 +56,7 @@ Panel::Panel():
 // Set size and pos prior
 void Panel::init(){
   system::init();
-  split_ready = false;
+  cmd = split_ready = false;
   saved = focus = true;
   line_height = LINE_HEIGHT_SCALE_1;
   char_width = CHAR_WIDTH_SCALE_1;
@@ -68,8 +68,7 @@ void Panel::init(){
   file = "";
   text.pb("");
   text_color.pb(vec<color>());
-  cursor.init();
-  cursor.pos = ipoint(pos.x, pos.y); }
+  cursor.init(); }
 
 void Panel::update(const double ms){
   system::update(ms);
@@ -87,15 +86,15 @@ void Panel::update(const double ms){
       draw_char(fonts[text_scale][c.fill][tc][ch], cpos);
       updated = true;
       last_update = clock(); }
-  }else
+  }else if(!cmd)
     c.draw(cpos); }
 
 void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   // Modify text
   str tail = text[p.y].substr(p.x);
-  text[p.y] = text[p.y].substr(0, p.x) + text[0];
+  text[p.y] = text[p.y].substr(0, p.x) + ins[0];
   text.insert(text.begin() + p.y + 1, ins.begin() + 1, ins.end());
-  text[p.y + text.size() - 1] += tail;
+  text[p.y + ins.size() - 1] += tail;
   highlight_text();
 
   // Draw single character at end of line
@@ -176,10 +175,11 @@ void Panel::move_cursor(const Dir d){
   c.blink = true;
 
   // Draw char at previous position
-  color b = (mark.y != -1 && (c.pos.y < mark.y
+  color cb = (mark.y != -1 && (c.pos.y < mark.y
       || (c.pos.y == mark.y && c.pos.x < mark.x))) ? SELECT_COLOR : bkgd;
-  draw_char(fonts[text_scale][b][text_color[c.pos.y][c.pos.x]]
-      [text[c.pos.y][c.pos.x]], ipoint(c.pos.x * char_width + pos.x,
+  char ch = (c.pos.x == text[c.pos.y].size()) ? ' ' : text[c.pos.y][c.pos.x];
+  color ct = (ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x];
+  draw_char(fonts[text_scale][cb][ct][ch], ipoint(c.pos.x * char_width + pos.x,
       (c.pos.y - top_line) * line_height + pos.y));
 
   switch(d){

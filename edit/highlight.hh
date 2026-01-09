@@ -10,6 +10,11 @@ void Panel::highlight_text(){
   while(text_color.size() < text.size())
     text_color.pb(vec<color>());
 
+  color ct = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
+  for(int y = 0; y < text.size(); ++y)
+    for(int x = 0; x < text[y].size(); ++x)
+      text_color[y].pb(ct);
+
   // str& t = text[line];
 
   // // Harvest tokens

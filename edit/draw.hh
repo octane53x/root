@@ -27,6 +27,7 @@ void Panel::draw(){
     for(int x = pos.x + (int)text[yf].size() * char_width;
         x < pos.x + size.x; ++x)
       frame->data[y][x] = bkgd;
+  if(cmd) return;
   // Draw past last line of text
   for(int y = pos.y + max(0, (yf + 1 - top_line) * line_height);
       y < pos.y + size.y; ++y)
