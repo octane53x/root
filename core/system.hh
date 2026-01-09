@@ -48,9 +48,7 @@ struct system : virtual thing {
 llu system::next_id = 1;
 
 // Set default member state
-system::system(): type("system"), initialized(false), active(false) {
-  id = new_id();
-  last_update = clock(); }
+system::system(): type("system"), initialized(false), active(false) {}
 
 // Implemented to avoid linker error
 system::~system(){}
@@ -68,7 +66,9 @@ str system::to_str() const {
 // Usually create and call init_members first, passing needed parameters
 void system::init(){
   if(initialized) err(type+".init", "called twice");
-  initialized = true; }
+  initialized = true;
+  id = new_id();
+  last_update = clock(); }
 
 // Call at the beginning of derived class run()
 void system::run(){
@@ -82,14 +82,12 @@ void system::stop(){
   if(!active) err(type+".stop", "called when not running");
   active = false; }
 
-// An object cannot continuously update, because other tasks must be processed.
-// The engine is recommended to operate a loop of (update -> output -> repeat).
 // Call at the beginning of derived class update()
-// Set last_update to clock() at the end of the update
+// Set updated to true if it is determined that the object updated
+// If so, set last_update to clock() at the end of the update
 void system::update(const double ms){
   if(!initialized) err(type+".update", "called before init");
-  if(!active) err(type+".update", "called when not running");
-  updated = false; }
+  if(!active) err(type+".update", "called when not running"); }
 
 // Return a unique object id
 llu system::new_id(){

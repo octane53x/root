@@ -15,16 +15,11 @@ struct Cursor : virtual system {
   color fill, bkgd;
   ipoint pos, ppos, size;
 
-  Cursor();
-
   virtual void init();
   virtual void update(const double ms);
 
+  // Defined in draw.hh
   void draw(image* frame, const viewport& view); };
-
-Cursor::Cursor():
-    fill(CURSOR_COLOR), blink(true), focus(true),
-    x(0), y(0), xprev(0), yprev(0) {}
 
 void Cursor::init(){
   system::init();
@@ -42,16 +37,5 @@ void Cursor::update(const double ms){
     fill = blink ? CURSOR_COLOR : CLEAR;
     updated = true;
     last_update = clock(); } }
-
-void Cursor::draw(image* frame, const viewport& view){
-  if(focus)
-    polygon::draw(frame, view);
-  else{
-    line(pos, point(pos.x + width, pos.y)).draw(frame, view);
-    line(point(pos.x + width, pos.y),
-        point(pos.x + width, pos.y + height)).draw(frame, view);
-    line(point(pos.x + width, pos.y + height),
-        point(pos.x, pos.y + height)).draw(frame, view);
-    line(point(pos.x, pos.y + height), pos).draw(frame, view); } }
 
 #endif

@@ -2,6 +2,8 @@
 
 // Depends on libpng/zlib - loaded in Visual Studio
 
+//! Test inputs when command bar in focus
+
 #ifndef EDITOR_HH
 #define EDITOR_HH
 
@@ -18,24 +20,49 @@ struct Editor : virtual window {
   Panel cmd, info, *focus, *prev_panel;
   vec<Panel> panels;
 
-  KeyProc keyproc;
-  CmdProc cmdproc;
-
   void init_members(const HINSTANCE wp1, const int wp2);
 
   virtual void init();
   virtual void run();
   virtual void update(const double ms);
-  virtual void draw();
-  virtual void resize(const point& pos, const int w, const int h);
+  // Defined in input.hh
+  virtual void process_key(const str& key, const bool down, const point& mouse);
 
+  // Defined in draw.hh
+  void draw();
+  // Defined in cmd.hh
+  void process_cmd(const str& cmd);
+
+  void resize(const point& pos, const int w, const int h);
   void load_font();
   void color_font(const double scale);
   image color_char(const image& img, const color& ctext, const color& cbkgd);
   void clip();
-  void split_horizontal();
-  void split_vertical();
-  void close_panel(); };
+
+  // Defined in input.hh
+  bool parse_char(const str& key);
+  void proc_indent();
+  void proc_backspace();
+  void proc_enter();
+  void proc_escape();
+  void proc_ctrl_move(const Dir d);
+  void proc_ctrl_backspace();
+  void proc_delete();
+  void proc_del_space();
+  void proc_open_file();
+  void proc_set_mark();
+  void proc_select_all();
+  void proc_indent_selection();
+  void proc_unindent_selection();
+  void proc_cut();
+  void proc_copy();
+  void proc_paste();
+  void proc_move_max(const Dir d);
+  void proc_left_panel();
+  void proc_right_panel();
+  void proc_split_horizontal();
+  void proc_split_vertical();
+  void proc_close_panel(); };
 
 void Editor::init_members(const HINSTANCE wp1, const int wp2){
   win_param_1 = wp1, win_param_2 = wp2; }
@@ -43,8 +70,8 @@ void Editor::init_members(const HINSTANCE wp1, const int wp2){
 void Editor::init(){
   system::init();
   _win = this;
-  updated = true;
   shift = ctrl = alt = false;
+  Panel::frame = &frame;
 
   // Window init
   RECT rect;
@@ -66,10 +93,11 @@ void Editor::init(){
 
   // Command bar
   cmd.size = ipoint(size.x, LINE_HEIGHT_SCALE_1);
-  cmd.init();
   cmd.pos = point(0, p.height + p.line_height);
+  cmd.init();
   cmd.bkgd = cmd.cursor.bkgd = CMD_BAR_COLOR;
-  cmd.cursor.blink = false;
+  cmd.focus = cmd.cursor.blink = false;
+  cmd.hide = true;
 
   // Font
   load_font();
@@ -89,173 +117,12 @@ void Editor::run(){
 
 void Editor::update(const double ms){
   system::update(ms);
-  for(Panel& p : panels)
-    if(p.refresh){
-      p.update(ms);
+  for(Panel& p : panels){
+    p.update(ms);
+    if(p.updated)
       updated = true; }
-  focus->cursor.update(ms);
-  if(focus->cursor.updated)
-    updated = true;
   if(updated)
     last_update = clock(); }
-
-void Editor::draw(){
-  Panel& p = *focus;
-  Cursor& c = p.cursor;
-  for(int y : p.refresh_lines){
-    if(y < 0 || y > p.height / p.line_height)
-      err("draw", "bad refresh line");
-    int yl = y + p.top_line;
-
-    // Determine selection
-    int xstart = -1, xend = -1;
-    if(p.ymark != -1){
-      // Cursor before mark
-      if(c.y < p.ymark || (c.y == p.ymark && c.x < p.xmark)){
-        if(c.y < yl)
-          xstart = 0;
-        else if(c.y == yl)
-          xstart = c.x;
-        if(p.ymark > yl)
-          xend = (int)p.text[yl].size();
-        else if(p.ymark == yl)
-          xend = p.xmark - 1;
-
-      // Mark before cursor
-      }else if(c.y > p.ymark || (c.y == p.ymark && c.x > p.xmark)){
-        if(p.ymark < yl)
-          xstart = 0;
-        else if(p.ymark == yl)
-          xstart = p.xmark;
-        if(c.y > yl)
-          xend = (int)p.text[yl].size();
-        else if(c.y == yl)
-          xend = c.x - 1; } }
-    if(yl < p.text.size())
-      assert(xend <= (int)p.text[yl].size(), "draw", "bad selection end point");
-
-    // Line background
-    if(xstart != 0 || xend == -1){
-      polygon line;
-      line.pos = point(p.pos.x, p.pos.y + y * p.line_height);
-      int w = (xstart == -1 || xend == -1) ? p.width : xstart * p.char_width;
-      line.set_box(w, p.line_height);
-      line.fill = p.col;
-      line.draw(&frame, p.view); }
-
-    // Selection background
-    if(xstart != -1 && xend != -1){
-      polygon select;
-      select.pos = point(p.pos.x + xstart * p.char_width,
-          p.pos.y + y * p.line_height);
-      int w = (xend == p.text[yl].size()) ? p.width - xstart * p.char_width
-          : (xend - xstart + 1) * p.char_width;
-      select.set_box(w, p.line_height);
-      select.fill = SELECT_COLOR;
-      select.draw(&frame, p.view); }
-
-    // Line background
-    if(xstart != -1 && xend != -1 && xend < p.text[yl].size()){
-      polygon line;
-      line.pos = point(p.pos.x + (xend + 1) * p.char_width,
-          p.pos.y + y * p.line_height);
-      line.set_box(p.width - (xend + 1) * p.char_width, p.line_height);
-      line.fill = p.col;
-      line.draw(&frame, p.view); }
-
-    // Draw text
-    if(yl >= p.text.size()) continue;
-    if(&p != &cmd)
-      highlight_text(yl);
-    for(int x = 0; x < p.text[yl].size(); ++x){
-      debug("Panel "+to_string((llu)&p)+" draw char "+str(1, p.text[yl][x])
-          +" at "+point(p.pos.x + x * p.char_width,
-          p.pos.y + y * p.line_height).to_str()+" \n  with color "
-          +p.text_color[yl][x].to_str()+" size "
-          +to_string(p.font[p.text[yl][x]].width)+","
-          +to_string(p.font[p.text[yl][x]].height));
-      draw_char(p.font[p.text[yl][x]],
-          point(p.pos.x + x * p.char_width, p.pos.y + y * p.line_height),
-          p.text_color[yl][x], p.col); } }
-  p.refresh_lines.clear();
-
-  if(c.xprev != c.x || c.yprev != c.y){
-    // Clear last character
-    color col = c.fill;
-    c.fill =
-        (p.ymark == -1 || ((c.y < c.yprev || (c.y == c.yprev && c.x < c.xprev))
-        && (p.ymark < c.yprev || (p.ymark == c.yprev && p.xmark <= c.xprev)))
-        || ((c.y > c.yprev || (c.y == c.yprev && c.x > c.xprev))
-        && (p.ymark > c.yprev || (p.ymark == c.yprev && p.xmark > c.xprev))))
-        ? p.col : SELECT_COLOR;
-    c.pos = point(p.pos.x + c.xprev * p.char_width,
-        p.pos.y + (c.yprev - p.top_line) * p.line_height);
-    c.draw(&frame, p.view);
-    c.pos = point(p.pos.x + c.x * p.char_width,
-        p.pos.y + (c.y - p.top_line) * p.line_height);
-    c.fill = col;
-
-    // Draw last character
-    if(c.yprev < p.text.size() && c.xprev < p.text[c.yprev].size())
-      draw_char(p.font[p.text[c.yprev][c.xprev]],
-          point(p.pos.x + c.xprev * p.char_width,
-          p.pos.y + (c.yprev - p.top_line) * p.line_height),
-          p.text_color[c.yprev][c.xprev], p.col);
-    c.xprev = c.x, c.yprev = c.y; }
-
-  // Clear cursor
-  color col = c.fill;
-  c.fill = (p.ymark == -1 || (c.y > p.ymark
-      || (c.y == p.ymark && c.x >= p.xmark))) ? p.col : SELECT_COLOR;
-  c.draw(&frame, p.view);
-  c.fill = col;
-  // Draw current character
-  if(c.y < p.text.size() && c.x < p.text[c.y].size())
-    draw_char(p.font[p.text[c.y][c.x]],
-        point(p.pos.x + c.x * p.char_width,
-        p.pos.y + (c.y - p.top_line) * p.line_height),
-        p.text_color[c.y][c.x], p.col);
-  // Draw cursor
-  c.draw(&frame, p.view);
-
-  // Draw vertical divider
-  for(Panel& t : panels){
-    if(!t.refresh_divider) continue;
-    polygon div;
-    div.pos = point(t.pos.x + t.width, t.pos.y);
-    div.set_box(VERTICAL_DIVIDE, t.height);
-    div.fill = UNFOCUS_FILE_BAR_COLOR;
-    div.draw(&frame, t.view);
-    t.refresh_divider = false; }
-
-  // Draw file bars
-  for(Panel& t : panels){
-    if(!t.refresh_file_bar) continue;
-    polygon bar;
-    bar.pos = point(t.pos.x, t.pos.y + t.height);
-    bar.set_box(t.width + VERTICAL_DIVIDE, default_line_height);
-    bar.fill = (focus == &t) ? FOCUS_FILE_BAR_COLOR : UNFOCUS_FILE_BAR_COLOR;
-    bar.draw(&frame, t.view);
-    str bar_text = str(t.saved ? "-----" : "*****") + "     ";
-    if(t.file.find("\\root\\") != str::npos)
-      bar_text += t.file.substr(t.file.find("\\root\\") + 6) + "     ";
-    bar_text += "(" + to_string(t.cursor.y + 1) + ","
-        + to_string(t.cursor.x + 1) + ")";
-    for(int x = 0; x < bar_text.size(); ++x)
-      draw_char(default_font[bar_text[x]],
-          point(bar.pos.x + x * default_char_width, bar.pos.y),
-          FILE_BAR_TEXT_COLOR, bar.fill);
-    t.refresh_file_bar = false; }
-
-  // Hide cmd bar
-  if(cmd.hide){
-    assert(focus != &cmd, "draw", "cmd marked for refresh but still in focus");
-    polygon line;
-    line.pos = point(cmd.pos.x, cmd.pos.y);
-    line.set_box(cmd.width, cmd.line_height);
-    line.fill = BKGD_COLOR;
-    line.draw(&frame, cmd.view);
-    cmd.hide = false; } }
 
 void Editor::resize(const point& pos, const int w, const int h){
   if(w == width && h == height){
@@ -333,17 +200,18 @@ void Editor::load_font(){
 void Editor::color_font(const double scale){
   umap<color, umap<color, font> > cmbkgd;
   // Code colors
-  umap<color, font> cmtext;
-  for(const color& ct : TEXT_COLORS){
-    font f;
-    for(const char c : _SYMBOLS)
-      f[c] = color_char(font_base[c], ct, BKGD_COLOR).scale(scale);
-    cmtext[ct] = f; }
-  cmbkgd[BKGD_COLOR] = cmtext;
+  vec<color> bkgds = {BKGD_COLOR, SELECT_COLOR};
+  for(const color& cb : bkgds){
+    umap<color, font> cmtext;
+    for(const color& ct : TEXT_COLORS){
+      font f;
+      for(const char c : _SYMBOLS)
+        f[c] = color_char(font_base[c], ct, cb).scale(scale);
+      cmtext[ct] = f; }
+    cmbkgd[cb] = cmtext; }
 
   // File and command bar colors
-  vec<color> bkgds =
-      {CMD_BAR_COLOR, FOCUS_FILE_BAR_COLOR, UNFOCUS_FILE_BAR_COLOR};
+  bkgds = {CMD_BAR_COLOR, FOCUS_FILE_BAR_COLOR, UNFOCUS_FILE_BAR_COLOR};
   for(const color& cb : bkgds){
     umap<color, font> cmtext;
     font f;
@@ -393,45 +261,5 @@ void Editor::clip(){
       clipboard.pb("");
       ++y0;
       x0 = 0; } } }
-
-void Editor::split_horizontal(){
-  Panel& p = *focus;
-  p.height = (p.height + default_line_height) / 2 - default_line_height;
-  p.refresh_file_bar = true;
-  p.refresh_divider = true;
-  int i;
-  for(i = 0; i < panels.size(); ++i)
-    if(focus == &panels[i]) break;
-  if(i + 1 == panels.size())
-    panels.pb(p);
-  else
-    panels.insert(panels.begin() + i + 1, p);
-  Panel& p2 = panels[i];
-  focus = &panels[i + 1];
-  focus->pos = point(p2.pos.x, p2.pos.y + p2.height + default_line_height);
-  refresh_panel(); }
-
-void Editor::split_vertical(){
-  Panel& p = *focus;
-  p.width = (p.width + VERTICAL_DIVIDE) / 2 - VERTICAL_DIVIDE;
-  p.refresh_file_bar = true;
-  p.refresh_divider = true;
-  int i;
-  for(i = 0; i < panels.size(); ++i)
-    if(focus == &panels[i]) break;
-  if(i + 1 == panels.size())
-    panels.pb(p);
-  else
-    panels.insert(panels.begin() + i + 1, p);
-  Panel& p2 = panels[i];
-  focus = &panels[i + 1];
-  focus->pos = point(p2.pos.x + p2.width + VERTICAL_DIVIDE, p2.pos.y);
-  refresh_panel(); }
-
-void Editor::close_panel(){
-  Panel& p = *focus;
-  //!
-
-}
 
 #endif

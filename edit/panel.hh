@@ -12,7 +12,7 @@ struct Panel : virtual system {
   // bool updated
   // clock_t last_update
 
-  bool hide, saved, focus, refresh, split_ready;
+  bool saved, focus, split_ready;
   int line_height, char_width, scroll_lines, top_line;
   double text_scale;
   color bkgd;
@@ -20,11 +20,12 @@ struct Panel : virtual system {
   str file;
   vec<str> text;
   vec<vec<color> > text_color;
-  image buf;
-  viewport view;
   Cursor cursor;
+  uset<Panel*> siblings;
+
+  static image* frame;
   // Key 1: Scale, Key 2: Bkgd color, Key 3: Text color, Key 4: Character
-  static umap<double, umap<color, umap<color, umap<char, image> > > > fonts;
+  static umap<double, umap<color, umap<color, font> > > fonts;
   static Highlighter highlighter;
 
   Panel();
@@ -32,10 +33,12 @@ struct Panel : virtual system {
   virtual void init();
   virtual void update(const double ms);
 
-  void draw(image* frame, const viewport& view);
-  void draw_char(
-      const image& img, const ipoint& buf_pos, const ipoint& frame_pos,
-      const color& ctext, const color& cbkgd);
+  // Defined in draw.hh
+  void draw();
+  void draw_char(const image& img, const ipoint& p);
+  void draw_selection(const ipoint& p0, const ipoint& pf);
+  void draw_divider();
+  void draw_file_bar();
 
   void resize(const ipoint& _pos, const ipoint& _size);
   void scale_font(const double factor, const umap<char, image>& font_base);
@@ -45,55 +48,38 @@ struct Panel : virtual system {
   void scroll(const bool down);
   void move_cursor(const Dir d); };
 
+image* Panel::frame;
 Highlighter Panel::highlighter;
 umap<double, umap<color, umap<color, umap<char, image> > > > Panel::fonts;
 
 Panel::Panel():
-    width(0), height(0) {}
+    size(0, 0), pos(0, 0) {}
 
-// Set size prior
+// Set size and pos prior
 void Panel::init(){
   system::init();
-  hide = split_ready = false;
-  saved = focus = refresh = true;
+  split_ready = false;
+  saved = focus = true;
   line_height = LINE_HEIGHT_SCALE_1;
   char_width = CHAR_WIDTH_SCALE_1;
   scroll_lines = size.y / line_height / 2;
   top_line = 0;
   text_scale = 1.0;
   bkgd = BKGD_COLOR;
-  pos = ipoint(0, 0);
   mark = ipoint(-1, -1);
   file = "";
   text.pb("");
   text_color.pb(vec<color>());
-  buf.set_size(size.x, size.y);
-  cursor.init(); }
+  cursor.init();
+  cursor.pos = ipoint(pos.x, pos.y); }
 
 void Panel::update(const double ms){
   system::update(ms);
-  scroll_lines = height / line_height / 2;
-  cursor.pos = point(
-      pos.x + cursor.x * char_width,
-      pos.y + (cursor.y - top_line) * line_height);
-  cursor.width = char_width;
-  cursor.height = line_height;
-  cursor.bkgd = fill;
-  updated = true;
-  last_update = clock(); }
-
-void Panel::draw(image* frame, const viewport& view){}
-
-void Panel::draw_char(const image& img, const ipoint& buf_pos,
-    const ipoint& frame_pos){
-  image r = img;
-  // Draw to buffer
-  r.pos = point(buf_pos);
-  r.draw(&buf, view);
-  // Draw to frame
-  if(frame_pos.y < frame.height && frame_pos.y + line_height >= 0){
-    r.pos = point(frame_pos);
-    r.draw(&frame, view); } }
+  if(focus){
+    cursor.update(ms);
+    if(cursor.updated){
+      updated = true;
+      last_update = clock(); } } }
 
 void Panel::scale_font(const double factor, const umap<char, image>& font_base){
   text_scale *= factor;
@@ -105,6 +91,7 @@ void Panel::scale_font(const double factor, const umap<char, image>& font_base){
   cursor.scale(factor); }
 
 void Panel::insert_text(const vec<str>& ins, const ipoint& p){
+  // Modify text
   str tail = text[p.y].substr(p.x);
   text[p.y] = text[p.y].substr(0, p.x) + text[0];
   text.insert(text.begin() + p.y + 1, ins.begin() + 1, ins.end());
@@ -113,31 +100,32 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
 
   // Draw single character at end of line
   if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
-    draw_char(font[ins[0][0]], p,
-        ipoint(p.x * char_width + (int)round(pos.x),
-        (p.y - top_line) * line_height + (int)round(pos.y)),
-        text_color[p.y][p.x], fill);
+    draw_char(fonts[text_scale][bkgd][text_color[p.y][p.x]][ins[0][0]],
+        ipoint(p.x * char_width + pos.x,
+        (p.y - top_line) * line_height + pos.y));
     return; }
 
   // Draw single line without adding new lines
   if(ins.size() == 1){
     for(int x = p.x; x < text[p.y].size(); ++x)
-      draw_char(font[text[p.y][x]], ipoint(x, p.y);
-          ipoint(x * char_width + (int)round(pos.x),
-          (p.y - top_line) * line_height + (int)round(pos.y)),
-          text_color[p.y][x], fill);
+      draw_char(fonts[text_scale][bkgd][text_color[p.y][x]][text[p.y][x]],
+          ipoint(x * char_width + pos.x,
+          (p.y - top_line) * line_height + pos.y));
     return; }
 
-  // Split buffer with new lines
-  for(int i = 0; i < (ins.size() - 1) * line_height; ++i){
-    buf.data.pb(vec<color>());
-    buf.data.back().reserve(buf.width); }
-  for(int
-
-}
+  // Redraw panel if lines moved
+  draw(); }
 
 void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   if(p0.y == text.size() - 1 && p0.x == text[p0.y].size()) return;
+  // Draw over end of line
+  if(p0.y == pf.y)
+    for(int x = text[p0.y].size() - (pf.x - p0.x); x < text[p0.y].size; ++x)
+      draw_char(fonts[text_scale][bkgd][COLOR_CODE][' '],
+          ipoint(x * char_width + pos.x,
+          (p0.y - top_line) * line_height + pos.y));
+
+  // Remove from text
   ipoint pf2 = pf;
   if(pf.x == -1){
     --pf2.y;
@@ -151,12 +139,22 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
     line += text[pf2.y].substr(pf2.x + 1);
     text.erase(text.begin() + p0.y + 1, text.begin() + pf2.y + 1); }
   text[p0.y] = line;
-  // draw
+
+  // Draw chars after deletion
+  if(p0.y == pf.y){
+    for(int x = p0.x; x < text[p0.y].size(); ++x)
+      draw_char(fonts[text_scale][bkgd][text_color[p0.y][x]][text[p0.y][x]],
+          ipoint(x * char_width + pos.x,
+          (p0.y - top_line) * line_height + pos.y));
+    return;
   }
 
+  // Redraw panel if lines moved
+  draw(); }
+
 void Panel::delete_selection(){
-  Cursor& c = cursor;
   if(mark.y == -1) return;
+  Cursor& c = cursor;
   if(c.y < mark.y || (c.y == mark.y && c.x < mark.x))
     remove_text(c.y, c.x, mark.y, mark.x - 1);
   else if(c.y > mark.y || (c.y == mark.y && c.x > mark.x)){

@@ -12,6 +12,8 @@ struct ipoint : virtual thing {
   ipoint();
   ipoint(const int _x, const int _y);
 
+  bool operator==(const ipoint& o) const;
+
   virtual void validate(const str& func);
   virtual str to_str() const; };
 
@@ -20,6 +22,9 @@ ipoint::ipoint():
 
 ipoint::ipoint(const int _x, const int _y):
     x(_x), y(_y) {}
+
+bool ipoint::operator==(const ipoint& o) const {
+  return x == o.x && y == o.y; }
 
 void ipoint::validate(const str& func){}
 

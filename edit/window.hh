@@ -20,7 +20,6 @@ struct window : system {
   // void run()
   // void update(ms)
 
-  virtual void draw() = 0;
   virtual void resize(const ipoint& pos, const ipoint& _size) = 0;
   virtual void process_key(
       const str& key, const bool down, const ipoint& mouse) = 0; };
@@ -148,7 +147,6 @@ void _win_run(){
     DispatchMessage(&msg);
     double ms = (double)(clock() - _win->last_update) * 1000.0 / CLOCKS_PER_SEC;
     _win->update(ms);
-    _win->draw();
     InvalidateRect(_win->hwnd, NULL, FALSE); } }
 
 #endif
