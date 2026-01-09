@@ -10,34 +10,31 @@ void Editor::draw(){
   for(Panel& p : panels)
     p.draw();
   if(&cmd == focus)
-    cmd.draw(); }
+    cmd.draw();
+  else
+    for(int y = cmd.pos.y; y < cmd.pos.y + cmd.size.y; ++y)
+      for(int x = 0; x < cmd.size.x; ++x)
+        frame.data[y][x] = BKGD_COLOR; }
 
 void Panel::draw(){
   updated = false;
-debug(1);
   // Draw text
-  int yf = min(text.size() - 1, (int)ceil((double)size.y / line_height));
+  int yf = min((int)text.size() - 1, (int)ceil((double)size.y / line_height));
   draw_selection(ipoint(0, top_line), ipoint((int)text[yf].size() - 1, yf));
-debug(2);
   // Draw empty space after last line
   for(int y = pos.y + max(0, (yf - top_line) * line_height);
-      y < pos.y + min(size.y, (yf - top_line) * (line_height + 1)); ++y)
+      y < pos.y + min(size.y, (yf - top_line + 1) * line_height); ++y)
     for(int x = pos.x + (int)text[yf].size() * char_width;
         x < pos.x + size.x; ++x)
       frame->data[y][x] = bkgd;
-debug(3);
   // Draw past last line of text
   for(int y = pos.y + max(0, (yf + 1 - top_line) * line_height);
       y < pos.y + size.y; ++y)
     for(int x = pos.x; x < pos.x + size.x; ++x)
       frame->data[y][x] = bkgd;
-debug(4);
   // Draw divider and file bar
   draw_divider();
-debug(5);
-  draw_file_bar();
-debug(6);
-}
+  draw_file_bar(); }
 
 // Draw one character
 void Panel::draw_char(const image& img, const ipoint& p){
@@ -56,7 +53,6 @@ void Panel::draw_selection(const ipoint& p0, const ipoint& pf){
           ipoint(x * char_width + pos.x,
           (p0.y - top_line) * line_height + pos.y));
     return; }
-
   // Draw several lines
   for(int x = p0.x; x < text[p0.y].size(); ++x)
     draw_char(fonts[text_scale][b][text_color[p0.y][x]][text[p0.y][x]],
@@ -71,7 +67,6 @@ void Panel::draw_selection(const ipoint& p0, const ipoint& pf){
     draw_char(fonts[text_scale][b][text_color[pf.y][x]][text[pf.y][x]],
         ipoint(x * char_width + pos.x,
         (pf.y - top_line) * line_height + pos.y));
-
   // Draw empty space
   for(int y = p0.y; y < pf.y; ++y)
     for(int x = (int)text[y].size(); x <= PANEL_CHARS; ++x)
@@ -101,7 +96,7 @@ void Panel::draw_file_bar(){
   // Draw text
   for(int x = 0; x < bar_text.size(); ++x)
     draw_char(fonts[text_scale][cbkgd][BAR_TEXT_COLOR][bar_text[x]],
-        ipoint(pos.x, pos.y + size.y)); }
+        ipoint(pos.x + x * char_width, pos.y + size.y)); }
 
 // Handled by panel.update when in focus
 void Cursor::draw(const ipoint& win_pos){

@@ -37,7 +37,7 @@ void Cursor::update(const double ms){
   double sec = (double)(clock() - last_update) / CLOCKS_PER_SEC;
   if(sec >= CURSOR_BLINK){
     blink = !blink;
-    fill = blink ? CURSOR_COLOR : CLEAR;
+    fill = blink ? CURSOR_COLOR : bkgd;
     updated = true;
     last_update = clock(); } }
 

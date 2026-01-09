@@ -389,16 +389,20 @@ void Editor::proc_left_panel(){
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
   focus->draw_file_bar();
+  focus->focus = false;
   focus = &panels[(i == 0) ? panels.size() - 1 : i - 1];
-  focus->draw_file_bar(); }
+  focus->draw_file_bar();
+  focus->focus = true; }
 
 void Editor::proc_right_panel(){
   int i;
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
   focus->draw_file_bar();
+  focus->focus = false;
   focus = &panels[(i == panels.size() - 1) ? 0 : i + 1];
-  focus->draw_file_bar(); }
+  focus->draw_file_bar();
+  focus->focus = true; }
 
 void Editor::proc_split_horizontal(){
   Panel& p = *focus;
@@ -414,6 +418,8 @@ void Editor::proc_split_horizontal(){
   Panel& p3 = panels[i + 1];
   p3.pos = ipoint(p2.pos.x, p2.pos.y + p2.size.y + LINE_HEIGHT_SCALE_1);
   focus = &p3;
+  p2.focus = false;
+  p3.focus = true;
   p2.draw();
   p3.draw(); }
 
@@ -431,6 +437,8 @@ void Editor::proc_split_vertical(){
   Panel& p3 = panels[i + 1];
   p3.pos = ipoint(p2.pos.x + p2.size.x + VERTICAL_DIVIDE, p2.pos.y);
   focus = &p3;
+  p2.focus = false;
+  p3.focus = true;
   p2.draw();
   p3.draw(); }
 

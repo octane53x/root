@@ -88,7 +88,7 @@ void Editor::init(){
   panels.pb(Panel());
   Panel& p = panels.back();
   p.size = ipoint(size.x - VERTICAL_DIVIDE + WIDTH_OFFSET,
-      size.y - p.line_height * 2 + HEIGHT_OFFSET);
+      size.y - LINE_HEIGHT_SCALE_1 * 2 + HEIGHT_OFFSET);
   p.init();
   focus = &p;
 
@@ -212,7 +212,8 @@ void Editor::color_font(const double scale){
     cmbkgd[cb] = cmtext; }
 
   // File and command bar colors
-  bkgds = {CMD_BAR_COLOR, FOCUS_FILE_BAR_COLOR, UNFOCUS_FILE_BAR_COLOR};
+  bkgds = {CMD_BAR_COLOR, FOCUS_FILE_BAR_COLOR, UNFOCUS_FILE_BAR_COLOR,
+      CURSOR_COLOR};
   for(const color& cb : bkgds){
     umap<color, font> cmtext;
     font f;
@@ -220,6 +221,7 @@ void Editor::color_font(const double scale){
       f[c] = color_char(font_base[c], BAR_TEXT_COLOR, cb).scale(scale);
     cmtext[BAR_TEXT_COLOR] = f;
     cmbkgd[cb] = cmtext; }
+
   Panel::fonts[scale] = cmbkgd; }
 
 image Editor::color_char(const image& img, const color& ctext,

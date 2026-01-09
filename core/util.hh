@@ -70,6 +70,9 @@ void debug(const str& msg){
 void debug(const int n){
   debug(to_string(n)); }
 
+void debug(const double d){
+  debug(to_string(d)); }
+
 // Print debug ints
 void debug(const initializer_list<int>& ints){
   str msg = "";

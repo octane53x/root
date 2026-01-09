@@ -82,7 +82,8 @@ void Panel::update(const double ms){
       c.updated = false;
       char ch = (c.pos.x == text[c.pos.y].size())
           ? ' ' : text[c.pos.y][c.pos.x];
-      color tc = (ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x];
+      color tc = (c.fill == CURSOR_COLOR) ? BAR_TEXT_COLOR
+          : ((ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x]);
       draw_char(fonts[text_scale][c.fill][tc][ch], cpos);
       updated = true;
       last_update = clock(); }
