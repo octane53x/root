@@ -38,6 +38,8 @@ struct Panel : virtual system {
   void draw_divider();
   void draw_file_bar();
 
+  ipoint text_to_frame(const ipoint& p) const;
+
   void resize(const ipoint& _pos, const ipoint& _size);
   void insert_text(const vec<str>& ins, const ipoint& p);
   void remove_text(const ipoint& p0, const ipoint& pf);
@@ -73,21 +75,21 @@ void Panel::init(){
 void Panel::update(const double ms){
   system::update(ms);
   Cursor& c = cursor;
-  ipoint cpos = ipoint(c.pos.x * char_width + pos.x,
-      (c.pos.y - top_line) * line_height + pos.y);
-  if(focus){
-    c.update(ms);
-    if(c.updated){
-      c.updated = false;
-      char ch = (c.pos.x == text[c.pos.y].size())
-          ? ' ' : text[c.pos.y][c.pos.x];
-      color tc = (c.fill == CURSOR_COLOR) ? BAR_TEXT_COLOR
-          : ((ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x]);
-      draw_char(fonts[text_scale][c.fill][tc][ch], cpos);
-      updated = true;
-      last_update = clock(); }
-  }else if(!cmd)
-    c.draw(cpos); }
+  if(!focus) return;
+  c.update(ms);
+  if(!c.updated) return;
+  c.updated = false;
+  char ch = (c.pos.x == text[c.pos.y].size())
+      ? ' ' : text[c.pos.y][c.pos.x];
+  color tc = (c.fill == CURSOR_COLOR) ? BAR_TEXT_COLOR
+      : ((ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x]);
+  draw_char(fonts[text_scale][c.fill][tc][ch], text_to_frame(c.pos));
+  updated = true;
+  last_update = clock(); }
+
+ipoint Panel::text_to_frame(const ipoint& p) const {
+  return ipoint(p.x * char_width + pos.x,
+      (p.y - top_line) * line_height + pos.y); }
 
 void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   // Modify text
@@ -100,16 +102,14 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   // Draw single character at end of line
   if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
     draw_char(fonts[text_scale][bkgd][text_color[p.y][p.x]][ins[0][0]],
-        ipoint(p.x * char_width + pos.x,
-        (p.y - top_line) * line_height + pos.y));
+        text_to_frame(p));
     return; }
 
   // Draw single line without adding new lines
   if(ins.size() == 1){
     for(int x = p.x; x < text[p.y].size(); ++x)
       draw_char(fonts[text_scale][bkgd][text_color[p.y][x]][text[p.y][x]],
-          ipoint(x * char_width + pos.x,
-          (p.y - top_line) * line_height + pos.y));
+          text_to_frame(ipoint(x, p.y)));
     return; }
 
   // Redraw panel if lines moved
@@ -117,13 +117,14 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
 
 void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   if(p0.y == text.size() - 1 && p0.x == text[p0.y].size()) return;
+  bool endline = (p0.y == pf.y && p0.x == text[p0.y].size());
   // Draw over end of line
-  if(p0.y == pf.y)
-    for(int x = (int)text[p0.y].size() - (pf.x - p0.x);
-        x < text[p0.y].size(); ++x)
-      draw_char(fonts[text_scale][bkgd][COLOR_CODE][' '],
-          ipoint(x * char_width + pos.x,
-          (p0.y - top_line) * line_height + pos.y));
+  if(p0.y == pf.y && !endline){
+    color tc = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
+    for(int x = (int)text[p0.y].size() - (pf.x - p0.x + 1);
+        x <= text[p0.y].size(); ++x)
+      draw_char(fonts[text_scale][bkgd][tc][' '],
+          text_to_frame(ipoint(x, p0.y))); }
 
   // Remove from text
   ipoint pf2 = pf;
@@ -142,13 +143,11 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   highlight_text();
 
   // Draw chars after deletion
-  if(p0.y == pf.y){
+  if(p0.y == pf.y && !endline){
     for(int x = p0.x; x < text[p0.y].size(); ++x)
       draw_char(fonts[text_scale][bkgd][text_color[p0.y][x]][text[p0.y][x]],
-          ipoint(x * char_width + pos.x,
-          (p0.y - top_line) * line_height + pos.y));
-    return;
-  }
+          text_to_frame(ipoint(x, p0.y)));
+    return; }
 
   // Redraw panel if lines moved
   draw(); }
@@ -179,8 +178,7 @@ void Panel::move_cursor(const Dir d){
       || (c.pos.y == mark.y && c.pos.x < mark.x))) ? SELECT_COLOR : bkgd;
   char ch = (c.pos.x == text[c.pos.y].size()) ? ' ' : text[c.pos.y][c.pos.x];
   color ct = (ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x];
-  draw_char(fonts[text_scale][cb][ct][ch], ipoint(c.pos.x * char_width + pos.x,
-      (c.pos.y - top_line) * line_height + pos.y));
+  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(c.pos));
 
   switch(d){
   case UP:

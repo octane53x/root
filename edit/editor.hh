@@ -40,6 +40,7 @@ struct Editor : virtual window {
   image color_char(const image& img, const color& ctext, const color& cbkgd);
   void scale_font(const double factor);
   void clip();
+  void switch_panel(Panel* p);
 
   // Defined in input.hh
   bool parse_char(const str& key);
@@ -278,5 +279,24 @@ void Editor::clip(){
       clipboard.pb("");
       ++y0;
       x0 = 0; } } }
+
+void Editor::switch_panel(Panel* p){
+  Panel& p0 = *focus;
+  Cursor& c0 = p0.cursor;
+  c0.blink = false;
+  c0.fill = p0.bkgd;
+  char ch = (c0.pos.x == p0.text[c0.pos.y].size())
+      ? ' ' : p0.text[c0.pos.y][c0.pos.x];
+  color tc = (ch == ' ') ? COLOR_CODE : p0.text_color[c0.pos.y][c0.pos.x];
+  p0.draw_char(Panel::fonts[p0.text_scale][c0.fill][tc][ch],
+      p0.text_to_frame(c0.pos));
+  c0.draw(p0.text_to_frame(c0.pos));
+  p0.focus = false;
+  if(&p0 != &cmd && p != &cmd)
+    p0.draw_file_bar();
+  focus = p;
+  p->focus = true;
+  if(&p0 != &cmd && p != &cmd)
+    p->draw_file_bar(); }
 
 #endif

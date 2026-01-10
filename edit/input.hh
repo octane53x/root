@@ -225,9 +225,7 @@ void Editor::proc_enter(){
 void Editor::proc_escape(){
   Panel& p = *focus;
   if(&p != &cmd) return;
-  p.focus = false;
-  focus = prev_panel;
-  focus->focus = true;
+  switch_panel(prev_panel);
   for(int y = p.pos.y; y < p.pos.y + p.size.y; ++y)
     for(int x = p.pos.x; x < p.pos.x + p.size.x; ++x)
       frame.data[y][x] = BKGD_COLOR;
@@ -302,9 +300,7 @@ void Editor::proc_del_space(){
 void Editor::proc_open_file(){
   if(focus == &cmd) return;
   prev_panel = focus;
-  focus->focus = false;
-  focus = &cmd;
-  focus->focus = true;
+  switch_panel(&cmd);
   Panel& p = *focus;
   Cursor& c = p.cursor;
   p.draw();
@@ -399,21 +395,13 @@ void Editor::proc_left_panel(){
   int i;
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
-  focus->draw_file_bar();
-  focus->focus = false;
-  focus = &panels[(i == 0) ? panels.size() - 1 : i - 1];
-  focus->draw_file_bar();
-  focus->focus = true; }
+  switch_panel(&panels[(i == 0) ? panels.size() - 1 : i - 1]); }
 
 void Editor::proc_right_panel(){
   int i;
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
-  focus->draw_file_bar();
-  focus->focus = false;
-  focus = &panels[(i == panels.size() - 1) ? 0 : i + 1];
-  focus->draw_file_bar();
-  focus->focus = true; }
+  switch_panel(&panels[(i == panels.size() - 1) ? 0 : i + 1]); }
 
 void Editor::proc_split_horizontal(){
   Panel& p = *focus;
