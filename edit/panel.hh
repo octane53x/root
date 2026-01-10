@@ -172,6 +172,9 @@ void Panel::scroll(const Dir d){
 void Panel::move_cursor(const Dir d){
   Cursor& c = cursor;
   c.blink = true;
+  c.fill = CURSOR_COLOR;
+  c.updated = true;
+  c.last_update = clock();
 
   // Draw char at previous position
   color cb = (mark.y != -1 && (c.pos.y < mark.y
@@ -180,53 +183,59 @@ void Panel::move_cursor(const Dir d){
   color ct = (ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x];
   draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(c.pos));
 
+  // Move cursor
   switch(d){
   case UP:
     if(c.pos.y == 0){
       if(c.pos.x > 0)
         c.pos.x = 0;
-      return; }
+      break; }
     --c.pos.y;
     if(c.pos.x > text[c.pos.y].size())
       c.pos.x = (int)text[c.pos.y].size();
     if(c.pos.y < top_line)
       scroll(UP);
-    return;
+    break;
 
   case LEFT:
     if(c.pos.x == 0){
-      if(c.pos.y == 0) return;
+      if(c.pos.y == 0) break;
       --c.pos.y;
       c.pos.x = (int)text[c.pos.y].size();
       if(c.pos.y < top_line)
         scroll(UP);
     }else
       --c.pos.x;
-    return;
+    break;
 
   case DOWN:
     if(c.pos.y == text.size() - 1){
       if(c.pos.x < text[c.pos.y].size())
         c.pos.x = (int)text[c.pos.y].size();
-      return; }
+      break; }
     ++c.pos.y;
     if(c.pos.x > text[c.pos.y].size())
       c.pos.x = (int)text[c.pos.y].size();
     if(c.pos.y - top_line >= size.y / line_height - 1)
       scroll(DOWN);
-    return;
+    break;
 
   case RIGHT:
     if(c.pos.x == text[c.pos.y].size()){
-      if(c.pos.y == text.size() - 1) return;
+      if(c.pos.y == text.size() - 1) break;
       ++c.pos.y;
       c.pos.x = 0;
       if(c.pos.y - top_line >= size.y / line_height - 1)
         scroll(DOWN);
     }else
       ++c.pos.x;
-    return;
+    break;
   default:
-    err("move_cursor", "impossible direction"); } }
+    err("move_cursor", "impossible direction"); }
+
+  // Draw character and cursor
+  ch = (c.pos.x == text[c.pos.y].size()) ? ' ' : text[c.pos.y][c.pos.x];
+  draw_char(fonts[text_scale][c.fill][BAR_TEXT_COLOR][ch],
+      text_to_frame(c.pos)); }
 
 #endif

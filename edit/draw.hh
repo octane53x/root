@@ -19,7 +19,8 @@ void Editor::draw(){
 void Panel::draw(){
   updated = false;
   // Draw text
-  int yf = min((int)text.size() - 1, (int)ceil((double)size.y / line_height));
+  int yf = min((int)text.size() - 1,
+      top_line + (int)ceil((double)size.y / line_height));
   draw_selection(ipoint(0, top_line), ipoint((int)text[yf].size() - 1, yf));
   // Draw empty space after last line
   for(int y = pos.y + max(0, (yf - top_line) * line_height);
@@ -51,29 +52,26 @@ void Panel::draw_selection(const ipoint& p0, const ipoint& pf){
   if(p0.y == pf.y){
     for(int x = p0.x; x <= pf.x; ++x)
       draw_char(fonts[text_scale][b][text_color[p0.y][x]][text[p0.y][x]],
-          ipoint(x * char_width + pos.x,
-          (p0.y - top_line) * line_height + pos.y));
+          text_to_frame(ipoint(x, p0.y)));
     return; }
+
   // Draw several lines
   for(int x = p0.x; x < text[p0.y].size(); ++x)
     draw_char(fonts[text_scale][b][text_color[p0.y][x]][text[p0.y][x]],
-        ipoint(x * char_width + pos.x,
-        (p0.y - top_line) * line_height + pos.y));
+        text_to_frame(ipoint(x, p0.y)));
   for(int y = p0.y + 1; y <= pf.y - 1; ++y)
     for(int x = 0; x < text[y].size(); ++x)
       draw_char(fonts[text_scale][b][text_color[y][x]][text[y][x]],
-        ipoint(x * char_width + pos.x,
-        (y - top_line) * line_height + pos.y));
+          text_to_frame(ipoint(x, y)));
   for(int x = 0; x <= pf.x; ++x)
     draw_char(fonts[text_scale][b][text_color[pf.y][x]][text[pf.y][x]],
-        ipoint(x * char_width + pos.x,
-        (pf.y - top_line) * line_height + pos.y));
+        text_to_frame(ipoint(x, pf.y)));
+
   // Draw empty space
   for(int y = p0.y; y < pf.y; ++y)
     for(int x = (int)text[y].size(); x <= PANEL_CHARS; ++x)
       draw_char(fonts[text_scale][b][COLOR_CODE][' '],
-          ipoint(x * char_width + pos.x,
-          (y - top_line) * line_height + pos.y)); }
+          text_to_frame(ipoint(x, y))); }
 
 void Panel::draw_divider(){
   for(int y = pos.y; y < pos.y + size.y; ++y)

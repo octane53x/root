@@ -208,19 +208,26 @@ void Editor::proc_backspace(){
 void Editor::proc_enter(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
+  // Execute command
   if(&p == &cmd){
-    focus = prev_panel;
+    switch_panel(prev_panel);
     process_cmd(p.text[0]);
     p.text[0] = "";
-  }else{
-    p.insert_text(vec<str>({"", ""}), c.pos);
-    p.move_cursor(RIGHT);
-    int spaces = 0;
-    for(; spaces < p.text[c.pos.y - 1].size(); ++spaces)
-      if(p.text[c.pos.y - 1][spaces] != ' ') break;
-    for(int i = 0; i < spaces; ++i){
-      p.insert_text(vec<str>({" "}), c.pos);
-      p.move_cursor(RIGHT); } } }
+    c.pos = ipoint(0, 0);
+    focus->highlight_text();
+    focus->top_line = 0;
+    draw();
+    return; }
+
+  // Newline
+  p.insert_text(vec<str>({"", ""}), c.pos);
+  p.move_cursor(RIGHT);
+  int spaces = 0;
+  for(; spaces < p.text[c.pos.y - 1].size(); ++spaces)
+    if(p.text[c.pos.y - 1][spaces] != ' ') break;
+  for(int i = 0; i < spaces; ++i){
+    p.insert_text(vec<str>({" "}), c.pos);
+    p.move_cursor(RIGHT); } } }
 
 void Editor::proc_escape(){
   Panel& p = *focus;
@@ -300,12 +307,16 @@ void Editor::proc_del_space(){
 void Editor::proc_open_file(){
   if(focus == &cmd) return;
   prev_panel = focus;
+debug(1);
   switch_panel(&cmd);
   Panel& p = *focus;
   Cursor& c = p.cursor;
+debug(2);
   p.draw();
   str cwd = current_path().string();
+debug(3);
   p.insert_text({"Open: " + cwd.substr(0, cwd.find("\\root\\") + 6)}, c.pos);
+debug(4);
   c.pos.x = (int)p.text[0].size(); }
 
 void Editor::proc_set_mark(){
