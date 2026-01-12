@@ -3,8 +3,8 @@
 #ifndef WINDOW_HH
 #define WINDOW_HH
 
-#include "../gl/image.hh"
-#include "../os/win/util.hh"
+#include "../../gl/image.hh"
+#include "../../os/win/util.hh"
 
 struct window : system {
 

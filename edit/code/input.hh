@@ -227,7 +227,7 @@ void Editor::proc_enter(){
     if(p.text[c.pos.y - 1][spaces] != ' ') break;
   for(int i = 0; i < spaces; ++i){
     p.insert_text(vec<str>({" "}), c.pos);
-    p.move_cursor(RIGHT); } } }
+    p.move_cursor(RIGHT); } }
 
 void Editor::proc_escape(){
   Panel& p = *focus;
@@ -307,16 +307,12 @@ void Editor::proc_del_space(){
 void Editor::proc_open_file(){
   if(focus == &cmd) return;
   prev_panel = focus;
-debug(1);
   switch_panel(&cmd);
   Panel& p = *focus;
   Cursor& c = p.cursor;
-debug(2);
   p.draw();
   str cwd = current_path().string();
-debug(3);
   p.insert_text({"Open: " + cwd.substr(0, cwd.find("\\root\\") + 6)}, c.pos);
-debug(4);
   c.pos.x = (int)p.text[0].size(); }
 
 void Editor::proc_set_mark(){
@@ -328,8 +324,8 @@ void Editor::proc_set_mark(){
   ipoint p0 = (p.mark.y < c.pos.y
       || (p.mark.y == c.pos.y && p.mark.x < c.pos.x)) ? p.mark : c.pos;
   ipoint pf = (p.mark == p0) ? c.pos : p.mark;
-  p.draw_selection(p0, pf);
-  p.mark = ipoint(-1, -1); }
+  p.mark = ipoint(-1, -1);
+  p.draw_selection(p0, ipoint(pf.x - 1, pf.y)); }
 
 void Editor::proc_select_all(){
   Panel& p = *focus;

@@ -3,7 +3,7 @@
 #ifndef EDITOR_UTIL_HH
 #define EDITOR_UTIL_HH
 
-#include "../gl/image.hh"
+#include "../../gl/image.hh"
 
 typedef umap<char, image> font;
 
@@ -60,5 +60,10 @@ enum Dir { UP, LEFT, DOWN, RIGHT };
 bool name_or_val(const char c){
   return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
       || (c >= 'a' && c <= 'z') || c == '_'; }
+
+bool in_selection(const ipoint& p0, const ipoint& pf, const ipoint& p){
+  bool after_p0 = (p.y > p0.y || (p.y == p0.y && p.x >= p0.x));
+  bool before_pf = (p.y < pf.y || (p.y == pf.y && p.x <= pf.x));
+  return (after_p0 && before_pf); }
 
 #endif

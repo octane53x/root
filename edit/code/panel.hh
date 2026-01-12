@@ -50,7 +50,7 @@ struct Panel : virtual system {
   void highlight_text(); };
 
 image* Panel::frame;
-umap<double, umap<color, umap<color, umap<char, image> > > > Panel::fonts;
+umap<double, umap<color, umap<color, font> > > Panel::fonts;
 
 Panel::Panel():
     size(0, 0), pos(0, 0) {}
@@ -81,9 +81,11 @@ void Panel::update(const double ms){
   c.updated = false;
   char ch = (c.pos.x == text[c.pos.y].size())
       ? ' ' : text[c.pos.y][c.pos.x];
-  color tc = (c.fill == CURSOR_COLOR) ? BAR_TEXT_COLOR
+  color ct = (c.fill == CURSOR_COLOR || cmd) ? BAR_TEXT_COLOR
       : ((ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x]);
-  draw_char(fonts[text_scale][c.fill][tc][ch], text_to_frame(c.pos));
+  color cb = (c.fill == bkgd && mark.y != -1 && (c.pos.y < mark.y
+      || (c.pos.y == mark.y && c.pos.x < mark.x))) ? SELECT_COLOR : c.fill;
+  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(c.pos));
   updated = true;
   last_update = clock(); }
 
@@ -98,20 +100,17 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   text.insert(text.begin() + p.y + 1, ins.begin() + 1, ins.end());
   text[p.y + ins.size() - 1] += tail;
   highlight_text();
-
   // Draw single character at end of line
   if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
     draw_char(fonts[text_scale][bkgd][text_color[p.y][p.x]][ins[0][0]],
         text_to_frame(p));
     return; }
-
   // Draw single line without adding new lines
   if(ins.size() == 1){
     for(int x = p.x; x < text[p.y].size(); ++x)
       draw_char(fonts[text_scale][bkgd][text_color[p.y][x]][text[p.y][x]],
           text_to_frame(ipoint(x, p.y)));
     return; }
-
   // Redraw panel if lines moved
   draw(); }
 
@@ -148,7 +147,6 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
       draw_char(fonts[text_scale][bkgd][text_color[p0.y][x]][text[p0.y][x]],
           text_to_frame(ipoint(x, p0.y)));
     return; }
-
   // Redraw panel if lines moved
   draw(); }
 
@@ -175,13 +173,7 @@ void Panel::move_cursor(const Dir d){
   c.fill = CURSOR_COLOR;
   c.updated = true;
   c.last_update = clock();
-
-  // Draw char at previous position
-  color cb = (mark.y != -1 && (c.pos.y < mark.y
-      || (c.pos.y == mark.y && c.pos.x < mark.x))) ? SELECT_COLOR : bkgd;
-  char ch = (c.pos.x == text[c.pos.y].size()) ? ' ' : text[c.pos.y][c.pos.x];
-  color ct = (ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x];
-  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(c.pos));
+  ipoint cp = c.pos;
 
   // Move cursor
   switch(d){
@@ -232,6 +224,23 @@ void Panel::move_cursor(const Dir d){
     break;
   default:
     err("move_cursor", "impossible direction"); }
+
+  // Draw whole lines if mark is set
+  if(mark.y != -1 && c.pos.y != cp.y)
+    draw_selection((c.pos.y < cp.y) ? c.pos : cp,
+        (c.pos.y < cp.y) ? cp : c.pos);
+
+  // Draw char at previous position
+  color cb = bkgd;
+  if(mark.y != -1){
+    ipoint p0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
+        ? c.pos : mark;
+    ipoint pf = (c.pos == p0) ? mark : c.pos;
+    if(in_selection(p0, ipoint(pf.x - 1, pf.y), cp))
+      cb = SELECT_COLOR; }
+  char ch = (cp.x == text[cp.y].size()) ? ' ' : text[cp.y][cp.x];
+  color ct = (ch == ' ') ? COLOR_CODE : text_color[cp.y][cp.x];
+  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(cp));
 
   // Draw character and cursor
   ch = (c.pos.x == text[c.pos.y].size()) ? ' ' : text[c.pos.y][c.pos.x];

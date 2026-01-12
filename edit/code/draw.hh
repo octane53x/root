@@ -20,7 +20,7 @@ void Panel::draw(){
   updated = false;
   // Draw text
   int yf = min((int)text.size() - 1,
-      top_line + (int)ceil((double)size.y / line_height));
+      top_line + (int)ceil((double)size.y / line_height) - 1);
   draw_selection(ipoint(0, top_line), ipoint((int)text[yf].size() - 1, yf));
   // Draw empty space after last line
   for(int y = pos.y + max(0, (yf - top_line) * line_height);
@@ -47,30 +47,39 @@ void Panel::draw_char(const image& img, const ipoint& p){
       frame->data[yo][xo] = img.data[yi][xi]; }
 
 void Panel::draw_selection(const ipoint& p0, const ipoint& pf){
-  color b = (mark.y == -1) ? bkgd : SELECT_COLOR;
+  // Determine background color
+  //! wrong
+  Cursor& c = cursor;
+  ipoint mark0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x == mark.x))
+      ? c.pos : mark;
+  ipoint markf = (c.pos == mark0) ? mark : c.pos;
+  --markf.x;
+  color cb = (mark.y == -1 || !in_selection(mark0, markf, p0)
+      || !in_selection(mark0, markf, pf)) ? bkgd : SELECT_COLOR;
+
   // Draw single line
   if(p0.y == pf.y){
     for(int x = p0.x; x <= pf.x; ++x)
-      draw_char(fonts[text_scale][b][text_color[p0.y][x]][text[p0.y][x]],
+      draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
           text_to_frame(ipoint(x, p0.y)));
     return; }
 
   // Draw several lines
   for(int x = p0.x; x < text[p0.y].size(); ++x)
-    draw_char(fonts[text_scale][b][text_color[p0.y][x]][text[p0.y][x]],
+    draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
         text_to_frame(ipoint(x, p0.y)));
   for(int y = p0.y + 1; y <= pf.y - 1; ++y)
     for(int x = 0; x < text[y].size(); ++x)
-      draw_char(fonts[text_scale][b][text_color[y][x]][text[y][x]],
+      draw_char(fonts[text_scale][cb][text_color[y][x]][text[y][x]],
           text_to_frame(ipoint(x, y)));
-  for(int x = 0; x <= pf.x; ++x)
-    draw_char(fonts[text_scale][b][text_color[pf.y][x]][text[pf.y][x]],
+  for(int x = 0; x <= min((int)text[pf.y].size() - 1, pf.x); ++x)
+    draw_char(fonts[text_scale][cb][text_color[pf.y][x]][text[pf.y][x]],
         text_to_frame(ipoint(x, pf.y)));
 
   // Draw empty space
   for(int y = p0.y; y < pf.y; ++y)
     for(int x = (int)text[y].size(); x <= PANEL_CHARS; ++x)
-      draw_char(fonts[text_scale][b][COLOR_CODE][' '],
+      draw_char(fonts[text_scale][cb][COLOR_CODE][' '],
           text_to_frame(ipoint(x, y))); }
 
 void Panel::draw_divider(){
