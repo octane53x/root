@@ -100,30 +100,55 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   text.insert(text.begin() + p.y + 1, ins.begin() + 1, ins.end());
   text[p.y + ins.size() - 1] += tail;
   highlight_text();
+
+  // Determine selection
+  Cursor& c = cursor;
+  ipoint mark0, markf;
+  if(mark.y != -1){
+    mark0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
+        ? c.pos : mark;
+    markf = (mark0 == c.pos) ? mark : c.pos; }
+
   // Draw single character at end of line
   if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
-    draw_char(fonts[text_scale][bkgd][text_color[p.y][p.x]][ins[0][0]],
+    color cb = (mark.y != -1 && in_selection(mark0, markf, p))
+        ? SELECT_COLOR : bkgd;
+    draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
         text_to_frame(p));
     return; }
+
   // Draw single line without adding new lines
   if(ins.size() == 1){
-    for(int x = p.x; x < text[p.y].size(); ++x)
-      draw_char(fonts[text_scale][bkgd][text_color[p.y][x]][text[p.y][x]],
-          text_to_frame(ipoint(x, p.y)));
+    for(int x = p.x; x < text[p.y].size(); ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p.y)))
+          ? SELECT_COLOR : bkgd;
+      draw_char(fonts[text_scale][cb][text_color[p.y][x]][text[p.y][x]],
+          text_to_frame(ipoint(x, p.y))); }
     return; }
+
   // Redraw panel if lines moved
   draw(); }
 
 void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   if(p0.y == text.size() - 1 && p0.x == text[p0.y].size()) return;
   bool endline = (p0.y == pf.y && p0.x == text[p0.y].size());
+  // Determine selection
+  Cursor& c = cursor;
+  ipoint mark0, markf;
+  if(mark.y != -1){
+    mark0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
+        ? c.pos : mark;
+    markf = (mark0 == c.pos) ? mark : c.pos; }
+
   // Draw over end of line
   if(p0.y == pf.y && !endline){
     color tc = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
     for(int x = (int)text[p0.y].size() - (pf.x - p0.x + 1);
-        x <= text[p0.y].size(); ++x)
-      draw_char(fonts[text_scale][bkgd][tc][' '],
-          text_to_frame(ipoint(x, p0.y))); }
+        x <= text[p0.y].size(); ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
+          ? SELECT_COLOR : bkgd;
+      draw_char(fonts[text_scale][cb][tc][' '],
+          text_to_frame(ipoint(x, p0.y))); } }
 
   // Remove from text
   ipoint pf2 = pf;
@@ -143,22 +168,27 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
 
   // Draw chars after deletion
   if(p0.y == pf.y && !endline){
-    for(int x = p0.x; x < text[p0.y].size(); ++x)
-      draw_char(fonts[text_scale][bkgd][text_color[p0.y][x]][text[p0.y][x]],
-          text_to_frame(ipoint(x, p0.y)));
+    for(int x = p0.x; x < text[p0.y].size(); ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
+          ? SELECT_COLOR : bkgd;
+      draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
+          text_to_frame(ipoint(x, p0.y))); }
     return; }
+
   // Redraw panel if lines moved
   draw(); }
 
 void Panel::delete_selection(){
   if(mark.y == -1) return;
   Cursor& c = cursor;
-  if(c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
-    remove_text(c.pos, ipoint(mark.x - 1, mark.y));
-  else if(c.pos.y > mark.y || (c.pos.y == mark.y && c.pos.x > mark.x)){
-    remove_text(mark, ipoint(c.pos.x - 1, c.pos.y));
-    c.pos.y = mark.y, c.pos.x = mark.x; }
-  mark.y = mark.x = -1; }
+  ipoint p0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
+      ? c.pos : mark;
+  ipoint pf = (c.pos == p0) ? mark : c.pos;
+  remove_text(p0, ipoint(pf.x - 1, pf.y));
+  if(c.pos == pf)
+    c.pos = p0;
+  mark = ipoint(-1, -1);
+  draw(); }
 
 void Panel::scroll(const Dir d){
   int lines = min((int)text.size() - top_line - 1, scroll_lines);
@@ -226,9 +256,12 @@ void Panel::move_cursor(const Dir d){
     err("move_cursor", "impossible direction"); }
 
   // Draw whole lines if mark is set
-  if(mark.y != -1 && c.pos.y != cp.y)
-    draw_selection((c.pos.y < cp.y) ? c.pos : cp,
-        (c.pos.y < cp.y) ? cp : c.pos);
+  if(mark.y != -1 && (c.pos.y != cp.y
+      || (c.pos.y == cp.y && abs(c.pos.x - cp.x) > 1))){
+    ipoint p0 = (c.pos.y < cp.y || (c.pos.y == cp.y && c.pos.x < cp.x))
+        ? c.pos : cp;
+    ipoint pf = (c.pos == p0) ? cp : c.pos;
+    draw_selection(p0, pf); }
 
   // Draw char at previous position
   color cb = bkgd;

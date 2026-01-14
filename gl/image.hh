@@ -10,12 +10,12 @@
 struct image : virtual object {
 
   // Image size
-  int width, height;
-  // Pixel data, height by width, (0,0) Top-left
+  ipoint size;
+  // Pixel data, size.y by width, (0,0) Top-left
   vec<vec<color> > data;
 
   image();
-  image(const int w, const int h);
+  image(const ipoint& sz);
 
   image& operator=(const image& o);
 
@@ -24,8 +24,8 @@ struct image : virtual object {
 
   bool empty() const;
 
-  void set_size(const int w, const int h);
-  void set_pixel(const int x, const int y, const color& c);
+  void set_size(const ipoint& sz);
+  void set_pixel(const ipoint& p, const color& c);
   void fix(const color& c);
   void fill(const color& c);
   void replace(const color& src, const color& dest);
@@ -36,26 +36,26 @@ struct image : virtual object {
   image flip(const uvec& axis) const; };
 
 // Set default member state
-image::image(): width(0), height(0) {
-  type = "image"; }
+image::image(){
+  type = "image";
+  size = ipoint(0, 0); }
 
 // Construct at a certain size
-image::image(const int w, const int h){
-  set_size(w, h); }
+image::image(const ipoint& sz){
+  set_size(sz); }
 
 // Assignment operator
 image& image::operator=(const image& o){
-  pos = o.pos;
-  width = o.width, height = o.height, data = o.data;
+  pos = o.pos, size = o.size, data = o.data;
   validate("image.operator=");
   return *this; }
 
 // Ensure valid state
 void image::validate(const str& func){
   object::validate(func);
-  assert(!(data.empty() && (width > 0 || height > 0)), func,
+  assert(!(data.empty() && (size.x > 0 || size.y > 0)), func,
       "image empty but positive size");
-  assert(!(!data.empty() && (width <= 0 || height <= 0)), func,
+  assert(!(!data.empty() && (size.x <= 0 || size.y <= 0)), func,
       "image not empty but size not positive"); }
 
 // Draw onto an image
@@ -64,14 +64,14 @@ void image::draw(image* canvas, const viewport& view){
   image img = scale(ratio);
   img.pos = view.translate_out(pos);
   // If image outside the viewport, don't bother iterating pixels
-  if(img.pos.y + img.height < 0 || img.pos.y > canvas->height
-      || img.pos.x + img.width < 0 || img.pos.x > canvas->width) return;
+  if(img.pos.y + img.size.y < 0 || img.pos.y > canvas->size.y
+      || img.pos.x + img.size.x < 0 || img.pos.x > canvas->size.x) return;
   // Otherwise draw all valid pixels
   for(int y = max(0, (int)round(pos.y)), yt = max(0, -(int)round(pos.y));
-      y < min(canvas->height, (int)round(pos.y)+height); ++y, ++yt)
+      y < min(canvas->size.y, (int)round(pos.y)+size.y); ++y, ++yt)
     for(int x = max(0, (int)round(pos.x)), xt = max(0, -(int)round(pos.x));
-        x < min(canvas->width, (int)round(pos.x)+width); ++x, ++xt)
-      canvas->set_pixel(x, y, img.data[yt][xt]);
+        x < min(canvas->size.x, (int)round(pos.x)+size.x); ++x, ++xt)
+      canvas->set_pixel(ipoint(x, y), img.data[yt][xt]);
   validate("image.draw"); }
 
 // True if no pixels stored
@@ -79,52 +79,52 @@ bool image::empty() const {
   return data.empty(); }
 
 // Clears contents and sets to a certain size with default pixel color
-void image::set_size(const int w, const int h){
-  assert(w > 0 && h > 0, "image.set_size",
-      "image.setsize width/height params must be positive");
-  width = w, height = h;
+void image::set_size(const ipoint& sz){
+  assert(sz.x > 0 && sz.y > 0, "image.set_size",
+      "image.setsize size.x/size.y params must be positive");
+  size = sz;
   data.clear();
-  for(int i = 0; i < height; ++i){
+  for(int i = 0; i < size.y; ++i){
     data.pb(vec<color>());
-    data[i].reserve(width);
-    for(int j = 0; j < width; ++j)
+    data[i].reserve(size.x);
+    for(int j = 0; j < size.x; ++j)
       data[i].pb(DEFAULT_COLOR); }
   validate("image.set_size"); }
 
 // Set pixel at (x,y) to color
-inline void image::set_pixel(const int x, const int y, const color& c){
+inline void image::set_pixel(const ipoint& p, const color& c){
   if(c == CLEAR) return;
   if(c != CLEAR_PEN){
-    if(x >= 0 && x < width && y >= 0 && y < height)
-      data[y][x] = c;
+    if(p.x >= 0 && p.x < size.x && p.y >= 0 && p.y < size.y)
+      data[p.y][p.x] = c;
     return;
-  }else if(x >= 0 && x < width && y >= 0 && y < height)
-    data[y][x] = CLEAR; }
+  }else if(p.x >= 0 && p.x < size.x && p.y >= 0 && p.y < size.y)
+    data[p.y][p.x] = CLEAR; }
 
 // Delete margins of color
 void image::fix(const color& c){
   int left,right,top,bot;
-  for(int i = 0; i < width; ++i){
+  for(int i = 0; i < size.x; ++i){
     bool found = false;
-    for(int j = 0; j < height; ++j)
+    for(int j = 0; j < size.y; ++j)
       if(data[j][i] != c){ found = true; break; }
     if(found){ left = i; break; } }
-  for(int i = width-1; i >= 0; --i){
+  for(int i = size.x-1; i >= 0; --i){
     bool found = false;
-    for(int j = 0; j < height; ++j)
+    for(int j = 0; j < size.y; ++j)
       if(data[j][i] != c){ found = true; break; }
     if(found){ right = i; break; } }
-  for(int j = 0; j < height; ++j){
+  for(int j = 0; j < size.y; ++j){
     bool found = false;
-    for(int i = 0; i < width; ++i)
+    for(int i = 0; i < size.x; ++i)
       if(data[j][i] != c){ found = true; break; }
     if(found){ top = j; break; } }
-  for(int j = height-1; j >= 0; --j){
+  for(int j = size.y-1; j >= 0; --j){
     bool found = false;
-    for(int i = 0; i < width; ++i)
+    for(int i = 0; i < size.x; ++i)
       if(data[j][i] != c){ found = true; break; }
     if(found){ bot = j; break; } }
-  image r(right-left+1, bot-top+1);
+  image r(ipoint(right-left+1, bot-top+1));
   for(int i = top; i <= bot; ++i)
     for(int j = left; j <= right; ++j)
       r.data[i-top][j-left] = data[i][j];
@@ -133,22 +133,22 @@ void image::fix(const color& c){
 
 // Fill the image with one color
 void image::fill(const color& c){
-  for(int y = 0; y < height; ++y)
-    for(int x = 0; x < width; ++x)
+  for(int y = 0; y < size.y; ++y)
+    for(int x = 0; x < size.x; ++x)
       data[y][x] = c; }
 
 // Replace all pixels of src color with dest color
 void image::replace(const color& src, const color& dest){
-  for(int y = 0; y < height; ++y)
-    for(int x = 0; x < width; ++x)
+  for(int y = 0; y < size.y; ++y)
+    for(int x = 0; x < size.x; ++x)
       if(data[y][x] == src)
         data[y][x] = dest;
   validate("image.replace"); }
 
 // Replace all pixels that are not src color with dest color
 void image::replace_except(const color& src, const color& dest){
-  for(int y = 0; y < height; ++y)
-    for(int x = 0; x < width; ++x)
+  for(int y = 0; y < size.y; ++y)
+    for(int x = 0; x < size.x; ++x)
       if(data[y][x] != src)
         data[y][x] = dest;
   validate("image.replace_except"); }
@@ -156,14 +156,14 @@ void image::replace_except(const color& src, const color& dest){
 // Return a scaled image. Does not modify current image
 image image::scale(const double s) const {
   if(deq(s, 1.0)) return *this;
-  image ret((int)ceil(s * width), (int)ceil(s * height));
+  image ret(ipoint((int)ceil(s * size.x), (int)ceil(s * size.y)));
 
   // Enlarge image
   if(s > 1.0){
     double ys = 0.0;
-    for(int yo = 0, yi = 0; yo < ret.height; ++yo){
+    for(int yo = 0, yi = 0; yo < ret.size.y; ++yo){
       double xs = 0.0;
-      for(int xo = 0, xi = 0; xo < ret.width; ++xo){
+      for(int xo = 0, xi = 0; xo < ret.size.x; ++xo){
         if(dgeq(xs, s)){
           xs -= s;
           ++xi; }
@@ -178,10 +178,10 @@ image image::scale(const double s) const {
   }else{
     double ys = 0.0;
     int yo = 0;
-    for(int yi = 0; yo < ret.height && yi < data.size(); ++yo){
+    for(int yi = 0; yo < ret.size.y && yi < data.size(); ++yo){
       double xs = 0.0;
       int xo = 0;
-      for(int xi = 0; xo < ret.width && xi < data[yi].size(); ++xo){
+      for(int xi = 0; xo < ret.size.x && xi < data[yi].size(); ++xo){
         // Average the input pixel colors
         int r = 0, g = 0, b = 0, custom = 0, c = 0;
         color special;
@@ -204,14 +204,14 @@ image image::scale(const double s) const {
           xs += s;
           ++xi; }
         xs -= 1.0; }
-      if(xo < ret.width)
+      if(xo < ret.size.x)
         ret.data[yo][xo] = ret.data[yo][xo - 1];
       while(dlt(ys, 1.0)){
         ys += s;
         ++yi; }
       ys -= 1.0; }
-    if(yo < ret.height)
-      for(int x = 0; x < ret.width; ++x)
+    if(yo < ret.size.y)
+      for(int x = 0; x < ret.size.x; ++x)
         ret.data[yo][x] = ret.data[yo - 1][x]; }
 
   ret.pos = pos;
@@ -220,14 +220,14 @@ image image::scale(const double s) const {
 
 // Rotate an image by a given degree < 360
 image image::rotate(const double deg) const {
-  image r(width, height);
+  image r(size);
   //! rotate
   r.validate("image.rotate");
   return r; }
 
 // Flip an image over an axis
 image image::flip(const uvec& axis) const {
-  image r(width, height);
+  image r(size);
   //! flip
   r.validate("image.flip");
   return r; }

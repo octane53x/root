@@ -220,6 +220,7 @@ void Editor::proc_enter(){
     return; }
 
   // Newline
+  p.delete_selection();
   p.insert_text(vec<str>({"", ""}), c.pos);
   p.move_cursor(RIGHT);
   int spaces = 0;
@@ -246,6 +247,8 @@ void Editor::proc_ctrl_move(const Dir d){
     p.move_cursor(UP);
     while(c.pos.y > 0 && p.text[c.pos.y] != "")
       p.move_cursor(UP);
+    while(c.pos.x > 0)
+      p.move_cursor(LEFT);
   }else if(d == LEFT){
     while(!(c.pos.y == 0 && c.pos.x == 0)
         && !name_or_val(p.text[c.pos.y][c.pos.x]))
@@ -257,6 +260,8 @@ void Editor::proc_ctrl_move(const Dir d){
     p.move_cursor(DOWN);
     while(c.pos.y < p.text.size() - 1 && p.text[c.pos.y] != "")
       p.move_cursor(DOWN);
+    while(c.pos.x < p.text[c.pos.y].size())
+      p.move_cursor(RIGHT);
   }else if(d == RIGHT){
     while(!(c.pos.y == p.text.size() - 1 && c.pos.x == p.text[c.pos.y].size())
         && !name_or_val(p.text[c.pos.y][c.pos.x]))
@@ -330,10 +335,9 @@ void Editor::proc_set_mark(){
 void Editor::proc_select_all(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  p.mark.y = (int)p.text.size() - 1, p.mark.x = (int)p.text.back().size();
+  p.mark = ipoint((int)p.text.back().size(), (int)p.text.size() - 1);
   c.pos = ipoint(0, 0);
-  while(p.top_line != 0)
-    p.scroll(DOWN);
+  p.top_line = 0;
   p.draw(); }
 
 void Editor::proc_indent_selection(){
@@ -363,9 +367,14 @@ void Editor::proc_copy(){
   Cursor& c = p.cursor;
   if(p.mark.y == -1) return;
   clip();
-  ipoint p0 = (p.mark.y < c.pos.y
-      || (p.mark.y == c.pos.y && p.mark.x < c.pos.x)) ? p.mark : c.pos;
-  ipoint pf = (p.mark == p0) ? c.pos : p.mark;
+  ipoint p0, pf;
+  if(p.mark.y < c.pos.y || (p.mark.y == c.pos.y && p.mark.x < c.pos.x)){
+    p0 = p.mark;
+    pf = c.pos;
+  }else{
+    p0 = c.pos;
+    pf = c.pos = p.mark; }
+  --pf.x;
   p.mark = ipoint(-1, -1);
   p.draw_selection(p0, pf); }
 
@@ -378,7 +387,9 @@ void Editor::proc_paste(){
   if(clipboard.size() == 1)
     c.pos.x += (int)clipboard.back().size();
   else
-    c.pos.x = (int)clipboard.back().size(); }
+    c.pos.x = (int)clipboard.back().size();
+  while(c.pos.y > p.top_line + p.size.y / p.line_height)
+    p.scroll(DOWN); }
 
 void Editor::proc_move_max(const Dir d){
   Panel& p = *focus;

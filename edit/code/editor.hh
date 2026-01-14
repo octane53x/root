@@ -15,6 +15,7 @@
 struct Editor : virtual window {
 
   bool shift, ctrl, alt;
+  ipoint frame_size;
   vec<str> clipboard;
   font font_base;
   Panel cmd, info, *focus, *prev_panel;
@@ -79,22 +80,22 @@ void Editor::init(){
   // Window init
   RECT rect;
   SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
-  size = ipoint(2 * (PANEL_CHARS * CHAR_WIDTH_SCALE_1)
-      + VERTICAL_DIVIDE + PANEL_OFFSET, rect.bottom - rect.top);
-  win_pos = ipoint(rect.right - size.x, 0);
-  size.x += WINDOW_OFFSET;
-  size.y += WINDOW_OFFSET;
+  frame_size = ipoint(2 * ((PANEL_CHARS * CHAR_WIDTH_SCALE_1)
+      + VERTICAL_DIVIDE), rect.bottom - rect.top + FRAME_HEIGHT_OFFSET);
+  size = ipoint(frame_size.x + WIN_WIDTH_OFFSET,
+      frame_size.y + WIN_HEIGHT_OFFSET);
+  win_pos = ipoint(rect.right - size.x + WIN_XPOS_OFFSET, 0);
 
   // Initial panel
   panels.pb(Panel());
   Panel& p = panels.back();
-  p.size = ipoint(size.x - VERTICAL_DIVIDE + WIDTH_OFFSET,
-      size.y - LINE_HEIGHT_SCALE_1 * 2 + HEIGHT_OFFSET);
+  p.size = ipoint(frame_size.x - VERTICAL_DIVIDE,
+      frame_size.y - 2 * LINE_HEIGHT_SCALE_1);
   p.init();
   focus = &p;
 
   // Command bar
-  cmd.size = ipoint(size.x, LINE_HEIGHT_SCALE_1);
+  cmd.size = ipoint(frame_size.x, LINE_HEIGHT_SCALE_1);
   cmd.pos = ipoint(0, p.size.y + p.line_height);
   cmd.init();
   cmd.cmd = true;
@@ -106,7 +107,7 @@ void Editor::init(){
   color_font(1.0);
 
   // Display frame
-  frame.set_size(size.x, size.y);
+  frame.set_size(frame_size);
   draw(); }
 
 void Editor::run(){
@@ -131,22 +132,25 @@ void Editor::update(const double ms){
   if(updated)
     last_update = clock(); }
 
+//! probably needs to consider offsets
+//! frame_size
 void Editor::resize(const ipoint& npos, const ipoint& nsize){
-  if(nsize.x == size.x && nsize.y == size.y){
-    win_pos = npos;
-    return; }
-  frame.set_size(npos.x, npos.y);
-  for(int y = 0; y < npos.y; ++y)
-    for(int x = 0; x < npos.x; ++x)
-      frame.data[y][x] = BKGD_COLOR;
-  double xr = (double)nsize.x / size.x;
-  double yr = (double)nsize.y / size.y;
-  for(Panel& p : panels){
-    p.pos.x = (int)round(p.pos.x * xr);
-    p.pos.y = (int)round(p.pos.y * yr);
-    p.size.x = (int)round(xr * p.size.x);
-    p.size.y = (int)round(yr * p.size.y); }
-  win_pos = npos, size = nsize; }
+  // if(nsize.x == size.x && nsize.y == size.y){
+  //   win_pos = npos;
+  //   return; }
+  // frame.set_size(npos);
+  // for(int y = 0; y < npos.y; ++y)
+  //   for(int x = 0; x < npos.x; ++x)
+  //     frame.data[y][x] = BKGD_COLOR;
+  // double xr = (double)nsize.x / size.x;
+  // double yr = (double)nsize.y / size.y;
+  // for(Panel& p : panels){
+  //   p.pos.x = (int)round(p.pos.x * xr);
+  //   p.pos.y = (int)round(p.pos.y * yr);
+  //   p.size.x = (int)round(xr * p.size.x);
+  //   p.size.y = (int)round(yr * p.size.y); }
+  // win_pos = npos, size = nsize;
+}
 
 void Editor::load_font(){
   // Load the font PNG with libpng
@@ -188,20 +192,20 @@ void Editor::load_font(){
 
   // Create the image from buffer
   image font_img;
-  font_img.set_size(size.x, size.y);
+  font_img.set_size(ipoint(w, h));
   for(int y = 0; y < h; ++y)
     for(int x = 0; x < w; ++x)
-      font_img.set_pixel(x, y, color(
+      font_img.set_pixel(ipoint(x, y), color(
           image_data[y * w * 4 + x * 4],
           image_data[y * w * 4 + x * 4 + 1],
           image_data[y * w * 4 + x * 4 + 2]));
 
   // Split characters from image
   for(int i = 0; i < _SYMBOLS.size(); ++i){
-    image c(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1);
-    for(int xi = i * c.width, xo = 0; xo < c.width; ++xi, ++xo)
-      for(int y = 0; y < c.height; ++y)
-        c.set_pixel(xo, y, font_img.data[y][xi]);
+    image c(ipoint(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1));
+    for(int xi = i * c.size.x, xo = 0; xo < c.size.x; ++xi, ++xo)
+      for(int y = 0; y < c.size.y; ++y)
+        c.set_pixel(ipoint(xo, y), font_img.data[y][xi]);
     font_base[_SYMBOLS[i]] = c; } }
 
 void Editor::color_font(const double scale){
@@ -234,8 +238,8 @@ void Editor::color_font(const double scale){
 image Editor::color_char(const image& img, const color& ctext,
     const color& cbkgd){
   image r = img;
-  for(int y = 0; y < img.height; ++y)
-    for(int x = 0; x < img.width; ++x){
+  for(int y = 0; y < img.size.y; ++y)
+    for(int x = 0; x < img.size.x; ++x){
       color ci = img.data[y][x];
       double brt = (double)((int)ci.r + ci.g + ci.b) / (255 * 3);
       color co;
@@ -274,8 +278,8 @@ void Editor::clip(){
   while(y0 < yf || (y0 == yf && x0 <= xf)){
     if(x0 < p.text[y0].size()){
       clipboard.back() += str(1, p.text[y0][x0]);
-      ++x0; }
-    if(x0 == p.text[y0].size()){
+      ++x0;
+    }else if(x0 == p.text[y0].size()){
       clipboard.pb("");
       ++y0;
       x0 = 0; } } }

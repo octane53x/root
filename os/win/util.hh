@@ -28,29 +28,29 @@ image load_bmp(str dir){
   BITMAP b;
   GetObject(hbmp, sizeof(BITMAP), &b);
   int w = b.bmWidth, h = b.bmHeight;
-  image img(w, h);
+  image img(ipoint(w, h));
   int area = w * h;
   for(int k = 0; k < area * 3; k += 3){
     int i = (k / 3) / w;
     int j = (k / 3) % w;
-    img.set_pixel(j, h-i-1, color(((uchar*)b.bmBits)[k],
+    img.set_pixel(ipoint(j, h-i-1), color(((uchar*)b.bmBits)[k],
         ((uchar*)b.bmBits)[k+1], ((uchar*)b.bmBits)[k+2])); }
   return img; }
 
 // Convert image object to bitmap file
 //! Saves it upside down
 void save_bmp(image f, str file){
-  for(int i = 0; i < f.height; ++i)
-    for(int j = 0; j < f.width; ++j)
-      bmp_data[i * f.width + j] = ((ui)f.data[i][j].r << 16)
+  for(int i = 0; i < f.size.y; ++i)
+    for(int j = 0; j < f.size.x; ++j)
+      bmp_data[i * f.size.x + j] = ((ui)f.data[i][j].r << 16)
           | ((ui)f.data[i][j].g << 8) | f.data[i][j].b;
   BITMAPINFOHEADER ih;
   ih.biSize = sizeof(BITMAPINFOHEADER);
   ih.biBitCount = 32;
   ih.biPlanes = 1;
   ih.biCompression = BI_RGB;
-  ih.biWidth = f.width;
-  ih.biHeight = f.height;
+  ih.biWidth = f.size.x;
+  ih.biHeight = f.size.y;
   ih.biSizeImage = ((((ih.biWidth * ih.biBitCount) + 31) & ~31) >> 3)
       * ih.biHeight;
   BITMAPFILEHEADER fh;
@@ -71,10 +71,10 @@ void save_bmp(image f, str file){
 
 // Convert image object to Windows bitmap
 HBITMAP image_to_bmp(HDC hdc, image* f){
-  for(int i = 0; i < f->height; ++i)
-    for(int j = 0; j < f->width; ++j)
-      bmp_data[i * f->width + j] = ((ui)f->data[i][j].r << 16)
+  for(int i = 0; i < f->size.y; ++i)
+    for(int j = 0; j < f->size.x; ++j)
+      bmp_data[i * f->size.x + j] = ((ui)f->data[i][j].r << 16)
           | ((ui)f->data[i][j].g << 8) | f->data[i][j].b;
-  return CreateBitmap(f->width, f->height, 1, 32, bmp_data); }
+  return CreateBitmap(f->size.x, f->size.y, 1, 32, bmp_data); }
 
 #endif

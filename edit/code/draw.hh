@@ -41,46 +41,60 @@ void Panel::draw(){
 // Draw one character
 void Panel::draw_char(const image& img, const ipoint& p){
   for(int yo = max(0, p.y), yi = max(0, -p.y);
-      yo < frame->height && yi < img.height; ++yo, ++yi)
+      yo < frame->size.y && yi < img.size.y; ++yo, ++yi)
     for(int xo = max(0, p.x), xi = max(0, -p.x);
-        xo < frame->width && xi < img.width; ++xo, ++xi)
+        xo < frame->size.x && xi < img.size.x; ++xo, ++xi)
       frame->data[yo][xo] = img.data[yi][xi]; }
 
 void Panel::draw_selection(const ipoint& p0, const ipoint& pf){
-  // Determine background color
-  //! wrong
   Cursor& c = cursor;
-  ipoint mark0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x == mark.x))
-      ? c.pos : mark;
-  ipoint markf = (c.pos == mark0) ? mark : c.pos;
-  --markf.x;
-  color cb = (mark.y == -1 || !in_selection(mark0, markf, p0)
-      || !in_selection(mark0, markf, pf)) ? bkgd : SELECT_COLOR;
+  // Draw whole panel if selection clears past text
+  if(pf.y >= text.size()){
+    draw();
+    return; }
+
+  // Find selection to determine background color
+  ipoint mark0, markf;
+  if(mark.y != -1){
+    mark0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
+        ? c.pos : mark;
+    markf = (c.pos == mark0) ? mark : c.pos;
+    --markf.x; }
 
   // Draw single line
   if(p0.y == pf.y){
-    for(int x = p0.x; x <= pf.x; ++x)
+    for(int x = p0.x; x <= pf.x; ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
+          ? SELECT_COLOR : bkgd;
       draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
-          text_to_frame(ipoint(x, p0.y)));
+          text_to_frame(ipoint(x, p0.y))); }
     return; }
 
   // Draw several lines
-  for(int x = p0.x; x < text[p0.y].size(); ++x)
+  for(int x = p0.x; x < text[p0.y].size(); ++x){
+    color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
+        ? SELECT_COLOR : bkgd;
     draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
-        text_to_frame(ipoint(x, p0.y)));
+        text_to_frame(ipoint(x, p0.y))); }
   for(int y = p0.y + 1; y <= pf.y - 1; ++y)
-    for(int x = 0; x < text[y].size(); ++x)
+    for(int x = 0; x < text[y].size(); ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, y)))
+          ? SELECT_COLOR : bkgd;
       draw_char(fonts[text_scale][cb][text_color[y][x]][text[y][x]],
-          text_to_frame(ipoint(x, y)));
-  for(int x = 0; x <= min((int)text[pf.y].size() - 1, pf.x); ++x)
+          text_to_frame(ipoint(x, y))); }
+  for(int x = 0; x <= min((int)text[pf.y].size() - 1, pf.x); ++x){
+    color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, pf.y)))
+        ? SELECT_COLOR : bkgd;
     draw_char(fonts[text_scale][cb][text_color[pf.y][x]][text[pf.y][x]],
-        text_to_frame(ipoint(x, pf.y)));
+        text_to_frame(ipoint(x, pf.y))); }
 
   // Draw empty space
   for(int y = p0.y; y < pf.y; ++y)
-    for(int x = (int)text[y].size(); x <= PANEL_CHARS; ++x)
+    for(int x = (int)text[y].size(); x <= PANEL_CHARS; ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, y)))
+          ? SELECT_COLOR : bkgd;
       draw_char(fonts[text_scale][cb][COLOR_CODE][' '],
-          text_to_frame(ipoint(x, y))); }
+          text_to_frame(ipoint(x, y))); } }
 
 void Panel::draw_divider(){
   for(int y = pos.y; y < pos.y + size.y; ++y)
