@@ -34,7 +34,8 @@ void Panel::draw(){
       y < pos.y + size.y; ++y)
     for(int x = pos.x; x < pos.x + size.x; ++x)
       frame->data[y][x] = bkgd;
-  // Draw divider and file bar
+  // Draw cursor, divider, and file bar
+  cursor.draw(text_to_frame(cursor.pos));
   draw_divider();
   draw_file_bar(); }
 

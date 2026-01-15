@@ -440,9 +440,10 @@ void Editor::proc_split_horizontal(){
   Panel& p3 = panels[i + 1];
   p3.pos = ipoint(p2.pos.x, p2.pos.y + p2.size.y + LINE_HEIGHT_SCALE_1);
   p3.size.y = h2 - LINE_HEIGHT_SCALE_1;
-  p2.draw();
-  p3.draw();
+  p3.focus = false;
   focus = &p2;
+  p2.draw_divider();
+  p3.draw();
   switch_panel(&p3); }
 
 void Editor::proc_split_vertical(){
@@ -461,9 +462,10 @@ void Editor::proc_split_vertical(){
   Panel& p3 = panels[i + 1];
   p3.pos = ipoint(p2.pos.x + p2.size.x + VERTICAL_DIVIDE, p2.pos.y);
   p3.size.x = w2 - VERTICAL_DIVIDE;
-  p2.draw();
-  p3.draw();
+  p3.focus = false;
   focus = &p2;
+  p2.draw_divider();
+  p3.draw();
   switch_panel(&p3); }
 
 void Editor::proc_close_panel(){
@@ -504,7 +506,12 @@ void Editor::proc_close_panel(){
   for(i = 0; i < panels.size(); ++i)
     if(&pdel == &panels[i]) break;
   switch_panel(xpd);
+  int j;
+  for(j = 0; j < panels.size(); ++j)
+    if(xpd == &panels[j]) break;
   panels.erase(panels.begin() + i);
+  if(i < j)
+    --focus;
   draw(); }
 
 #endif
