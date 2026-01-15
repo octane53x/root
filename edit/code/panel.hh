@@ -20,7 +20,6 @@ struct Panel : virtual system {
   vec<str> text;
   vec<vec<color> > text_color;
   Cursor cursor;
-  uset<Panel*> siblings;
 
   static image* frame;
   // Key 1: Scale, Key 2: Bkgd color, Key 3: Text color, Key 4: Character
@@ -278,6 +277,10 @@ void Panel::move_cursor(const Dir d){
   // Draw character and cursor
   ch = (c.pos.x == text[c.pos.y].size()) ? ' ' : text[c.pos.y][c.pos.x];
   draw_char(fonts[text_scale][c.fill][BAR_TEXT_COLOR][ch],
-      text_to_frame(c.pos)); }
+      text_to_frame(c.pos));
+
+  // Update file bar
+  if(!cmd)
+    draw_file_bar(); }
 
 #endif

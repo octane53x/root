@@ -250,12 +250,15 @@ void Editor::proc_ctrl_move(const Dir d){
     while(c.pos.x > 0)
       p.move_cursor(LEFT);
   }else if(d == LEFT){
+    p.move_cursor(LEFT);
     while(!(c.pos.y == 0 && c.pos.x == 0)
         && !name_or_val(p.text[c.pos.y][c.pos.x]))
       p.move_cursor(LEFT);
     while(!(c.pos.y == 0 && c.pos.x == 0)
         && name_or_val(p.text[c.pos.y][c.pos.x]))
       p.move_cursor(LEFT);
+    if(!(c.pos.y == 0 && c.pos.x == 0))
+      p.move_cursor(RIGHT);
   }else if(d == DOWN){
     p.move_cursor(DOWN);
     while(c.pos.y < p.text.size() - 1 && p.text[c.pos.y] != "")
@@ -423,7 +426,9 @@ void Editor::proc_right_panel(){
 
 void Editor::proc_split_horizontal(){
   Panel& p = *focus;
-  p.size.y = (p.size.y + LINE_HEIGHT_SCALE_1) / 2 - LINE_HEIGHT_SCALE_1;
+  int h1 = (int)ceil((double)(p.size.y + LINE_HEIGHT_SCALE_1) / 2.0);
+  int h2 = (int)floor((double)(p.size.y + LINE_HEIGHT_SCALE_1) / 2.0);
+  p.size.y = h1 - LINE_HEIGHT_SCALE_1;
   int i;
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
@@ -434,15 +439,17 @@ void Editor::proc_split_horizontal(){
   Panel& p2 = panels[i];
   Panel& p3 = panels[i + 1];
   p3.pos = ipoint(p2.pos.x, p2.pos.y + p2.size.y + LINE_HEIGHT_SCALE_1);
-  focus = &p3;
-  p2.focus = false;
-  p3.focus = true;
+  p3.size.y = h2 - LINE_HEIGHT_SCALE_1;
   p2.draw();
-  p3.draw(); }
+  p3.draw();
+  focus = &p2;
+  switch_panel(&p3); }
 
 void Editor::proc_split_vertical(){
   Panel& p = *focus;
-  p.size.x = (p.size.x + VERTICAL_DIVIDE) / 2 - VERTICAL_DIVIDE;
+  int w1 = (int)ceil((double)(p.size.x + VERTICAL_DIVIDE) / 2.0);
+  int w2 = (int)floor((double)(p.size.x + VERTICAL_DIVIDE) / 2.0);
+  p.size.x = w1 - VERTICAL_DIVIDE;
   int i;
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
@@ -453,14 +460,51 @@ void Editor::proc_split_vertical(){
   Panel& p2 = panels[i];
   Panel& p3 = panels[i + 1];
   p3.pos = ipoint(p2.pos.x + p2.size.x + VERTICAL_DIVIDE, p2.pos.y);
-  focus = &p3;
-  p2.focus = false;
-  p3.focus = true;
+  p3.size.x = w2 - VERTICAL_DIVIDE;
   p2.draw();
-  p3.draw(); }
+  p3.draw();
+  focus = &p2;
+  switch_panel(&p3); }
 
 void Editor::proc_close_panel(){
-  //! difficult ???
-}
+  Panel& pdel = *focus;
+  // Find panel to expand
+  Panel* xpd = NULL;
+  for(Panel& p : panels){
+    if(&p == &pdel) continue;
+    xpd = &p;
+    // Is expanding panel above closing panel
+    if(p.size.x == pdel.size.x && p.pos.x == pdel.pos.x
+        && p.pos.y + p.size.y + LINE_HEIGHT_SCALE_1 == pdel.pos.y){
+      p.size.y += pdel.size.y + LINE_HEIGHT_SCALE_1;
+      break;
+    // Is expanding panel below closing panel
+    }else if(p.size.x == pdel.size.x && p.pos.x == pdel.pos.x
+        && p.pos.y == pdel.pos.y + pdel.size.y + LINE_HEIGHT_SCALE_1){
+      p.size.y += pdel.size.y + LINE_HEIGHT_SCALE_1;
+      p.pos.y = pdel.pos.y;
+      break;
+    // Is expanding panel left of closing panel
+    }else if(p.size.y == pdel.size.y && p.pos.y == pdel.pos.y
+        && p.pos.x + p.size.x + VERTICAL_DIVIDE == pdel.pos.x){
+      p.size.x += pdel.size.x + VERTICAL_DIVIDE;
+      break;
+    // Is expanding panel right of closing panel
+    }else if(p.size.y == pdel.size.y && p.pos.y == pdel.pos.y
+        && p.pos.x == pdel.pos.x + pdel.size.x + VERTICAL_DIVIDE){
+      p.size.x += pdel.size.x + VERTICAL_DIVIDE;
+      p.pos.x = pdel.pos.x;
+      break;
+    }else
+      xpd = NULL; }
+  if(xpd == NULL) return;
+
+  // Delete original panel and draw
+  int i;
+  for(i = 0; i < panels.size(); ++i)
+    if(&pdel == &panels[i]) break;
+  switch_panel(xpd);
+  panels.erase(panels.begin() + i);
+  draw(); }
 
 #endif
