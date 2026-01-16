@@ -1,9 +1,9 @@
 // Execute text editor in a window
 
-#include "../code/draw.hh"
-#include "../code/input.hh"
-#include "../code/cmd.hh"
-#include "../code/highlight.hh"
+#include "draw.hh"
+#include "input.hh"
+#include "cmd.hh"
+#include "highlight.hh"
 
 // Main function called on application execution
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,

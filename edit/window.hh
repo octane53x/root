@@ -3,8 +3,8 @@
 #ifndef WINDOW_HH
 #define WINDOW_HH
 
-#include "../../gl/image.hh"
-#include "../../os/win/util.hh"
+#include "../gl/image.hh"
+#include "../os/win/util.hh"
 
 struct window : system {
 
@@ -123,13 +123,13 @@ LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 void _win_init(){
-  const wchar_t CLASS[] = L"WindowClass";
+  const char* CLASS = "WindowClass";
   WNDCLASS wc = {};
   wc.lpfnWndProc = _win_proc;
   wc.hInstance = _win->win_param_1;
   wc.lpszClassName = CLASS;
   RegisterClass(&wc);
-  _win->hwnd = CreateWindowEx(0, CLASS, L"Window", WS_OVERLAPPEDWINDOW,
+  _win->hwnd = CreateWindowEx(0, CLASS, "Window", WS_OVERLAPPEDWINDOW,
       _win->win_pos.x, _win->win_pos.y, _win->size.x, _win->size.y,
       NULL, NULL, _win->win_param_1, NULL);
   assert(_win->hwnd != NULL, "window.display", "could not create window");

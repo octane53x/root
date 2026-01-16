@@ -9,11 +9,11 @@ void Editor::draw(){
   updated = false;
   for(Panel& p : panels)
     p.draw();
-  if(&cmd == focus)
-    cmd.draw();
+  if(&cmd_panel == focus)
+    cmd_panel.draw();
   else
-    for(int y = cmd.pos.y; y < cmd.pos.y + cmd.size.y; ++y)
-      for(int x = 0; x < cmd.size.x; ++x)
+    for(int y = cmd_panel.pos.y; y < cmd_panel.pos.y + cmd_panel.size.y; ++y)
+      for(int x = 0; x < cmd_panel.size.x; ++x)
         frame.data[y][x] = BKGD_COLOR; }
 
 void Panel::draw(){

@@ -30,9 +30,12 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
   if(!ctrl && !alt){
     if(parse_char(key))
       return;
-    if(key == "TAB")
-      proc_indent();
-    else if(key == "BACKSPACE")
+    if(key == "TAB"){
+      if(p.cmd)
+        complete_file();
+      else
+        proc_indent();
+    }else if(key == "BACKSPACE")
       proc_backspace();
     else if(key == "ENTER")
       proc_enter();
@@ -68,6 +71,14 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
       proc_ctrl_move(DOWN);
     else if(key == "L")
       proc_ctrl_move(RIGHT);
+    else if(key == "UP")
+      proc_move_max(UP);
+    else if(key == "LEFT")
+      proc_move_max(LEFT);
+    else if(key == "DOWN")
+      proc_move_max(DOWN);
+    else if(key == "RIGHT")
+      proc_move_max(RIGHT);
     else if(key == "BACKSPACE")
       proc_ctrl_backspace();
     else if(key == "D")
@@ -116,13 +127,13 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
       proc_close_panel();
     if(key == "J")
       proc_left_panel();
-    if(key == "K" && focus != &cmd){
+    if(key == "K" && focus != &cmd_panel){
       if(p.split_ready){
         p.split_ready = false;
         proc_split_horizontal();
       }else
         p.split_ready = true; }
-    if(key == "L" && focus != &cmd){
+    if(key == "L" && focus != &cmd_panel){
       if(p.split_ready){
         p.split_ready = false;
         proc_split_vertical();
@@ -211,7 +222,7 @@ void Editor::proc_enter(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   // Execute command
-  if(&p == &cmd){
+  if(&p == &cmd_panel){
     switch_panel(prev_panel);
     process_cmd(p.text[0]);
     p.text[0] = "";
@@ -234,7 +245,7 @@ void Editor::proc_enter(){
 
 void Editor::proc_escape(){
   Panel& p = *focus;
-  if(&p != &cmd) return;
+  if(&p != &cmd_panel) return;
   switch_panel(prev_panel);
   for(int y = p.pos.y; y < p.pos.y + p.size.y; ++y)
     for(int x = p.pos.x; x < p.pos.x + p.size.x; ++x)
@@ -315,14 +326,18 @@ void Editor::proc_del_space(){
     p.remove_text(c.pos, c.pos); }
 
 void Editor::proc_open_file(){
-  if(focus == &cmd) return;
+  if(focus == &cmd_panel) return;
   prev_panel = focus;
-  switch_panel(&cmd);
+  switch_panel(&cmd_panel);
   Panel& p = *focus;
   Cursor& c = p.cursor;
   p.draw();
   str cwd = current_path().string();
-  p.insert_text({"Open: " + cwd.substr(0, cwd.find("\\root\\") + 6)}, c.pos);
+  cwd = cwd.substr(0, cwd.find("\\root\\") + 6);
+  for(int i = 0; i < cwd.size(); ++i)
+    if(cwd[i] == '\\')
+      cwd[i] = '/';
+  p.insert_text({"Open: " + cwd}, c.pos);
   c.pos.x = (int)p.text[0].size(); }
 
 void Editor::proc_set_mark(){

@@ -3,7 +3,7 @@
 #ifndef EDITOR_UTIL_HH
 #define EDITOR_UTIL_HH
 
-#include "../../gl/image.hh"
+#include "../gl/image.hh"
 
 typedef umap<char, image> font;
 
@@ -45,7 +45,7 @@ const vec<color> TEXT_COLORS =
     COLOR_STRING, COLOR_COMMENT};
 
 const str
-    _FONT_LOC = "../symbols.png",
+    _FONT_LOC = "symbols.bmp",
     _SYMBOLS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         " .,/?:;'\"+=-_\\|~!@#$%^&*()[]{}<>";
 
@@ -65,5 +65,11 @@ bool in_selection(const ipoint& p0, const ipoint& pf, const ipoint& p){
   bool after_p0 = (p.y > p0.y || (p.y == p0.y && p.x >= p0.x));
   bool before_pf = (p.y < pf.y || (p.y == pf.y && p.x <= pf.x));
   return (after_p0 && before_pf); }
+
+bool starts_with(const str& s, const str& t){
+  if(t.size() > s.size()) return false;
+  for(int i = 0; i < t.size(); ++i)
+    if(s[i] != t[i]) return false;
+  return true; }
 
 #endif

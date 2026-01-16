@@ -17,7 +17,7 @@ const double
     PI = 3.14159265358979323846;
 const str
     // Debug log file location, print goes here when there's no console
-    DEBUG_FILE = "../../debug.txt";
+    DEBUG_FILE = "debug.txt";
 
 // Do nothing, used to follow if/else when the condition just needs to be seen
 void pass(){}

@@ -8,23 +8,11 @@
 // 10 mil pixel buffer for image conversion
 ui bmp_data[10000000]={0};
 
-// Convert C++ string to a specific Windows string
-LPCWSTR str_to_lpcw(str s){
-  int size = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
-  wchar_t* r = new wchar_t[size];
-  MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, r, size);
-  return r; }
-
 // Convert bitmap file to image object
 //! Only works for certain bitmap sizes, e.g. 60x90
 image load_bmp(str dir){
-#ifdef _WIN32
-  HBITMAP hbmp = (HBITMAP)LoadImage(NULL, str_to_lpcw(dir), IMAGE_BITMAP,
-      0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
-#else
   HBITMAP hbmp = (HBITMAP)LoadImage(NULL, dir.c_str(), IMAGE_BITMAP,
       0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
-#endif
   BITMAP b;
   GetObject(hbmp, sizeof(BITMAP), &b);
   int w = b.bmWidth, h = b.bmHeight;

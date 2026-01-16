@@ -1,8 +1,4 @@
-imp/imp_win_exec/*
-!imp/imp_win_exec/win_exec.cpp
-edit/edit_win_exec/*
-!edit/edit_win_exec/win_exec.cpp
-test/vs_test/
 debug.txt
-main.exe
+*.obj
+*.exe
 *~
