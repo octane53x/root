@@ -15,11 +15,6 @@ struct window : system {
   ipoint size, win_pos, mouse_pos;
   image frame;
 
-  // Inherits:
-  // void init()
-  // void run()
-  // void update(ms)
-
   virtual void resize(const ipoint& npos, const ipoint& nsize) = 0;
   virtual void process_key(
       const str& key, const bool down, const ipoint& mouse) = 0; };

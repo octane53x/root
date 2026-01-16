@@ -93,7 +93,9 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
     else if(key == "C")
       proc_copy();
     else if(key == "V")
-      proc_paste(); }
+      proc_paste();
+    else if(key == "Z")
+      proc_undo(); }
 
   // Ctrl + Alt + Key
   if(ctrl && alt && !shift){
@@ -393,6 +395,31 @@ void Editor::proc_paste(){
     c.pos.x = (int)clipboard.back().size();
   while(c.pos.y > p.top_line + p.size.y / p.line_height)
     p.scroll(DOWN); }
+
+void Editor::proc_undo(){
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  if(p.opstack.empty()) return;
+  Panel::Op op = p.opstack.back();
+  p.opstack.popb();
+  if(op.ins){
+    ipoint pf = op.pos;
+    if(op.text.size() == 1){
+      pf.x += (int)op.text[0].size() - 1;
+    }else{
+      pf.y += (int)op.text.size() - 1;
+      pf.x = (int)op.text.back().size() - 1; }
+    p.remove_text(op.pos, pf);
+    c.pos = op.pos;
+  }else{
+    p.insert_text(op.text, op.pos);
+    c.pos = op.pos;
+    if(op.text.size() == 1){
+      c.pos.x += (int)op.text[0].size();
+    }else{
+      c.pos.x = (int)op.text.back().size();
+      c.pos.y += (int)op.text.size() - 1; } }
+  p.opstack.popb(); }
 
 void Editor::proc_move_max(const Dir d){
   Panel& p = *focus;

@@ -2,7 +2,14 @@
 
 // Depends on libpng/zlib - loaded in Visual Studio
 
+//! TODO
+//!
 //! Test inputs when command bar in focus
+//! Undo
+//! Cmd bar tab completion
+//! Find/replace
+//! Syntax highlighting
+//! Autocomplete
 
 #ifndef EDITOR_HH
 #define EDITOR_HH
@@ -61,6 +68,7 @@ struct Editor : virtual window {
   void proc_cut();
   void proc_copy();
   void proc_paste();
+  void proc_undo();
   void proc_move_max(const Dir d);
   void proc_left_panel();
   void proc_right_panel();

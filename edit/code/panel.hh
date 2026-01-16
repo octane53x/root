@@ -7,9 +7,11 @@
 
 struct Panel : virtual system {
 
-  // Inherits:
-  // bool updated
-  // clock_t last_update
+  // Used for undo
+  struct Op {
+    bool ins; // False if remove
+    ipoint pos;
+    vec<str> text; };
 
   bool cmd, saved, focus, split_ready;
   int line_height, char_width, scroll_lines, top_line;
@@ -19,6 +21,7 @@ struct Panel : virtual system {
   str file;
   vec<str> text;
   vec<vec<color> > text_color;
+  vec<Op> opstack;
   Cursor cursor;
 
   static image* frame;
@@ -93,6 +96,13 @@ ipoint Panel::text_to_frame(const ipoint& p) const {
       (p.y - top_line) * line_height + pos.y); }
 
 void Panel::insert_text(const vec<str>& ins, const ipoint& p){
+  // Store operation for undo
+  Op op;
+  op.ins = true;
+  op.pos = p;
+  op.text = ins;
+  opstack.pb(op);
+
   // Modify text
   str tail = text[p.y].substr(p.x);
   text[p.y] = text[p.y].substr(0, p.x) + ins[0];
@@ -131,6 +141,31 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
 void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   if(p0.y == text.size() - 1 && p0.x == text[p0.y].size()) return;
   bool endline = (p0.y == pf.y && p0.x == text[p0.y].size());
+
+  // Adjust endpoint
+  ipoint pf2 = pf;
+  if(pf.x == -1){
+    --pf2.y;
+    pf2.x = (int)text[pf2.y].size(); }
+
+  // Store operation for undo
+  Op op;
+  op.ins = false;
+  op.pos = p0;
+  op.text.pb("");
+  ipoint pt = p0;
+  while(1){
+    if(pt.x == text[pt.y].size()){
+      op.text.pb("");
+      if(pt == pf2) break;
+      ++pt.y;
+      pt.x = 0;
+      continue; }
+    op.text.back() += str(1, text[pt.y][pt.x]);
+    if(pt == pf2) break;
+    ++pt.x; }
+  opstack.pb(op);
+
   // Determine selection
   Cursor& c = cursor;
   ipoint mark0, markf;
@@ -150,10 +185,6 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
           text_to_frame(ipoint(x, p0.y))); } }
 
   // Remove from text
-  ipoint pf2 = pf;
-  if(pf.x == -1){
-    --pf2.y;
-    pf2.x = (int)text[pf2.y].size(); }
   str line = text[p0.y].substr(0, p0.x);
   if(pf2.x == text[pf2.y].size()){
     if(pf2.y + 1 < text.size() && text[pf2.y + 1] != "")
