@@ -119,21 +119,21 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
     markf = (mark0 == c.pos) ? mark : c.pos; }
 
   // Draw single character at end of line
-  if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
-    color cb = (mark.y != -1 && in_selection(mark0, markf, p))
-        ? SELECT_COLOR : bkgd;
-    draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
-        text_to_frame(p));
-    return; }
+  // if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
+  //   color cb = (mark.y != -1 && in_selection(mark0, markf, p))
+  //       ? SELECT_COLOR : bkgd;
+  //   draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
+  //       text_to_frame(p));
+  //   return; }
 
   // Draw single line without adding new lines
-  if(ins.size() == 1){
-    for(int x = p.x; x < text[p.y].size(); ++x){
-      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p.y)))
-          ? SELECT_COLOR : bkgd;
-      draw_char(fonts[text_scale][cb][text_color[p.y][x]][text[p.y][x]],
-          text_to_frame(ipoint(x, p.y))); }
-    return; }
+  // if(ins.size() == 1){
+  //   for(int x = p.x; x < text[p.y].size(); ++x){
+  //     color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p.y)))
+  //         ? SELECT_COLOR : bkgd;
+  //     draw_char(fonts[text_scale][cb][text_color[p.y][x]][text[p.y][x]],
+  //         text_to_frame(ipoint(x, p.y))); }
+  //   return; }
 
   // Redraw panel if lines moved
   draw(); }
@@ -175,14 +175,14 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
     markf = (mark0 == c.pos) ? mark : c.pos; }
 
   // Draw over end of line
-  if(p0.y == pf.y && !endline){
-    color tc = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
-    for(int x = (int)text[p0.y].size() - (pf.x - p0.x + 1);
-        x <= text[p0.y].size(); ++x){
-      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
-          ? SELECT_COLOR : bkgd;
-      draw_char(fonts[text_scale][cb][tc][' '],
-          text_to_frame(ipoint(x, p0.y))); } }
+  // if(p0.y == pf.y && !endline){
+  //   color tc = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
+  //   for(int x = (int)text[p0.y].size() - (pf.x - p0.x + 1);
+  //       x <= text[p0.y].size(); ++x){
+  //     color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
+  //         ? SELECT_COLOR : bkgd;
+  //     draw_char(fonts[text_scale][cb][tc][' '],
+  //         text_to_frame(ipoint(x, p0.y))); } }
 
   // Remove from text
   str line = text[p0.y].substr(0, p0.x);
@@ -197,13 +197,13 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   highlight_text();
 
   // Draw chars after deletion
-  if(p0.y == pf.y && !endline){
-    for(int x = p0.x; x < text[p0.y].size(); ++x){
-      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
-          ? SELECT_COLOR : bkgd;
-      draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
-          text_to_frame(ipoint(x, p0.y))); }
-    return; }
+  // if(p0.y == pf.y && !endline){
+  //   for(int x = p0.x; x < text[p0.y].size(); ++x){
+  //     color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
+  //         ? SELECT_COLOR : bkgd;
+  //     draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
+  //         text_to_frame(ipoint(x, p0.y))); }
+  //   return; }
 
   // Redraw panel if lines moved
   draw(); }
