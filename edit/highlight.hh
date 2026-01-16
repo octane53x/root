@@ -17,7 +17,19 @@ void Panel::highlight_text(){
 
   bool found;
   int x, y;
-  //!
+
+  // Keyword
+  for(y = 0; y < text.size(); ++y){
+    str line = text[y];
+    x = 0;
+    while(line != ""){
+      str tok = next_tok(line);
+      if(KEYWORDS.find(tok) != KEYWORDS.end())
+        for(int i = x; i < x + tok.size(); ++i)
+          text_color[y][i] = COLOR_KEYWORD;
+      int n = line.size();
+      line = delete_tok(line);
+      x += n - line.size(); } }
 
   // Comment
   for(y = 0; y < text.size(); ++y){

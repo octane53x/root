@@ -50,10 +50,15 @@ const str
         " .,/?:;'\"+=-_\\|~!@#$%^&*()[]{}<>";
 
 const uset<str> KEYWORDS = {
+    // Crab
     "obj", "fn", "if", "else", "for", "while", "return", "break", "continue",
     "const", "virtual", "final", "include", "this", "operator", "static",
     "template", "abstract", "force", "true", "false", "enum", "switch", "case",
-    "struct", "def", "delete", "in"}; // Other languages
+    "try", "catch", "typedef", "enum", "namespace",
+    // Other languages
+    "struct", "def", "delete", "in", "and", "or", "bitand", "bitor", "xor",
+    "static_cast", "dynamic_cast", "typename", "class", "do", "inline", "new",
+    "public", "protected", "private"};
 
 enum Dir { UP, LEFT, DOWN, RIGHT };
 
@@ -71,5 +76,48 @@ bool starts_with(const str& s, const str& t){
   for(int i = 0; i < t.size(); ++i)
     if(s[i] != t[i]) return false;
   return true; }
+
+bool is_upper(const char c){
+  return (c >= 'A' && c <= 'Z'); }
+
+bool is_lower(const char c){
+  return (c >= 'a' && c <= 'z'); }
+
+bool is_alpha(const char c){
+  return is_upper(c) || is_lower(c); }
+
+bool is_digit(const char c){
+  return (c >= '0' && c <= '9'); }
+
+str strip(const str& s){
+  int i = 0;
+  while(i < s.size() && s[i] == ' ')
+    ++i;
+  int j = s.size() - 1;
+  while(j >= 0 && s[j] == ' ')
+    --j;
+  if(i <= j)
+    return s.substr(i, j - i + 1);
+  return ""; }
+
+str next_tok(const str& s){
+  if(s == "") return "";
+  int i = 0;
+  if(is_alpha(s[0]) || is_digit(s[0]) || s[0] == '_')
+    while(i < s.size() && (is_alpha(s[i]) || is_digit(s[i]) || s[i] == '_'))
+      ++i;
+  else if(s[0] == '(' || s[0] == ')' || s[0] == '[' || s[0] == ']'
+      || s[0] == '{' || s[0] == '}')
+    ++i;
+  else
+    while(!is_alpha(s[i]) && !is_digit(s[i]) && s[i] != '_'
+        && s[i] != '(' && s[i] != ')' && s[i] != '[' && s[i] != ']'
+        && s[i] != '{' && s[i] != '}')
+      ++i;
+  return s.substr(0, i); }
+
+str delete_tok(const str& s){
+  str tok = next_tok(s);
+  return s.substr(tok.size()); }
 
 #endif
