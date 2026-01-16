@@ -45,7 +45,7 @@ const vec<color> TEXT_COLORS =
     COLOR_STRING, COLOR_COMMENT};
 
 const str
-    _FONT_LOC = "symbols.bmp",
+    _FONT_LOC = "edit/symbols.bmp",
     _SYMBOLS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         " .,/?:;'\"+=-_\\|~!@#$%^&*()[]{}<>";
 

@@ -82,9 +82,14 @@
 (global-set-key [?\C-k] 'forward-paragraph)
 
 (global-set-key [?\C-\M-j] 'beginning-of-line)
+(global-set-key (kbd "C-<left>") 'beginning-of-line)
 (global-set-key [?\C-\M-l] 'end-of-line)
+(global-set-key (kbd "C-<right>") 'end-of-line)
+(global-set-key [?\C-\M-i] 'beginning-of-buffer)
 (global-set-key [?\C-h ?\C-i] 'beginning-of-buffer)
+(global-set-key (kbd "C-<up>") 'beginning-of-buffer)
 (global-set-key [?\C-\M-k] 'end-of-buffer)
+(global-set-key (kbd "C-<down>") 'end-of-buffer)
 
 ;; Mark
 (global-set-key [?\C-a] 'mark-whole-buffer)

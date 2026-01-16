@@ -2,7 +2,7 @@
 
 //! TODO
 //!
-//! Cmd bar tab completion
+//! Save file
 //! Find/replace
 //! Word wrap
 //! Syntax highlighting

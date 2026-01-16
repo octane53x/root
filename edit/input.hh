@@ -333,11 +333,11 @@ void Editor::proc_open_file(){
   Cursor& c = p.cursor;
   p.draw();
   str cwd = current_path().string();
-  cwd = cwd.substr(0, cwd.find("\\root\\") + 6);
+  cwd = cwd.substr(0, cwd.find("\\root") + 5);
   for(int i = 0; i < cwd.size(); ++i)
     if(cwd[i] == '\\')
       cwd[i] = '/';
-  p.insert_text({"Open: " + cwd}, c.pos);
+  p.insert_text({"Open: " + cwd + "/"}, c.pos);
   c.pos.x = (int)p.text[0].size(); }
 
 void Editor::proc_set_mark(){

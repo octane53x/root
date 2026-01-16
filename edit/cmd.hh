@@ -58,6 +58,7 @@ void Editor::complete_file(){
 
   // Display completion
   c.text[0] = "Open: " + dir + opts[0];
+  c.cursor.pos = ipoint(c.text[0].size(), 0);
   c.highlight_text();
   c.draw(); }
 
