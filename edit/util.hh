@@ -37,7 +37,7 @@ const color
     COLOR_TYPE = color(0, 208, 82),
     COLOR_NAME = color(242, 242, 82),
     COLOR_FUNCTION = color(120, 132, 176),
-    COLOR_STRING = color(242, 64, 76),
+    COLOR_STRING = color(230, 124, 124),
     COLOR_COMMENT = color(255, 92, 0);
 
 const vec<color> TEXT_COLORS =

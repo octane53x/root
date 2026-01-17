@@ -16,7 +16,9 @@ void Panel::highlight_text(){
   if(cmd) return;
 
   bool found;
-  int x, y;
+  int x, y, f1, f2;
+
+  //! Type/var
 
   // Keyword
   for(y = 0; y < text.size(); ++y){
@@ -30,6 +32,25 @@ void Panel::highlight_text(){
       int n = line.size();
       line = delete_tok(line);
       x += n - line.size(); } }
+
+  // String and char
+  for(y = 0; y < text.size(); ++y){
+    f1 = f2 = -1;
+    for(x = 0; x < text[y].size(); ++x){
+      if(text[y][x] == '"'){
+        if(f1 != -1){
+          for(int i = x; i >= f1; --i)
+            text_color[y][i] = COLOR_STRING;
+          f1 = -1;
+        }else if(f2 == -1)
+          f1 = x;
+      }else if(text[y][x] == '\''){
+        if(f2 != -1){
+          for(int i = x; i >= f2; --i)
+            text_color[y][i] = COLOR_STRING;
+          f2 = -1;
+        }else if(f1 == -1)
+          f2 = x; } } }
 
   // Comment
   for(y = 0; y < text.size(); ++y){
