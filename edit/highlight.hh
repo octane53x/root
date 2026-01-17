@@ -15,12 +15,66 @@ void Panel::highlight_text(){
       text_color[y].pb(ct);
   if(cmd) return;
 
-  bool found;
-  int x, y, f1, f2;
+  // Declarations
+  bool in_fn = false, type_found = false, expect_name = false;
+  int x = 0, y = 0;
+  ipoint type_pt(-1, -1);
+  while(y < text.size()){
+    // Move marker
+    if(x >= text[y].size()){
+      ++y;
+      x = 0;
+      continue; }
+    if(text[y][x] == ' '){
+      ++x;
+      continue; }
 
-  //! Type/var
+    // Reset flags
+    str tok = next_tok(text[y].substr(x));
+    if(tok == ";" && type_found){
+      type_found = false;
+      expect_name = false;
+      ++x;
+      continue; }
+    if(tok == "," && type_found){
+      expect_name = true;
+      ++x;
+      continue; }
 
-  // Keyword
+    // Toss keywords
+    if(KEYWORDS.find(tok) != KEYWORDS.end()){
+      x += tok.size();
+      continue; }
+
+    // Highlight type and name
+    if(expect_name && type_or_name(tok)){
+      str t = next_tok(text[type_pt.y].substr(type_pt.x));
+      for(int i = type_pt.x; i < type_pt.x + t.size(); ++i)
+        text_color[type_pt.y][i] = COLOR_TYPE;
+      for(int i = x; i < x + tok.size(); ++i)
+        text_color[y][i] = COLOR_NAME;
+      expect_name = false;
+      x += tok.size();
+      continue; }
+
+    // Found type
+    if(type_or_name(tok)){
+      type_found = true;
+      expect_name = true;
+      type_pt = ipoint(x, y);
+      x += tok.size();
+      continue; }
+
+    // Cancel search for name
+    if(type_found && tok != "&" && tok != "*"){
+      type_found = false;
+      expect_name = false;
+      x += tok.size();
+      continue; }
+
+    x += tok.size(); }
+
+  // Keywords
   for(y = 0; y < text.size(); ++y){
     str line = text[y];
     x = 0;
@@ -35,7 +89,7 @@ void Panel::highlight_text(){
 
   // String and char
   for(y = 0; y < text.size(); ++y){
-    f1 = f2 = -1;
+    int f1 = -1, f2 = -1;
     for(x = 0; x < text[y].size(); ++x){
       if(text[y][x] == '"'){
         if(f1 != -1){
@@ -52,9 +106,18 @@ void Panel::highlight_text(){
         }else if(f1 == -1)
           f2 = x; } } }
 
-  // Comment
+  // Preprocessor
   for(y = 0; y < text.size(); ++y){
-    found = false;
+    x = 0;
+    while(x < text[y].size() && text[y][x] == ' ')
+      ++x;
+    if(x >= text[y].size() || text[y][x] != '#') continue;
+    for(; x < text[y].size(); ++x)
+      text_color[y][x] = COLOR_PREPROCESSOR; }
+
+  // Comments
+  for(y = 0; y < text.size(); ++y){
+    bool found = false;
     for(x = 0; x < (int)text[y].size() - 1; ++x)
       if(text[y][x] == '/' && text[y][x+1] == '/'){
         found = true;
@@ -62,8 +125,8 @@ void Panel::highlight_text(){
     for(; found && x < text[y].size(); ++x)
       text_color[y][x] = COLOR_COMMENT; }
 
-  // Comment block
-  found = false;
+  // Comment blocks
+  bool found = false;
   x = y = 0;
   while(y < text.size()){
     if(x < (int)text[y].size() - 1 && text[y][x] == '/' && text[y][x+1] == '*'){

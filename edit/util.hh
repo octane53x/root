@@ -34,15 +34,17 @@ const color
     // Highlighting
     COLOR_CODE = color(255, 255, 255),
     COLOR_KEYWORD = color(0, 208, 208),
-    COLOR_TYPE = color(0, 208, 82),
-    COLOR_NAME = color(242, 242, 82),
+    COLOR_TYPE = color(90, 230, 145),
+    COLOR_NAME = color(230, 230, 110),
     COLOR_FUNCTION = color(120, 132, 176),
+    COLOR_BASE = color(90, 220, 220),
     COLOR_STRING = color(230, 124, 124),
-    COLOR_COMMENT = color(255, 92, 0);
+    COLOR_COMMENT = color(255, 92, 0),
+    COLOR_PREPROCESSOR = color(200, 160, 230);
 
 const vec<color> TEXT_COLORS =
     {COLOR_CODE, COLOR_KEYWORD, COLOR_TYPE, COLOR_NAME, COLOR_FUNCTION,
-    COLOR_STRING, COLOR_COMMENT};
+    COLOR_BASE, COLOR_STRING, COLOR_COMMENT, COLOR_PREPROCESSOR};
 
 const str
     _FONT_LOC = "edit/symbols.bmp",
@@ -61,10 +63,6 @@ const uset<str> KEYWORDS = {
     "public", "protected", "private"};
 
 enum Dir { UP, LEFT, DOWN, RIGHT };
-
-bool name_or_val(const char c){
-  return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z')
-      || (c >= 'a' && c <= 'z') || c == '_'; }
 
 bool in_selection(const ipoint& p0, const ipoint& pf, const ipoint& p){
   bool after_p0 = (p.y > p0.y || (p.y == p0.y && p.x >= p0.x));
@@ -89,16 +87,14 @@ bool is_alpha(const char c){
 bool is_digit(const char c){
   return (c >= '0' && c <= '9'); }
 
-str strip(const str& s){
-  int i = 0;
-  while(i < s.size() && s[i] == ' ')
-    ++i;
-  int j = s.size() - 1;
-  while(j >= 0 && s[j] == ' ')
-    --j;
-  if(i <= j)
-    return s.substr(i, j - i + 1);
-  return ""; }
+bool name_or_val(const char c){
+  return is_alpha(c) || is_digit(c) || c == '_'; }
+
+bool type_or_name(const str& s){
+  if(!(is_alpha(s[0]) || s[0] == '_')) return false;
+  for(int i = 1; i < s.size(); ++i)
+    if(!name_or_val(s[i])) return false;
+  return true; }
 
 str next_tok(const str& s){
   if(s == "") return "";
