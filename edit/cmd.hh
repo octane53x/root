@@ -5,7 +5,8 @@
 
 #include "editor.hh"
 
-void Editor::process_cmd(const str& cmd){
+// Returns whether the cmd was successful
+bool Editor::process_cmd(const str& cmd){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   // Open file
@@ -21,7 +22,19 @@ void Editor::process_cmd(const str& cmd){
       while(getline(fs, line))
         p.text.pb(line);
     }else
-      p.text.pb(""); } }
+      p.text.pb("");
+    p.highlight_text();
+    p.top_line = 0;
+    return true;
+
+  // Save file
+  }else if(cmd.find("Save: ") == 0){
+    str file = cmd.substr(6);
+    if(exists(file))
+      return false;
+    p.file = file;
+    return proc_save_file(); }
+  return false; }
 
 void Editor::complete_file(){
   assert(focus == &cmd_panel, "complete_file", "cmd panel not in focus");

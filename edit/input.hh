@@ -87,6 +87,8 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
       proc_del_space();
     else if(key == "O")
       proc_open_file();
+    else if(key == "S")
+      proc_save_file();
     else if(key == "EQUALS")
       scale_font(SCALE_FACTOR);
     else if(key == "MINUS")
@@ -125,21 +127,22 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
   if(ctrl && !alt && shift){
     if(key == "I")
       proc_close_panel();
-    if(key == "J")
+    else if(key == "J")
       proc_left_panel();
-    if(key == "K" && focus != &cmd_panel){
+    else if(key == "K" && focus != &cmd_panel){
       if(p.split_ready){
         p.split_ready = false;
         proc_split_horizontal();
       }else
-        p.split_ready = true; }
-    if(key == "L" && focus != &cmd_panel){
+        p.split_ready = true;
+    }else if(key == "L" && focus != &cmd_panel){
       if(p.split_ready){
         p.split_ready = false;
         proc_split_vertical();
       }else
         proc_right_panel();
-        return; } } }
+    }else if(key == "S")
+      proc_save_new_file(); } }
 
 // Returns true if action was taken
 bool Editor::parse_char(const str& key){
@@ -224,11 +227,12 @@ void Editor::proc_enter(){
   // Execute command
   if(&p == &cmd_panel){
     switch_panel(prev_panel);
-    process_cmd(p.text[0]);
+    bool success = process_cmd(p.text[0]);
+    if(!success){
+      switch_panel(&cmd_panel);
+      return; }
     p.text[0] = "";
     c.pos = ipoint(0, 0);
-    focus->highlight_text();
-    focus->top_line = 0;
     draw();
     return; }
 
@@ -332,12 +336,29 @@ void Editor::proc_open_file(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   p.draw();
-  str cwd = current_path().string();
-  cwd = cwd.substr(0, cwd.find("\\root") + 5);
-  for(int i = 0; i < cwd.size(); ++i)
-    if(cwd[i] == '\\')
-      cwd[i] = '/';
-  p.insert_text({"Open: " + cwd + "/"}, c.pos);
+  p.insert_text({"Open: " + dir + "/"}, c.pos);
+  c.pos.x = (int)p.text[0].size(); }
+
+bool Editor::proc_save_file(){
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  if(p.file == ""){
+    proc_save_new_file();
+    return false; }
+  p.clean();
+  bool success = write_file();
+  if(success)
+    p.saved = true;
+  p.draw();
+  return success; }
+
+void Editor::proc_save_new_file(){
+  prev_panel = focus;
+  switch_panel(&cmd_panel);
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  p.draw();
+  p.insert_text({"Save: " + dir + "/"}, c.pos);
   c.pos.x = (int)p.text[0].size(); }
 
 void Editor::proc_set_mark(){

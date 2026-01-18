@@ -46,6 +46,7 @@ struct Panel : virtual system {
   void insert_text(const vec<str>& ins, const ipoint& p);
   void remove_text(const ipoint& p0, const ipoint& pf);
   void delete_selection();
+  void clean();
   void scroll(const Dir d);
   void move_cursor(const Dir d);
   // Defined in highlight.hh
@@ -136,6 +137,7 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   //   return; }
 
   // Redraw panel if lines moved
+  saved = false;
   draw(); }
 
 void Panel::remove_text(const ipoint& p0, const ipoint& pf){
@@ -206,6 +208,7 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   //   return; }
 
   // Redraw panel if lines moved
+  saved = false;
   draw(); }
 
 void Panel::delete_selection(){
@@ -219,6 +222,19 @@ void Panel::delete_selection(){
     c.pos = p0;
   mark = ipoint(-1, -1);
   draw(); }
+
+void Panel::clean(){
+  Cursor& c = cursor;
+  // Delete trailing whitespace
+  for(int y = 0; y < text.size(); ++y){
+    int n = 0;
+    for(int x = text[y].size() - 1; x >= 0; --x){
+      if(text[y][x] == ' ') ++n;
+      else break; }
+    text[y] = text[y].substr(0, text[y].size() - n); }
+  // Reset cursor
+  while(c.pos.x > text[c.pos.y].size())
+    --c.pos.x; }
 
 void Panel::scroll(const Dir d){
   int lines = min((int)text.size() - top_line - 1, scroll_lines);

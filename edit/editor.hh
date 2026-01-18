@@ -2,7 +2,10 @@
 
 //! TODO
 //!
-//! Save file
+//! Stop commands for cmd panel
+//! Tab complete partial token
+//! Set cwd of panel
+//!
 //! Find/replace
 //! Word wrap
 //! Syntax highlighting
@@ -23,6 +26,7 @@ struct Editor : virtual window {
 
   bool shift, ctrl, alt;
   ipoint frame_size;
+  str dir;
   vec<str> clipboard;
   font font_base;
   Panel cmd_panel, info_panel, *focus, *prev_panel;
@@ -40,7 +44,7 @@ struct Editor : virtual window {
   // Defined in draw.hh
   void draw();
   // Defined in cmd_panel.hh
-  void process_cmd(const str& cmd);
+  bool process_cmd(const str& cmd);
   void complete_file();
 
   void resize(const ipoint& npos, const ipoint& nsize);
@@ -50,6 +54,7 @@ struct Editor : virtual window {
   void scale_font(const double factor);
   void clip();
   void switch_panel(Panel* p);
+  bool write_file();
 
   // Defined in input.hh
   bool parse_char(const str& key);
@@ -62,6 +67,8 @@ struct Editor : virtual window {
   void proc_delete();
   void proc_del_space();
   void proc_open_file();
+  bool proc_save_file();
+  void proc_save_new_file();
   void proc_set_mark();
   void proc_select_all();
   void proc_indent_selection();
@@ -85,6 +92,10 @@ void Editor::init(){
   _win = this;
   shift = ctrl = alt = false;
   Panel::frame = Cursor::frame = &frame;
+  dir = current_path().string();
+  for(int i = 0; i < dir.size(); ++i)
+    if(dir[i] == '\\')
+      dir[i] = '/';
 
   // Window init
   RECT rect;
@@ -263,5 +274,14 @@ void Editor::switch_panel(Panel* p){
   p->focus = true;
   if(&p0 != &cmd_panel && p != &cmd_panel)
     p->draw_file_bar(); }
+
+bool Editor::write_file(){
+  Panel& p = *focus;
+  ofstream fs(p.file);
+  if(!fs.is_open()) return false;
+  for(int y = 0; y < p.text.size(); ++y)
+    fs << p.text[y] << endl;
+  fs.close();
+  return true; }
 
 #endif
