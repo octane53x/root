@@ -50,7 +50,20 @@ bool Editor::process_cmd(const str& cmd){
     if(!exists(dir)) return false;
     p.dir = dir;
     p.file = path.substr(i + 1);
-    return proc_save_file(); }
+    return proc_save_file();
+
+  }else if(cmd.find("Goto: ") == 0){
+    str line = cmd.substr(6);
+    for(int i = 0; i < line.size(); ++i)
+      if(!is_digit(line[i]))
+        return false;
+    int n = stoi(line) - 1;
+    if(n >= p.text.size()) return false;
+    while(c.pos.y > n)
+      p.move_cursor(UP);
+    while(c.pos.y < n)
+      p.move_cursor(DOWN);
+    return true; }
 
   // Bad command
   return false; }

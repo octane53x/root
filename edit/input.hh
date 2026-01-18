@@ -93,6 +93,8 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
       scale_font(SCALE_FACTOR);
     else if(key == "MINUS")
       scale_font(1.0 / SCALE_FACTOR);
+    else if(key == "G")
+      proc_goto_line();
     else if(key == "SPACE")
       proc_set_mark();
     else if(key == "A")
@@ -218,7 +220,8 @@ void Editor::proc_backspace(){
   if(p.mark.y == -1){
     if(&p == &cmd_panel){
       if(p.text[0].find("Open: ") == 0 && c.pos.x == 6) return;
-      if(p.text[0].find("Save: ") == 0 && c.pos.x == 6) return; }
+      if(p.text[0].find("Save: ") == 0 && c.pos.x == 6) return;
+      if(p.text[0].find("Goto: ") == 0 && c.pos.x == 6) return; }
     p.move_cursor(LEFT);
     p.remove_text(c.pos, c.pos);
   }else
@@ -363,6 +366,15 @@ void Editor::proc_save_new_file(){
   p.draw();
   p.insert_text({"Save: " + prev_panel->dir}, c.pos);
   c.pos.x = (int)p.text[0].size(); }
+
+void Editor::proc_goto_line(){
+  prev_panel = focus;
+  switch_panel(&cmd_panel);
+  Panel& p = *focus;
+  Cursor& c = p.cursor;
+  p.draw();
+  p.insert_text({"Goto: "}, c.pos);
+  c.pos.x = 6; }
 
 void Editor::proc_set_mark(){
   Panel& p = *focus;

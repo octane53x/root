@@ -69,6 +69,7 @@ struct Editor : virtual window {
   void proc_open_file();
   bool proc_save_file();
   void proc_save_new_file();
+  void proc_goto_line();
   void proc_set_mark();
   void proc_select_all();
   void proc_indent_selection();
