@@ -34,13 +34,13 @@ const color
     // Highlighting
     COLOR_CODE = color(255, 255, 255),
     COLOR_KEYWORD = color(0, 208, 208),
-    COLOR_TYPE = color(90, 230, 145),
-    COLOR_NAME = color(230, 230, 110),
+    COLOR_TYPE = color(140, 240, 200),
+    COLOR_NAME = color(220, 220, 100),
     COLOR_FUNCTION = color(120, 132, 176),
     COLOR_BASE = color(90, 220, 220),
     COLOR_STRING = color(230, 124, 124),
     COLOR_COMMENT = color(255, 92, 0),
-    COLOR_PREPROCESSOR = color(200, 160, 230);
+    COLOR_PREPROCESSOR = color(160, 160, 230);
 
 const vec<color> TEXT_COLORS =
     {COLOR_CODE, COLOR_KEYWORD, COLOR_TYPE, COLOR_NAME, COLOR_FUNCTION,
@@ -107,17 +107,19 @@ bool type_or_name(const str& s){
 
 str next_tok(const str& s){
   if(s == "") return "";
+  uset<char> brackets = {'(', ')', '[', ']', '{', '}'};
   int i = 0;
-  if(is_alpha(s[0]) || is_digit(s[0]) || s[0] == '_')
-    while(i < s.size() && (is_alpha(s[i]) || is_digit(s[i]) || s[i] == '_'))
+  if(name_or_val(s[0]))
+    while(i < s.size() && name_or_val(s[i]))
       ++i;
-  else if(s[0] == '(' || s[0] == ')' || s[0] == '[' || s[0] == ']'
-      || s[0] == '{' || s[0] == '}')
+  else if(brackets.find(s[0]) != brackets.end())
     ++i;
+  else if(s[0] == ' ')
+    while(i < s.size() && s[i] == ' ')
+      ++i;
   else
-    while(!is_alpha(s[i]) && !is_digit(s[i]) && s[i] != '_'
-        && s[i] != '(' && s[i] != ')' && s[i] != '[' && s[i] != ']'
-        && s[i] != '{' && s[i] != '}')
+    while(i < s.size() && !name_or_val(s[i]) && s[i] != ' '
+        && brackets.find(s[i]) == brackets.end())
       ++i;
   return s.substr(0, i); }
 

@@ -3,9 +3,7 @@
 //! TODO
 //!
 //! Stop commands for cmd panel
-//! Prevent deleting cmd prompts
 //!
-//! Goto line
 //! Syntax highlighting
 //! Find/replace
 //! Word wrap

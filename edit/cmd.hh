@@ -52,6 +52,7 @@ bool Editor::process_cmd(const str& cmd){
     p.file = path.substr(i + 1);
     return proc_save_file();
 
+  // Go to line number
   }else if(cmd.find("Goto: ") == 0){
     str line = cmd.substr(6);
     for(int i = 0; i < line.size(); ++i)

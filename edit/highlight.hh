@@ -20,17 +20,27 @@ void Panel::highlight_text(){
   int x = 0, y = 0;
   ipoint type_pt(-1, -1);
   while(y < text.size()){
-    // Move marker
+    // Next line
     if(x >= text[y].size()){
       ++y;
       x = 0;
       continue; }
+
+    // Skip spaces
     if(text[y][x] == ' '){
       ++x;
       continue; }
 
-    // Reset flags
+    // Skip preprocessor instructions and comments, reset
     str tok = next_tok(text[y].substr(x));
+    if(tok == "#" || tok == "//"){
+      type_found = false;
+      expect_name = false;
+      ++y;
+      x = 0;
+      continue; }
+
+    // Reset flags
     if(tok == ";" && type_found){
       type_found = false;
       expect_name = false;
@@ -66,7 +76,7 @@ void Panel::highlight_text(){
       continue; }
 
     // Cancel search for name
-    if(type_found && tok != "&" && tok != "*"){
+    if(tok != "&" && tok != "*" && type_found){
       type_found = false;
       expect_name = false;
       x += tok.size();
@@ -112,7 +122,9 @@ void Panel::highlight_text(){
     while(x < text[y].size() && text[y][x] == ' ')
       ++x;
     if(x >= text[y].size() || text[y][x] != '#') continue;
-    for(; x < text[y].size(); ++x)
+    str line = text[y].substr(x + 1);
+    str tok = next_tok(line);
+    for(int i = 0; i < tok.size() + 1; ++i, ++x)
       text_color[y][x] = COLOR_PREPROCESSOR; }
 
   // Comments
