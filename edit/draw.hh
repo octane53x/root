@@ -7,6 +7,9 @@
 
 void Editor::draw(){
   updated = false;
+  for(int y = 0; y < frame_size.y; ++y)
+    for(int x = 0; x < frame_size.x; ++x)
+      frame.data[y][x] = BKGD_COLOR;
   for(Panel& p : panels)
     p.draw();
   if(&cmd_panel == focus)
@@ -113,8 +116,8 @@ void Panel::draw_file_bar(){
       frame->data[y][x] = cbkgd;
   // Determine file bar text
   str bar_text = str(saved ? "-----" : "*****") + "     ";
-  if(file.find("\\root\\") != str::npos)
-    bar_text += file.substr(file.find("\\root\\") + 6) + "     ";
+  if(file.find("/root/") != str::npos)
+    bar_text += file.substr(file.find("/root/") + 6) + "     ";
   bar_text += "(" + to_string(cursor.pos.y + 1) + ","
       + to_string(cursor.pos.x + 1) + ")";
   // Draw text

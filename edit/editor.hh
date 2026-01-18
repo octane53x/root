@@ -3,12 +3,11 @@
 //! TODO
 //!
 //! Stop commands for cmd panel
-//! Tab complete partial token
 //! Set cwd of panel
 //!
+//! Syntax highlighting
 //! Find/replace
 //! Word wrap
-//! Syntax highlighting
 //! Scroll bar
 //! Autocomplete
 

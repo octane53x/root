@@ -10,7 +10,7 @@ typedef umap<char, image> font;
 const int
     FRAME_HEIGHT_OFFSET = -31,
     WIN_WIDTH_OFFSET = 15,
-    WIN_HEIGHT_OFFSET = 43,
+    WIN_HEIGHT_OFFSET = 39,
     WIN_XPOS_OFFSET = 7,
     LINE_HEIGHT_SCALE_1 = 18,
     CHAR_WIDTH_SCALE_1 = 9,

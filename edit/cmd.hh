@@ -67,10 +67,24 @@ void Editor::complete_file(){
   for(const str& s : files)
     if(starts_with(s, tok))
       opts.pb(s);
-  if(opts.size() != 1) return;
+  if(opts.empty()) return;
+  tok = "";
+  if(opts.size() > 1){
+    for(int i = 0; i < opts[0].size(); ++i){
+      char c = opts[0][i];
+      bool same = true;
+      for(int j = 1; j < opts.size(); ++j){
+        if(i >= opts[j].size() || opts[j][i] != c){
+          same = false;
+          break; } }
+      if(same)
+        tok += str(1, c);
+      else break; }
+  }else
+    tok = opts[0];
 
   // Display completion
-  c.text[0] = "Open: " + dir + opts[0];
+  c.text[0] = "Open: " + dir + tok;
   c.cursor.pos = ipoint(c.text[0].size(), 0);
   c.highlight_text();
   c.draw(); }
