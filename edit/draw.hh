@@ -116,8 +116,8 @@ void Panel::draw_file_bar(){
       frame->data[y][x] = cbkgd;
   // Determine file bar text
   str bar_text = str(saved ? "-----" : "*****") + "     ";
-  if(file.find("/root/") != str::npos)
-    bar_text += file.substr(file.find("/root/") + 6) + "     ";
+  if(dir.find("/root/") != str::npos)
+    bar_text += dir.substr(dir.find("/root/") + 6) + file + "     ";
   bar_text += "(" + to_string(cursor.pos.y + 1) + ","
       + to_string(cursor.pos.x + 1) + ")";
   // Draw text

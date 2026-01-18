@@ -64,6 +64,15 @@ const uset<str> KEYWORDS = {
 
 enum Dir { UP, LEFT, DOWN, RIGHT };
 
+str clean_path(const str& s){
+  str r = s;
+  for(int i = 0; i < s.size(); ++i)
+    if(r[i] == '\\')
+      r[i] = '/';
+  if(r.back() != '/')
+    r += "/";
+  return r; }
+
 bool in_selection(const ipoint& p0, const ipoint& pf, const ipoint& p){
   bool after_p0 = (p.y > p0.y || (p.y == p0.y && p.x >= p0.x));
   bool before_pf = (p.y < pf.y || (p.y == pf.y && p.x <= pf.x));

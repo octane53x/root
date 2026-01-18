@@ -216,6 +216,9 @@ void Editor::proc_backspace(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.mark.y == -1){
+    if(&p == &cmd_panel){
+      if(p.text[0].find("Open: ") == 0 && c.pos.x == 6) return;
+      if(p.text[0].find("Save: ") == 0 && c.pos.x == 6) return; }
     p.move_cursor(LEFT);
     p.remove_text(c.pos, c.pos);
   }else
@@ -336,7 +339,7 @@ void Editor::proc_open_file(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   p.draw();
-  p.insert_text({"Open: " + dir + "/"}, c.pos);
+  p.insert_text({"Open: " + prev_panel->dir}, c.pos);
   c.pos.x = (int)p.text[0].size(); }
 
 bool Editor::proc_save_file(){
@@ -358,7 +361,7 @@ void Editor::proc_save_new_file(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   p.draw();
-  p.insert_text({"Save: " + dir + "/"}, c.pos);
+  p.insert_text({"Save: " + prev_panel->dir}, c.pos);
   c.pos.x = (int)p.text[0].size(); }
 
 void Editor::proc_set_mark(){

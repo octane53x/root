@@ -18,7 +18,7 @@ struct Panel : virtual system {
   double text_scale;
   color bkgd;
   ipoint pos, size, mark;
-  str file;
+  str dir, file;
   vec<str> text;
   vec<vec<color> > text_color;
   vec<Op> opstack;
@@ -73,6 +73,7 @@ void Panel::init(){
   file = "";
   text.pb("");
   text_color.pb(vec<color>());
+  dir = clean_path(current_path().string());
   cursor.init(); }
 
 void Panel::update(const double ms){

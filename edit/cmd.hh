@@ -11,13 +11,23 @@ bool Editor::process_cmd(const str& cmd){
   Cursor& c = p.cursor;
   // Open file
   if(cmd.find("Open: ") == 0){
-    p.file = cmd.substr(6);
+    // Return if directory does not exist
+    str path = cmd.substr(6);
+    int i;
+    for(i = path.size() - 1; i >= 0; --i)
+      if(path[i] == '/') break;
+    if(i < 0) return false;
+    str dir = path.substr(0, i + 1);
+    if(!exists(dir)) return false;
+    p.dir = dir;
+    p.file = path.substr(i + 1);
+
     // Clear panel
     p.text.clear();
     c.pos = ipoint(0, 0);
     // Load file text
-    if(exists(p.file)){
-      ifstream fs(p.file);
+    if(exists(path)){
+      ifstream fs(path);
       str line;
       while(getline(fs, line))
         p.text.pb(line);
@@ -27,19 +37,28 @@ bool Editor::process_cmd(const str& cmd){
     p.top_line = 0;
     return true;
 
-  // Save file
+  // Save new file
   }else if(cmd.find("Save: ") == 0){
-    str file = cmd.substr(6);
-    if(exists(file))
+    str path = cmd.substr(6);
+    if(exists(path))
       return false;
-    p.file = file;
+    int i;
+    for(i = path.size() - 1; i >= 0; --i)
+      if(path[i] == '/') break;
+    if(i < 0) return false;
+    str dir = path.substr(0, i + 1);
+    if(!exists(dir)) return false;
+    p.dir = dir;
+    p.file = path.substr(i + 1);
     return proc_save_file(); }
+
+  // Bad command
   return false; }
 
 void Editor::complete_file(){
   assert(focus == &cmd_panel, "complete_file", "cmd panel not in focus");
   Panel& c = *focus;
-  if(c.text[0].find("Open: ") != 0) return;
+  if(c.text[0].find("Open: ") != 0 && c.text[0].find("Save: ") != 0) return;
   str path = c.text[0].substr(6);
   int i;
   for(i = (int)path.size() - 1; i >= 0; --i)
