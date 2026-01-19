@@ -3,6 +3,7 @@
 //! TODO
 //!
 //! Stop commands for cmd panel
+//! Single character speed
 //!
 //! Syntax highlighting
 //! Find/replace

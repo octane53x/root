@@ -16,8 +16,9 @@ void Panel::highlight_text(){
   if(cmd) return;
 
   // Declarations
-  bool in_fn = false, type_found = false, expect_name = false;
-  int x = 0, y = 0;
+  bool in_fn = false, type_found = false, expect_name = false,
+      class_decl = false;
+  int x = 0, y = 0, parens = 0, type_nest = 0;
   ipoint type_pt(-1, -1);
   while(y < text.size()){
     // Next line
@@ -31,22 +32,49 @@ void Panel::highlight_text(){
       ++x;
       continue; }
 
-    // Skip preprocessor instructions and comments, reset
+    // Skip whole instruction after any '='
+    if(text[y][x] == '='){
+      while(text[y][x] != ';'){
+        ++x;
+        if(x >= text[y].size()){
+          ++y;
+          x = 0; }
+        if(y >= text.size()) return; } }
+
+    // Get next token
     str tok = next_tok(text[y].substr(x));
+
+    // Skip preprocessor instructions and comments, reset
     if(tok == "#" || tok == "//"){
-      type_found = false;
-      expect_name = false;
       ++y;
       x = 0;
       continue; }
 
-    // Reset flags
-    if(tok == ";" && type_found){
-      type_found = false;
-      expect_name = false;
+    // Enter class declaration
+    if(tok == "struct" || tok == "class"){
+      class_decl = true;
+      x += tok.size();
+      continue; }
+
+    // Highlight class type
+    if(class_decl && type_or_name(tok)){
+      for(int i = x; i < x + tok.size(); ++i)
+        text_color[y][i] = COLOR_TYPE;
+      x += tok.size();
+      continue; }
+
+    // Exit class declaration
+    if(class_decl && (tok == ";" || tok == "{")){
+      class_decl = false;
       ++x;
       continue; }
-    if(tok == "," && type_found){
+
+    // Reset flags
+    if((tok == ";" || (tok == "," && parens > 0)) && type_found){
+      type_found = expect_name = false;
+      ++x;
+      continue; }
+    if(tok == "," && parens == 0 && type_found){
       expect_name = true;
       ++x;
       continue; }
@@ -56,29 +84,66 @@ void Panel::highlight_text(){
       x += tok.size();
       continue; }
 
+    // Count parentheses
+    if(tok == "("){
+      type_found = expect_name = false;
+      ++parens;
+      ++x;
+      continue; }
+    if(tok == ")"){
+      type_found = expect_name = false;
+      parens = (parens - 1 < 0) ? 0 : parens - 1;
+      ++x;
+      continue; }
+
+    // Templated type
+    if(type_found && tok == "<"){
+      ++type_nest;
+      ++x;
+      continue; }
+    if(type_found && tok == ">"){
+      type_nest = (type_nest - 1 < 0) ? 0 : type_nest - 1;
+      ++x;
+      continue; }
+    if(type_nest > 0 && type_or_name(tok)){
+      for(int i = x; i < x + tok.size(); ++i)
+        text_color[y][i] = COLOR_TYPE;
+      x += tok.size();
+      continue; }
+
     // Highlight type and name
     if(expect_name && type_or_name(tok)){
+      // Check for parenthesis (function)
+      str tt = next_tok(text[y].substr(x + tok.size()));
+      bool spaces = true;
+      for(int i = 0; i < tt.size(); ++i)
+        if(tt[i] != ' '){
+          spaces = false;
+          break; }
+      if(spaces)
+        tt = next_tok(text[y].substr(x + tok.size() + tt.size()));
+      color ct = (tt == "(") ? COLOR_FUNCTION : COLOR_NAME;
+
+      // Otherwise variable
       str t = next_tok(text[type_pt.y].substr(type_pt.x));
       for(int i = type_pt.x; i < type_pt.x + t.size(); ++i)
         text_color[type_pt.y][i] = COLOR_TYPE;
       for(int i = x; i < x + tok.size(); ++i)
-        text_color[y][i] = COLOR_NAME;
+        text_color[y][i] = ct;
       expect_name = false;
       x += tok.size();
       continue; }
 
     // Found type
     if(type_or_name(tok)){
-      type_found = true;
-      expect_name = true;
+      type_found = expect_name = true;
       type_pt = ipoint(x, y);
       x += tok.size();
       continue; }
 
     // Cancel search for name
-    if(tok != "&" && tok != "*" && type_found){
-      type_found = false;
-      expect_name = false;
+    if(type_found && tok != "&" && tok != "*" && tok != "<"){
+      type_found = expect_name = false;
       x += tok.size();
       continue; }
 

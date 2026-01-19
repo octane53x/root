@@ -33,14 +33,14 @@ const color
 
     // Highlighting
     COLOR_CODE = color(255, 255, 255),
-    COLOR_KEYWORD = color(0, 208, 208),
-    COLOR_TYPE = color(140, 240, 200),
-    COLOR_NAME = color(220, 220, 100),
-    COLOR_FUNCTION = color(120, 132, 176),
+    COLOR_KEYWORD = color(0, 255, 255),
+    COLOR_TYPE = color(140, 255, 200),
+    COLOR_NAME = color(255, 255, 100),
+    COLOR_FUNCTION = color(170, 230, 255),
     COLOR_BASE = color(90, 220, 220),
-    COLOR_STRING = color(230, 124, 124),
+    COLOR_STRING = color(255, 160, 160),
     COLOR_COMMENT = color(255, 92, 0),
-    COLOR_PREPROCESSOR = color(160, 160, 230);
+    COLOR_PREPROCESSOR = color(160, 160, 255);
 
 const vec<color> TEXT_COLORS =
     {COLOR_CODE, COLOR_KEYWORD, COLOR_TYPE, COLOR_NAME, COLOR_FUNCTION,
