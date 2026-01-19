@@ -36,9 +36,9 @@ const color
     COLOR_KEYWORD = color(0, 255, 255),
     COLOR_TYPE = color(140, 255, 200),
     COLOR_NAME = color(255, 255, 100),
-    COLOR_FUNCTION = color(170, 230, 255),
+    COLOR_FUNCTION = color(100, 200, 255),
     COLOR_BASE = color(90, 220, 220),
-    COLOR_STRING = color(255, 160, 160),
+    COLOR_STRING = color(255, 140, 140),
     COLOR_COMMENT = color(255, 92, 0),
     COLOR_PREPROCESSOR = color(160, 160, 255);
 

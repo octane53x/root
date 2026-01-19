@@ -5,6 +5,9 @@
 #include "cmd.hh"
 #include "highlight.hh"
 
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "user32.lib")
+
 // Main function called on application execution
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
@@ -14,3 +17,4 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
   edit.init();
   edit.run();
   return 0; }
+

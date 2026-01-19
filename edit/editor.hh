@@ -8,7 +8,9 @@
 //! Syntax highlighting
 //! Find/replace
 //! Word wrap
+//! Paren highlight
 //! Scroll bar
+//! Comment selection
 //! Info panel
 //! Autocomplete
 
@@ -17,9 +19,6 @@
 
 #include "window.hh"
 #include "panel.hh"
-
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib, "user32.lib")
 
 // Text editor application
 struct Editor : virtual window {
@@ -101,6 +100,7 @@ void Editor::init(){
   size = ipoint(frame_size.x + WIN_WIDTH_OFFSET,
       frame_size.y + WIN_HEIGHT_OFFSET);
   win_pos = ipoint(rect.right - size.x + WIN_XPOS_OFFSET, 0);
+  frame.set_size(frame_size);
 
   // Initial panel
   panels.pb(Panel());
@@ -122,8 +122,13 @@ void Editor::init(){
   load_font();
   color_font(1.0);
 
+  // Preferences
+  process_cmd("Open: C:/home/root/edit/highlight.hh");
+  proc_split_vertical();
+  process_cmd("Open: C:/home/root/edit/editor.hh");
+  proc_left_panel();
+
   // Display frame
-  frame.set_size(frame_size);
   draw(); }
 
 void Editor::run(){
