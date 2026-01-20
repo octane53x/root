@@ -22,6 +22,7 @@ struct Panel : virtual system {
   vec<str> text;
   vec<vec<color> > text_color;
   vec<Op> opstack;
+  FileType file_type;
   Cursor cursor;
 
   static image* frame;
@@ -49,6 +50,7 @@ struct Panel : virtual system {
   void clean();
   void scroll(const Dir d);
   void move_cursor(const Dir d);
+  void set_file_type();
   // Defined in highlight.hh
   void highlight_text(); };
 
@@ -74,6 +76,7 @@ void Panel::init(){
   text.pb("");
   text_color.pb(vec<color>());
   dir = clean_path(current_path().string());
+  file_type = NO_FILE_TYPE;
   cursor.init(); }
 
 void Panel::update(const double ms){
@@ -330,5 +333,15 @@ void Panel::move_cursor(const Dir d){
   // Update file bar
   if(!cmd)
     draw_file_bar(); }
+
+void Panel::set_file_type(){
+  if(ends_with(file, ".cc") || ends_with(file, ".hh"))
+    file_type = CPP;
+  else if(ends_with(file, ".py"))
+    file_type = PYTH;
+  else if(ends_with(file, ".crab"))
+    file_type = CRAB;
+  else
+    file_type = NO_FILE_TYPE; }
 
 #endif

@@ -21,6 +21,7 @@ bool Editor::process_cmd(const str& cmd){
     if(!exists(dir)) return false;
     p.dir = dir;
     p.file = path.substr(i + 1);
+    p.set_file_type();
 
     // Clear panel
     p.text.clear();
@@ -50,6 +51,7 @@ bool Editor::process_cmd(const str& cmd){
     if(!exists(dir)) return false;
     p.dir = dir;
     p.file = path.substr(i + 1);
+    p.set_file_type();
     return proc_save_file();
 
   // Go to line number

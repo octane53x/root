@@ -34,10 +34,10 @@ const color
     // Highlighting
     COLOR_CODE = color(255, 255, 255),
     COLOR_KEYWORD = color(0, 255, 255),
-    COLOR_TYPE = color(140, 255, 200),
+    COLOR_TYPE = color(100, 255, 160),
     COLOR_NAME = color(255, 255, 100),
     COLOR_FUNCTION = color(100, 200, 255),
-    COLOR_BASE = color(90, 220, 220),
+    COLOR_BASE = color(120, 255, 255),
     COLOR_STRING = color(255, 140, 140),
     COLOR_COMMENT = color(255, 92, 0),
     COLOR_PREPROCESSOR = color(160, 160, 255);
@@ -62,6 +62,8 @@ const uset<str> KEYWORDS = {
     "static_cast", "dynamic_cast", "typename", "class", "do", "inline", "new",
     "public", "protected", "private"};
 
+enum FileType { NO_FILE_TYPE, CPP, PYTH, CRAB };
+
 enum Dir { UP, LEFT, DOWN, RIGHT };
 
 str clean_path(const str& s){
@@ -82,6 +84,12 @@ bool starts_with(const str& s, const str& t){
   if(t.size() > s.size()) return false;
   for(int i = 0; i < t.size(); ++i)
     if(s[i] != t[i]) return false;
+  return true; }
+
+bool ends_with(const str& s, const str& t){
+  if(t.size() > s.size()) return false;
+  for(int i = t.size() - 1, j = s.size() - 1; i >= 0; --i, --j)
+    if(s[j] != t[i]) return false;
   return true; }
 
 bool is_upper(const char c){
@@ -105,22 +113,39 @@ bool type_or_name(const str& s){
     if(!name_or_val(s[i])) return false;
   return true; }
 
+bool all_spaces(const str& s){
+  int spaces = 0;
+  for(; spaces < s.size() && s[spaces] == ' '; ++spaces);
+  return spaces == s.size(); }
+
 str next_tok(const str& s){
   if(s == "") return "";
-  uset<char> brackets = {'(', ')', '[', ']', '{', '}'};
+  uset<str> ops =
+      {"//", "/*", "*/", "::", "->", "==", "!=", ">=", "<=", "&&", "||",
+      "<<", ">>", "<<=", ">>=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^="};
   int i = 0;
-  if(name_or_val(s[0]))
+  // Numeric constant
+  if(is_digit(s[0])){
+    while(i < s.size() && is_digit(s[i]))
+      ++i;
+  // Type or name
+  }else if(is_alpha(s[0]) || s[0] == '_'){
+    ++i;
     while(i < s.size() && name_or_val(s[i]))
       ++i;
-  else if(brackets.find(s[0]) != brackets.end())
-    ++i;
-  else if(s[0] == ' ')
+  // Spaces
+  }else if(s[0] == ' '){
     while(i < s.size() && s[i] == ' ')
       ++i;
+  // Three char operator
+  }else if(s.size() > 2 && ops.find(s.substr(0, 3)) != ops.end())
+    i += 3;
+  // Two char operator
+  else if(s.size() > 1 && ops.find(s.substr(0, 2)) != ops.end())
+    i += 2;
+  // Otherwise return single character
   else
-    while(i < s.size() && !name_or_val(s[i]) && s[i] != ' '
-        && brackets.find(s[i]) == brackets.end())
-      ++i;
+    ++i;
   return s.substr(0, i); }
 
 str delete_tok(const str& s){
