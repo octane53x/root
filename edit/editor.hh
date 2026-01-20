@@ -125,7 +125,7 @@ void Editor::init(){
   // Preferences
   process_cmd("Open: C:/home/root/edit/highlight.hh");
   proc_split_vertical();
-  process_cmd("Open: C:/home/root/edit/sample.cc");
+  process_cmd("Open: C:/home/root/edit/editor.hh");
   proc_left_panel();
 
   // Display frame

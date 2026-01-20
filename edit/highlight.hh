@@ -1,5 +1,11 @@
 // SYNTAX HIGHLIGHTING
 
+//! TODO
+//!
+//! Ptr/ref stopping type_found
+//! Params in decl (def is fine)
+//! Template type
+
 #ifndef HIGHLIGHT_HH
 #define HIGHLIGHT_HH
 
@@ -18,11 +24,11 @@ void Panel::highlight_text(){
 
   if(file_type == CPP){
     bool in_comment_block = false, in_str = false, in_val = false,
-        in_fn = false, in_preproc = false,
-        ready_for_type = true, type_found = false;
-    int in_obj = 0, braces = 0;
+        in_fn = false, in_preproc = false, in_params = false, in_for = false,
+        ready_for_type = true, type_found = false, name_found = false;
+    int in_obj = 0, braces = 0, parens = 0;
     ipoint pos(0, 0), type_pt, tok_pt, last_pt;
-    str tok, last_tok;
+    str tok, last_tok, last_tok2;
     while(pos.y < text.size()){
 
       // Next line
@@ -36,6 +42,7 @@ void Panel::highlight_text(){
 
       // Get next token
       if(!all_spaces(tok)){
+        last_tok2 = last_tok;
         last_tok = tok;
         last_pt = tok_pt; }
       tok = next_tok(text[pos.y].substr(pos.x));
@@ -57,11 +64,11 @@ void Panel::highlight_text(){
       if(in_str){
         for(int i = pos.x; i < pos.x + tok.size(); ++i)
           text_color[pos.y][i] = COLOR_STRING;
-        if(tok == "\"" && last_tok != "\\")
+        if(tok == "\"" && !(last_tok == "\\" && last_tok2 != "\\"))
           in_str = false;
         pos.x += tok.size();
         continue; }
-      if(tok == "\"" && last_tok != "\\"){
+      if(tok == "\"" && !(last_tok == "\\" && last_tok2 != "\\")){
         in_str = true;
         ready_for_type = false;
         text_color[pos.y][pos.x] = COLOR_STRING;
@@ -88,6 +95,8 @@ void Panel::highlight_text(){
       if(KEYWORDS.find(tok) != KEYWORDS.end()){
         if(tok == "struct" || tok == "class")
           ++in_obj;
+        else if(tok == "for")
+          in_for = true;
         for(int i = pos.x; i < pos.x + tok.size(); ++i)
           text_color[pos.y][i] = COLOR_KEYWORD;
         pos.x += tok.size();
@@ -95,9 +104,12 @@ void Panel::highlight_text(){
 
       // Inside function or brace
       if(tok == "{"){
-        ready_for_type = true;
-        if(last_tok == ")")
+        if(!in_val){
+          name_found = false;
+          ready_for_type = true; }
+        if(last_tok == ")"){
           in_fn = true;
+          in_params = false; }
         if(!in_val)
           type_found = false;
         ++braces;
@@ -106,7 +118,8 @@ void Panel::highlight_text(){
 
       // End of function or brace
       if(tok == "}"){
-        ready_for_type = false;
+        if(!in_val)
+          ready_for_type = true;
         if(in_fn && braces == in_obj + 1)
           in_fn = false;
         if(in_obj > 0 && braces == in_obj)
@@ -116,17 +129,33 @@ void Panel::highlight_text(){
         ++pos.x;
         continue; }
 
-      // End of instruction
-      if(tok == ";"){
-        in_val = type_found = false;
-        ready_for_type = true;
+      // Enter paren
+      if(tok == "("){
+        if(last_tok == "for")
+          ready_for_type = true;
+        ipoint p = pos;
+        while(p.y < text.size()
+            && text[p.y][p.x] != ';' && text[p.y][p.x] != '{'){
+          ++p.x;
+          if(p.x >= text[p.y].size()){
+            ++p.y;
+            p.x = 0; } }
+        if(p.y < text.size()){
+          if(text[p.y][p.x] == ';' && last_tok != "for")
+            in_val = true;
+          else if(text[p.y][p.x] == '{'){
+            ready_for_type = true;
+            in_params = true; } }
+        ++parens;
         ++pos.x;
         continue; }
 
-      // Next instruction, parameter, or value
-      if(tok == ","){
-        in_val = false;
-        ready_for_type = false;
+      // Leave paren
+      if(tok == ")"){
+        if(parens > 0)
+          --parens;
+        if(parens == 0 && in_for)
+          in_for = false;
         ++pos.x;
         continue; }
 
@@ -135,6 +164,23 @@ void Panel::highlight_text(){
         in_val = true;
         ready_for_type = false;
         pos.x += tok.size();
+        continue; }
+
+      // End of instruction
+      if(tok == ";"){
+        in_val = type_found = name_found = false;
+        ready_for_type = true;
+        ++pos.x;
+        continue; }
+
+      // Next instruction, parameter, or value
+      if(tok == ","){
+        if(!name_found)
+          type_found = false;
+        if(parens == 0 || in_for)
+          in_val = false;
+        ready_for_type = in_params;
+        ++pos.x;
         continue; }
 
       // Type scoping
@@ -161,10 +207,11 @@ void Panel::highlight_text(){
 
       // Var name
       if(type_found && !in_val && type_or_name(tok)){
+        name_found = true;
         str tn = next_tok(text[pos.y].substr(pos.x + tok.size()));
         if(all_spaces(tn))
           tn = next_tok(text[pos.y].substr(pos.x + tok.size() + tn.size()));
-        color ct = (tn == "(") ? COLOR_FUNCTION : COLOR_NAME;
+        color ct = (!in_fn && tn == "(") ? COLOR_FUNCTION : COLOR_NAME;
         str t = next_tok(text[type_pt.y].substr(type_pt.x));
         for(int i = type_pt.x; i < type_pt.x + t.size(); ++i)
           text_color[type_pt.y][i] = COLOR_TYPE;
