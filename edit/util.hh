@@ -33,8 +33,8 @@ const color
 
     // Highlighting
     COLOR_CODE = color(255, 255, 255),
-    COLOR_KEYWORD = color(0, 255, 255),
-    COLOR_TYPE = color(100, 255, 160),
+    COLOR_KEYWORD = color(0, 235, 235),
+    COLOR_TYPE = color(80, 255, 140),
     COLOR_NAME = color(255, 255, 100),
     COLOR_FUNCTION = color(100, 200, 255),
     COLOR_BASE = color(120, 255, 255),
