@@ -86,6 +86,7 @@ void Panel::update(const double ms){
   c.update(ms);
   if(!c.updated) return;
   c.updated = false;
+  // Draw character or cursor (move to draw obv)
   char ch = (c.pos.x == text[c.pos.y].size())
       ? ' ' : text[c.pos.y][c.pos.x];
   color ct = (c.fill == CURSOR_COLOR || cmd) ? BAR_TEXT_COLOR
@@ -124,12 +125,12 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
     markf = (mark0 == c.pos) ? mark : c.pos; }
 
   // Draw single character at end of line
-  // if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
-  //   color cb = (mark.y != -1 && in_selection(mark0, markf, p))
-  //       ? SELECT_COLOR : bkgd;
-  //   draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
-  //       text_to_frame(p));
-  //   return; }
+  if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
+    color cb = (mark.y != -1 && in_selection(mark0, markf, p))
+        ? SELECT_COLOR : bkgd;
+    draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
+        text_to_frame(p));
+    return; }
 
   // Draw single line without adding new lines
   // if(ins.size() == 1){

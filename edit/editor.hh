@@ -5,7 +5,6 @@
 //! Stop commands for cmd panel
 //! Single character speed
 //!
-//! Syntax highlighting
 //! Find/replace
 //! Word wrap
 //! Paren highlight
@@ -23,8 +22,10 @@
 // Text editor application
 struct Editor : virtual window {
 
-  bool shift, ctrl, alt;
+  bool shift, ctrl, alt, keyrep;
+  clock_t last_key;
   ipoint frame_size;
+  str keydown;
   vec<str> clipboard;
   font font_base;
   Panel cmd_panel, info_panel, *focus, *prev_panel;
@@ -89,7 +90,9 @@ void Editor::init_members(const HINSTANCE wp1, const int wp2){
 void Editor::init(){
   system::init();
   _win = this;
-  shift = ctrl = alt = false;
+  shift = ctrl = alt = keyrep = false;
+  last_key = 0;
+  keydown = "";
   Panel::frame = Cursor::frame = &frame;
 
   // Window init
@@ -143,15 +146,24 @@ void Editor::run(){
 
 void Editor::update(const double ms){
   system::update(ms);
+  if(keydown != ""){
+    if((double)(clock() - last_key) / CLOCKS_PER_SEC > 0.2)
+      keyrep = true;
+    if(keyrep && (double)(clock() - last_key) / CLOCKS_PER_SEC > 0.1)
+      process_key(keydown, true, mouse_pos);
+    updated = true; }
   for(Panel& p : panels){
     p.update(ms);
-    if(p.updated)
-      updated = true; }
+    if(p.updated){
+      updated = true;
+      p.updated = false; } }
   cmd_panel.update(ms);
-  if(cmd_panel.updated)
+  if(cmd_panel.updated){
     updated = true;
-  if(updated)
-    last_update = clock(); }
+    cmd_panel.updated = false; }
+  if(updated){
+    InvalidateRect(hwnd, NULL, FALSE);
+    last_update = clock(); } }
 
 //! probably needs to consider offsets
 //! frame_size

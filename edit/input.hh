@@ -16,7 +16,13 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
   if(key == "ALT"){
     alt = down;
     return; }
-  if(!down) return;
+  if(down){
+    keydown = key;
+  }else{
+    keydown = "";
+    keyrep = false;
+    return; }
+  last_key = clock();
 
   Panel& p = *focus;
   Cursor& c = p.cursor;
@@ -593,4 +599,3 @@ void Editor::proc_close_panel(){
   draw(); }
 
 #endif
-

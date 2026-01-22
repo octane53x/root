@@ -8,16 +8,22 @@
 
 struct window : system {
 
+  struct KeyPress {
+    str key;
+    bool down;
+    ipoint mouse; };
+
   HINSTANCE win_param_1;
   int win_param_2;
   HWND hwnd;
 
   ipoint size, win_pos, mouse_pos;
   image frame;
+  queue<KeyPress> keys;
 
   virtual void resize(const ipoint& npos, const ipoint& nsize) = 0;
-  virtual void process_key(
-      const str& key, const bool down, const ipoint& mouse) = 0; };
+  virtual void process_key(const str& key, const bool down,
+      const ipoint& mouse) = 0; };
 
 // GLOBAL WINDOW POINTER: SET IN EDITOR INIT
 window* _win;
@@ -141,7 +147,6 @@ void _win_run(){
     TranslateMessage(&msg);
     DispatchMessage(&msg);
     double ms = (double)(clock() - _win->last_update) * 1000.0 / CLOCKS_PER_SEC;
-    _win->update(ms);
-    InvalidateRect(_win->hwnd, NULL, FALSE); } }
+    _win->update(ms); } }
 
 #endif
