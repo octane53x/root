@@ -5,24 +5,26 @@
 
 #include "editor.hh"
 
-void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
+// Returns whether the editor has updated
+bool Editor::process_key(const str& key, const bool down, const ipoint& mouse){
   // Modifiers
   if(key == "SHIFT"){
     shift = down;
-    return; }
+    return false; }
   if(key == "CONTROL"){
     ctrl = down;
-    return; }
+    return false; }
   if(key == "ALT"){
     alt = down;
-    return; }
+    return false; }
+
+  // Key hold
   if(down){
     keydown = key;
   }else{
     keydown = "";
     keyrep = false;
-    return; }
-  last_key = clock();
+    return false; }
 
   Panel& p = *focus;
   Cursor& c = p.cursor;
@@ -30,23 +32,23 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
   // Cancel split
   if(p.split_ready && !(key == "K" || key == "L")){
     p.split_ready = false;
-    return; }
+    return false; }
 
   // Key or Shift + Key
   if(!ctrl && !alt){
     if(parse_char(key))
-      return;
+      return true;
     if(key == "TAB"){
       if(p.cmd)
         complete_file();
       else
-        proc_indent();
+        indent();
     }else if(key == "BACKSPACE")
-      proc_backspace();
+      backspace();
     else if(key == "ENTER")
-      proc_enter();
+      enter();
     else if(key == "ESCAPE")
-      proc_escape();
+      escape();
     else if(key == "UP")
       p.move_cursor(UP);
     else if(key == "LEFT")
@@ -54,10 +56,11 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
     else if(key == "DOWN")
       p.move_cursor(DOWN);
     else if(key == "RIGHT")
-      p.move_cursor(RIGHT); }
+      p.move_cursor(RIGHT);
+    else return false;
 
   // Alt + Key
-  if(!ctrl && alt && !shift){
+  }else if(!ctrl && alt && !shift){
     if(key == "I")
       p.move_cursor(UP);
     else if(key == "J")
@@ -65,92 +68,101 @@ void Editor::process_key(const str& key, const bool down, const ipoint& mouse){
     else if(key == "K")
       p.move_cursor(DOWN);
     else if(key == "L")
-      p.move_cursor(RIGHT); }
+      p.move_cursor(RIGHT);
+    else return false;
 
   // Ctrl + Key
-  if(ctrl && !alt && !shift){
+  }else if(ctrl && !alt && !shift){
     if(key == "I")
-      proc_ctrl_move(UP);
+      ctrl_move(UP);
     else if(key == "J")
-      proc_ctrl_move(LEFT);
+      ctrl_move(LEFT);
     else if(key == "K")
-      proc_ctrl_move(DOWN);
+      ctrl_move(DOWN);
     else if(key == "L")
-      proc_ctrl_move(RIGHT);
+      ctrl_move(RIGHT);
     else if(key == "UP")
-      proc_move_max(UP);
+      move_max(UP);
     else if(key == "LEFT")
-      proc_move_max(LEFT);
+      move_max(LEFT);
     else if(key == "DOWN")
-      proc_move_max(DOWN);
+      move_max(DOWN);
     else if(key == "RIGHT")
-      proc_move_max(RIGHT);
+      move_max(RIGHT);
     else if(key == "BACKSPACE")
-      proc_ctrl_backspace();
+      ctrl_backspace();
     else if(key == "D")
-      proc_delete();
+      del();
     else if(key == "W")
-      proc_del_space();
+      del_space();
     else if(key == "O")
-      proc_open_file();
+      open_file();
     else if(key == "S")
-      proc_save_file();
+      save_file();
     else if(key == "EQUALS")
       scale_font(SCALE_FACTOR);
     else if(key == "MINUS")
       scale_font(1.0 / SCALE_FACTOR);
     else if(key == "G")
-      proc_goto_line();
+      goto_line();
     else if(key == "SPACE")
-      proc_set_mark();
+      set_mark();
     else if(key == "A")
-      proc_select_all();
+      select_all();
     else if(key == "TAB")
-      proc_indent_selection();
+      indent_selection();
     else if(key == "Q")
-      proc_unindent_selection();
+      unindent_selection();
     else if(key == "X")
-      proc_cut();
+      cut();
     else if(key == "C")
-      proc_copy();
+      copy();
     else if(key == "V")
-      proc_paste();
+      paste();
     else if(key == "Z")
-      proc_undo(); }
+      undo();
+    else return false;
 
   // Ctrl + Alt + Key
-  if(ctrl && alt && !shift){
+  }else if(ctrl && alt && !shift){
     if(key == "I")
-      proc_move_max(UP);
+      move_max(UP);
     else if(key == "J")
-      proc_move_max(LEFT);
+      move_max(LEFT);
     else if(key == "K")
-      proc_move_max(DOWN);
+      move_max(DOWN);
     else if(key == "L")
-      proc_move_max(RIGHT);
+      move_max(RIGHT);
     else if(key == "Q")
-      quit(); }
+      quit();
+    else return false;
 
   // Ctrl + Shift + Key
-  if(ctrl && !alt && shift){
+  }else if(ctrl && !alt && shift){
     if(key == "I")
-      proc_close_panel();
+      close_panel();
     else if(key == "J")
-      proc_left_panel();
+      left_panel();
     else if(key == "K" && focus != &cmd_panel){
       if(p.split_ready){
         p.split_ready = false;
-        proc_split_horizontal();
+        split_horizontal();
       }else
         p.split_ready = true;
     }else if(key == "L" && focus != &cmd_panel){
       if(p.split_ready){
         p.split_ready = false;
-        proc_split_vertical();
+        split_vertical();
       }else
-        proc_right_panel();
+        right_panel();
     }else if(key == "S")
-      proc_save_new_file(); } }
+      save_new_file();
+    else return false;
+
+  // Unhandled modifier combo
+  }else return false;
+  // Fall-through from successful command
+  return true; }
 
 // Returns true if action was taken
 bool Editor::parse_char(const str& key){
@@ -199,7 +211,7 @@ bool Editor::parse_char(const str& key){
     return true; }
   return false; }
 
-void Editor::proc_indent(){
+void Editor::indent(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(c.pos.y > 0){
@@ -220,7 +232,7 @@ void Editor::proc_indent(){
     p.move_cursor(RIGHT);
     p.move_cursor(RIGHT); } }
 
-void Editor::proc_backspace(){
+void Editor::backspace(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.mark.y == -1){
@@ -233,7 +245,7 @@ void Editor::proc_backspace(){
   }else
     p.delete_selection(); }
 
-void Editor::proc_enter(){
+void Editor::enter(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   // Execute command
@@ -259,7 +271,7 @@ void Editor::proc_enter(){
     p.insert_text(vec<str>({" "}), c.pos);
     p.move_cursor(RIGHT); } }
 
-void Editor::proc_escape(){
+void Editor::escape(){
   Panel& p = *focus;
   if(&p != &cmd_panel) return;
   switch_panel(prev_panel);
@@ -269,7 +281,7 @@ void Editor::proc_escape(){
   p.text[0] = "";
   p.cursor.pos = ipoint(0, 0); }
 
-void Editor::proc_ctrl_move(const Dir d){
+void Editor::ctrl_move(const Dir d){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(d == UP){
@@ -302,7 +314,7 @@ void Editor::proc_ctrl_move(const Dir d){
         && name_or_val(p.text[c.pos.y][c.pos.x]))
       p.move_cursor(RIGHT); } }
 
-void Editor::proc_ctrl_backspace(){
+void Editor::ctrl_backspace(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(c.pos.x > 1 && p.text[c.pos.y][c.pos.x - 1] == ' '
@@ -324,7 +336,7 @@ void Editor::proc_ctrl_backspace(){
     p.move_cursor(RIGHT);
   p.remove_text(c.pos, ipoint(x0 - 1, y0)); }
 
-void Editor::proc_delete(){
+void Editor::del(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.mark.y == -1)
@@ -332,7 +344,7 @@ void Editor::proc_delete(){
   else
     p.delete_selection(); }
 
-void Editor::proc_del_space(){
+void Editor::del_space(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   while(c.pos.x > 0 && p.text[c.pos.y][c.pos.x - 1] == ' '){
@@ -341,48 +353,48 @@ void Editor::proc_del_space(){
   while(c.pos.x < p.text[c.pos.y].size() && p.text[c.pos.y][c.pos.x] == ' ')
     p.remove_text(c.pos, c.pos); }
 
-void Editor::proc_open_file(){
+void Editor::open_file(){
   if(focus == &cmd_panel) return;
   prev_panel = focus;
   switch_panel(&cmd_panel);
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  p.draw();
+  p.draw(true);
   p.insert_text({"Open: " + prev_panel->dir}, c.pos);
   c.pos.x = (int)p.text[0].size(); }
 
-bool Editor::proc_save_file(){
+bool Editor::save_file(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.file == ""){
-    proc_save_new_file();
+    save_new_file();
     return false; }
   p.clean();
   bool success = write_file();
   if(success)
     p.saved = true;
-  p.draw();
+  p.draw(true);
   return success; }
 
-void Editor::proc_save_new_file(){
+void Editor::save_new_file(){
   prev_panel = focus;
   switch_panel(&cmd_panel);
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  p.draw();
+  p.draw(true);
   p.insert_text({"Save: " + prev_panel->dir}, c.pos);
   c.pos.x = (int)p.text[0].size(); }
 
-void Editor::proc_goto_line(){
+void Editor::goto_line(){
   prev_panel = focus;
   switch_panel(&cmd_panel);
   Panel& p = *focus;
   Cursor& c = p.cursor;
-  p.draw();
+  p.draw(true);
   p.insert_text({"Goto: "}, c.pos);
   c.pos.x = 6; }
 
-void Editor::proc_set_mark(){
+void Editor::set_mark(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.mark.y == -1){
@@ -392,17 +404,17 @@ void Editor::proc_set_mark(){
       || (p.mark.y == c.pos.y && p.mark.x < c.pos.x)) ? p.mark : c.pos;
   ipoint pf = (p.mark == p0) ? c.pos : p.mark;
   p.mark = ipoint(-1, -1);
-  p.draw_selection(p0, ipoint(pf.x - 1, pf.y)); }
+  p.draw_selection(p0, ipoint(pf.x - 1, pf.y), true); }
 
-void Editor::proc_select_all(){
+void Editor::select_all(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   p.mark = ipoint((int)p.text.back().size(), (int)p.text.size() - 1);
   c.pos = ipoint(0, 0);
   p.top_line = 0;
-  p.draw(); }
+  p.draw(true); }
 
-void Editor::proc_indent_selection(){
+void Editor::indent_selection(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.mark.y == -1) return;
@@ -410,7 +422,7 @@ void Editor::proc_indent_selection(){
     if(p.text[y] != "")
       p.insert_text(vec<str>({"  "}), ipoint(0, y)); }
 
-void Editor::proc_unindent_selection(){
+void Editor::unindent_selection(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.mark.y == -1) return;
@@ -418,13 +430,13 @@ void Editor::proc_unindent_selection(){
     if(p.text[y].size() > 1 && p.text[y][0] == ' ' && p.text[y][1] == ' ')
       p.remove_text(ipoint(0, y), ipoint(1, y)); }
 
-void Editor::proc_cut(){
+void Editor::cut(){
   Panel& p = *focus;
   if(p.mark.y == -1) return;
   clip();
   p.delete_selection(); }
 
-void Editor::proc_copy(){
+void Editor::copy(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.mark.y == -1) return;
@@ -438,9 +450,9 @@ void Editor::proc_copy(){
     pf = c.pos = p.mark; }
   --pf.x;
   p.mark = ipoint(-1, -1);
-  p.draw_selection(p0, pf); }
+  p.draw_selection(p0, pf, true); }
 
-void Editor::proc_paste(){
+void Editor::paste(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(clipboard.empty()) return;
@@ -453,7 +465,7 @@ void Editor::proc_paste(){
   while(c.pos.y > p.top_line + p.size.y / p.line_height)
     p.scroll(DOWN); }
 
-void Editor::proc_undo(){
+void Editor::undo(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.opstack.empty()) return;
@@ -478,37 +490,37 @@ void Editor::proc_undo(){
       c.pos.y += (int)op.text.size() - 1; } }
   p.opstack.popb(); }
 
-void Editor::proc_move_max(const Dir d){
+void Editor::move_max(const Dir d){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(d == UP){
     c.pos = ipoint(0, 0);
     p.top_line = 0;
-    p.draw();
+    p.draw(true);
   }else if(d == LEFT){
     while(c.pos.x > 0)
       p.move_cursor(LEFT);
   }else if(d == DOWN){
     c.pos = ipoint((int)p.text.back().size(), (int)p.text.size() - 1);
     p.top_line = max(0, (int)p.text.size() - (p.size.y / p.line_height));
-    p.draw();
+    p.draw(true);
   }else if(d == RIGHT){
     while(c.pos.x < p.text[c.pos.y].size())
       p.move_cursor(RIGHT); } }
 
-void Editor::proc_left_panel(){
+void Editor::left_panel(){
   int i;
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
   switch_panel(&panels[(i == 0) ? panels.size() - 1 : i - 1]); }
 
-void Editor::proc_right_panel(){
+void Editor::right_panel(){
   int i;
   for(i = 0; i < panels.size(); ++i)
     if(focus == &panels[i]) break;
   switch_panel(&panels[(i == panels.size() - 1) ? 0 : i + 1]); }
 
-void Editor::proc_split_horizontal(){
+void Editor::split_horizontal(){
   Panel& p = *focus;
   int h1 = (int)ceil((double)(p.size.y + LINE_HEIGHT_SCALE_1) / 2.0);
   int h2 = (int)floor((double)(p.size.y + LINE_HEIGHT_SCALE_1) / 2.0);
@@ -526,11 +538,11 @@ void Editor::proc_split_horizontal(){
   p3.size.y = h2 - LINE_HEIGHT_SCALE_1;
   p3.focus = false;
   focus = &p2;
-  p2.draw_divider();
-  p3.draw();
+  p2.draw_divider(true);
+  p3.draw(true);
   switch_panel(&p3); }
 
-void Editor::proc_split_vertical(){
+void Editor::split_vertical(){
   Panel& p = *focus;
   int w1 = (int)ceil((double)(p.size.x + VERTICAL_DIVIDE) / 2.0);
   int w2 = (int)floor((double)(p.size.x + VERTICAL_DIVIDE) / 2.0);
@@ -548,11 +560,11 @@ void Editor::proc_split_vertical(){
   p3.size.x = w2 - VERTICAL_DIVIDE;
   p3.focus = false;
   focus = &p2;
-  p2.draw_divider();
-  p3.draw();
+  p2.draw_divider(true);
+  p3.draw(true);
   switch_panel(&p3); }
 
-void Editor::proc_close_panel(){
+void Editor::close_panel(){
   Panel& pdel = *focus;
   // Find panel to expand
   Panel* xpd = NULL;

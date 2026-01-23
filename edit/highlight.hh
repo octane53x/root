@@ -93,7 +93,7 @@ void Panel::highlight_text(){
           ++in_obj; }
         else if(tok == "for")
           in_for = true;
-        color ct = (tok == "true" || tok == "false")
+        color ct = (tok == "true" || tok == "false" || tok == "NULL")
             ? COLOR_BASE : COLOR_KEYWORD;
         for(int i = pos.x; i < pos.x + tok.size(); ++i)
           text_color[pos.y][i] = ct;

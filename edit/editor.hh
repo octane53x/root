@@ -2,13 +2,17 @@
 
 //! TODO
 //!
+//! REFACTOR: Speed, keys, update, draw
+//!
 //! Stop commands for cmd panel
-//! Single character speed
+//! Undo more than one character
 //!
 //! Find/replace
 //! Word wrap
 //! Paren highlight
 //! Scroll bar
+//! Mouse click to focus panel, select text
+//! Mouse wheel to scroll panel
 //! Comment selection
 //! Info panel
 //! Autocomplete
@@ -20,10 +24,9 @@
 #include "panel.hh"
 
 // Text editor application
-struct Editor : virtual window {
+struct Editor : virtual Window {
 
   bool shift, ctrl, alt, keyrep;
-  clock_t last_key;
   ipoint frame_size;
   str keydown;
   vec<str> clipboard;
@@ -32,21 +35,15 @@ struct Editor : virtual window {
   vec<Panel> panels;
 
   void init_members(const HINSTANCE wp1, const int wp2);
+  void init();
 
-  virtual void init();
-  virtual void run();
   virtual void update(const double ms);
-  // Defined in input.hh
-  virtual void process_key(const str& key, const bool down,
-      const ipoint& mouse);
+  virtual void resize(const ipoint& npos, const ipoint& nsize);
 
   // Defined in draw.hh
-  void draw();
-  // Defined in cmd_panel.hh
-  bool process_cmd(const str& cmd);
-  void complete_file();
+  virtual void draw();
+  void draw_cmd(const bool blt);
 
-  void resize(const ipoint& npos, const ipoint& nsize);
   void load_font();
   void color_font(const double scale);
   image color_char(const image& img, const color& ctext, const color& cbkgd);
@@ -55,41 +52,46 @@ struct Editor : virtual window {
   void switch_panel(Panel* p);
   bool write_file();
 
+  // Defined in cmd.hh
+  bool process_cmd(const str& cmd);
+  void complete_file();
+
   // Defined in input.hh
+  bool process_key(const str& key, const bool down, const ipoint& mouse);
   bool parse_char(const str& key);
-  void proc_indent();
-  void proc_backspace();
-  void proc_enter();
-  void proc_escape();
-  void proc_ctrl_move(const Dir d);
-  void proc_ctrl_backspace();
-  void proc_delete();
-  void proc_del_space();
-  void proc_open_file();
-  bool proc_save_file();
-  void proc_save_new_file();
-  void proc_goto_line();
-  void proc_set_mark();
-  void proc_select_all();
-  void proc_indent_selection();
-  void proc_unindent_selection();
-  void proc_cut();
-  void proc_copy();
-  void proc_paste();
-  void proc_undo();
-  void proc_move_max(const Dir d);
-  void proc_left_panel();
-  void proc_right_panel();
-  void proc_split_horizontal();
-  void proc_split_vertical();
-  void proc_close_panel(); };
+  void indent();
+  void backspace();
+  void enter();
+  void escape();
+  void ctrl_move(const Dir d);
+  void ctrl_backspace();
+  void del();
+  void del_space();
+  void open_file();
+  bool save_file();
+  void save_new_file();
+  void goto_line();
+  void set_mark();
+  void select_all();
+  void indent_selection();
+  void unindent_selection();
+  void cut();
+  void copy();
+  void paste();
+  void undo();
+  void move_max(const Dir d);
+  void left_panel();
+  void right_panel();
+  void split_horizontal();
+  void split_vertical();
+  void close_panel(); };
 
 void Editor::init_members(const HINSTANCE wp1, const int wp2){
   win_param_1 = wp1, win_param_2 = wp2; }
 
 void Editor::init(){
-  system::init();
   _win = this;
+  updated = true;
   shift = ctrl = alt = keyrep = false;
   last_key = 0;
   keydown = "";
@@ -126,32 +128,26 @@ void Editor::init(){
   color_font(1.0);
 
   // Preferences
-  process_cmd("Open: C:/home/root/edit/highlight.hh");
-  proc_split_vertical();
   process_cmd("Open: C:/home/root/edit/editor.hh");
-  proc_left_panel();
+  split_vertical();
+  process_cmd("Open: C:/home/root/edit/input.hh");
+  left_panel();
 
   // Display frame
   draw(); }
 
-void Editor::run(){
-  system::run();
-  for(Panel& p : panels){
-    p.run();
-    p.cursor.run(); }
-  cmd_panel.run();
-  cmd_panel.cursor.run();
-  _win_init();
-  _win_run(); }
-
 void Editor::update(const double ms){
-  system::update(ms);
   if(keydown != ""){
-    if((double)(clock() - last_key) / CLOCKS_PER_SEC > 0.2)
+    if((double)(clock() - last_key) / CPS > KEY_HOLD_DELAY)
       keyrep = true;
-    if(keyrep && (double)(clock() - last_key) / CLOCKS_PER_SEC > 0.1)
-      process_key(keydown, true, mouse_pos);
-    updated = true; }
+    if(keyrep && (double)(clock() - last_key) / CPS > KEY_HOLD_REP){
+      keys.push(KeyPress(keydown, true, mouse_pos));
+      last_key = clock(); } }
+  while(!keys.empty()){
+    KeyPress kp = keys.front();
+    keys.pop();
+    if(process_key(kp.key, kp.down, kp.mouse))
+      updated = true; }
   for(Panel& p : panels){
     p.update(ms);
     if(p.updated){
@@ -162,7 +158,6 @@ void Editor::update(const double ms){
     updated = true;
     cmd_panel.updated = false; }
   if(updated){
-    InvalidateRect(hwnd, NULL, FALSE);
     last_update = clock(); } }
 
 //! probably needs to consider offsets
@@ -278,15 +273,15 @@ void Editor::switch_panel(Panel* p){
       ? ' ' : p0.text[c0.pos.y][c0.pos.x];
   color tc = (ch == ' ') ? COLOR_CODE : p0.text_color[c0.pos.y][c0.pos.x];
   p0.draw_char(Panel::fonts[p0.text_scale][c0.fill][tc][ch],
-      p0.text_to_frame(c0.pos));
-  c0.draw(p0.text_to_frame(c0.pos));
+      p0.text_to_frame(c0.pos), true);
+  c0.draw(p0.text_to_frame(c0.pos), true);
   p0.focus = false;
   if(&p0 != &cmd_panel && p != &cmd_panel)
-    p0.draw_file_bar();
+    p0.draw_file_bar(true);
   focus = p;
   p->focus = true;
   if(&p0 != &cmd_panel && p != &cmd_panel)
-    p->draw_file_bar(); }
+    p->draw_file_bar(true); }
 
 bool Editor::write_file(){
   Panel& p = *focus;

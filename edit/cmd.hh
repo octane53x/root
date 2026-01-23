@@ -52,7 +52,7 @@ bool Editor::process_cmd(const str& cmd){
     p.dir = dir;
     p.file = path.substr(i + 1);
     p.set_file_type();
-    return proc_save_file();
+    return save_file();
 
   // Go to line number
   }else if(cmd.find("Goto: ") == 0){
@@ -122,6 +122,6 @@ void Editor::complete_file(){
   c.text[0] = "Open: " + dir + tok;
   c.cursor.pos = ipoint(c.text[0].size(), 0);
   c.highlight_text();
-  c.draw(); }
+  c.draw(true); }
 
 #endif

@@ -5,27 +5,24 @@
 
 #include "util.hh"
 
-struct Cursor : virtual system {
+struct Cursor {
 
-  // Inherits:
-  // bool updated
-  // clock_t last_update
-
-  bool blink;
+  bool updated, blink;
+  clock_t last_update;
   color fill, bkgd;
   ipoint pos, size;
+
   static image* frame;
 
-  virtual void init();
-  virtual void update(const double ms);
+  void init();
+  void update(const double ms);
 
   // Defined in draw.hh
-  void draw(const ipoint& win_pos); };
+  void draw(const ipoint& win_pos, const bool blt); };
 
 image* Cursor::frame;
 
 void Cursor::init(){
-  system::init();
   blink = true;
   fill = CURSOR_COLOR;
   bkgd = BKGD_COLOR;
@@ -33,8 +30,7 @@ void Cursor::init(){
   size = ipoint(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1); }
 
 void Cursor::update(const double ms){
-  system::update(ms);
-  double sec = (double)(clock() - last_update) / CLOCKS_PER_SEC;
+  double sec = (double)(clock() - last_update) / CPS;
   if(sec >= CURSOR_BLINK){
     blink = !blink;
     fill = blink ? CURSOR_COLOR : bkgd;

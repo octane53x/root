@@ -15,6 +15,6 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
   Editor edit;
   edit.init_members(hInst, nCmdShow);
   edit.init();
-  edit.run();
+  _win_init();
+  _win_run();
   return 0; }
-

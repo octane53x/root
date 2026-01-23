@@ -8,6 +8,7 @@
 typedef umap<char, image> font;
 
 const int
+    // Pixels
     FRAME_HEIGHT_OFFSET = -31,
     WIN_WIDTH_OFFSET = 15,
     WIN_HEIGHT_OFFSET = 39,
@@ -15,11 +16,16 @@ const int
     LINE_HEIGHT_SCALE_1 = 18,
     CHAR_WIDTH_SCALE_1 = 9,
     VERTICAL_DIVIDE = 20,
-    PANEL_CHARS = 80;
+    PANEL_CHARS = 80,
+    // Time
+    UPDATE_MS = 10;
 
 const double
     SCALE_FACTOR = 1.1,
-    CURSOR_BLINK = 0.5;
+    // Seconds
+    CURSOR_BLINK = 0.5,
+    KEY_HOLD_DELAY = 0.3,
+    KEY_HOLD_REP = 0.05;
 
 const color
     BKGD_COLOR = BLACK,
@@ -56,7 +62,7 @@ const uset<str> KEYWORDS = {
     "obj", "fn", "if", "else", "for", "while", "return", "break", "continue",
     "const", "virtual", "final", "include", "this", "operator", "static",
     "template", "abstract", "force", "true", "false", "enum", "switch", "case",
-    "try", "catch", "typedef", "enum", "namespace",
+    "try", "catch", "typedef", "enum", "namespace", "NULL",
     // Other languages
     "struct", "def", "delete", "in", "and", "or", "bitand", "bitor", "xor",
     "static_cast", "dynamic_cast", "typename", "class", "do", "inline", "new",
@@ -151,5 +157,13 @@ str next_tok(const str& s){
 str delete_tok(const str& s){
   str tok = next_tok(s);
   return s.substr(tok.size()); }
+
+RECT get_rect(const ipoint& pos, const ipoint& size){
+  RECT r;
+  r.left = pos.x;
+  r.top = pos.y;
+  r.right = pos.x + size.x;
+  r.bottom = pos.y + size.y;
+  return r; }
 
 #endif

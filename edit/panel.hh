@@ -5,7 +5,7 @@
 
 #include "cursor.hh"
 
-struct Panel : virtual system {
+struct Panel {
 
   // Used for undo
   struct Op {
@@ -13,9 +13,10 @@ struct Panel : virtual system {
     ipoint pos;
     vec<str> text; };
 
-  bool cmd, saved, focus, split_ready;
+  bool updated, cmd, saved, focus, split_ready;
   int line_height, char_width, scroll_lines, top_line;
   double text_scale;
+  clock_t last_update;
   color bkgd;
   ipoint pos, size, mark;
   str dir, file;
@@ -25,23 +26,28 @@ struct Panel : virtual system {
   FileType file_type;
   Cursor cursor;
 
-  static image* frame;
   // Key 1: Scale, Key 2: Bkgd color, Key 3: Text color, Key 4: Character
   static umap<double, umap<color, umap<color, font> > > fonts;
+  // Editor window frame
+  static image* frame;
 
   Panel();
 
-  virtual void init();
-  virtual void update(const double ms);
+  ipoint text_to_frame(const ipoint& p) const;
+  str file_bar_text() const;
+
+  void init();
+  void update(const double ms);
 
   // Defined in draw.hh
-  void draw();
-  void draw_char(const image& img, const ipoint& p);
-  void draw_selection(const ipoint& p0, const ipoint& pf);
-  void draw_divider();
-  void draw_file_bar();
-
-  ipoint text_to_frame(const ipoint& p) const;
+  void draw(const bool blt);
+  void draw_char(const image& img, const ipoint& p,
+      const bool blt);
+  void draw_selection(const ipoint& p0, const ipoint& pf,
+      const bool blt);
+  void draw_divider(const bool blt);
+  void draw_cursor_pos(const bool blt);
+  void draw_file_bar(const bool blt);
 
   void resize(const ipoint& _pos, const ipoint& _size);
   void insert_text(const vec<str>& ins, const ipoint& p);
@@ -54,15 +60,24 @@ struct Panel : virtual system {
   // Defined in highlight.hh
   void highlight_text(); };
 
-image* Panel::frame;
 umap<double, umap<color, umap<color, font> > > Panel::fonts;
+image* Panel::frame;
 
 Panel::Panel():
     size(0, 0), pos(0, 0) {}
 
+ipoint Panel::text_to_frame(const ipoint& p) const {
+  return ipoint(p.x * char_width + pos.x,
+      (p.y - top_line) * line_height + pos.y); }
+
+str Panel::file_bar_text() const {
+  str bar_text = str(saved ? "-----" : "*****") + "     ";
+  if(dir.find("/root/") != str::npos)
+    bar_text += dir.substr(dir.find("/root/") + 6) + file + "     ";
+  return bar_text; }
+
 // Set size and pos prior
 void Panel::init(){
-  system::init();
   cmd = split_ready = false;
   saved = focus = true;
   line_height = LINE_HEIGHT_SCALE_1;
@@ -80,26 +95,21 @@ void Panel::init(){
   cursor.init(); }
 
 void Panel::update(const double ms){
-  system::update(ms);
   Cursor& c = cursor;
   if(!focus) return;
   c.update(ms);
   if(!c.updated) return;
   c.updated = false;
-  // Draw character or cursor (move to draw obv)
+  // Draw character or cursor
   char ch = (c.pos.x == text[c.pos.y].size())
       ? ' ' : text[c.pos.y][c.pos.x];
   color ct = (c.fill == CURSOR_COLOR || cmd) ? BAR_TEXT_COLOR
       : ((ch == ' ') ? COLOR_CODE : text_color[c.pos.y][c.pos.x]);
   color cb = (c.fill == bkgd && mark.y != -1 && (c.pos.y < mark.y
       || (c.pos.y == mark.y && c.pos.x < mark.x))) ? SELECT_COLOR : c.fill;
-  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(c.pos));
+  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(c.pos), true);
   updated = true;
   last_update = clock(); }
-
-ipoint Panel::text_to_frame(const ipoint& p) const {
-  return ipoint(p.x * char_width + pos.x,
-      (p.y - top_line) * line_height + pos.y); }
 
 void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   // Store operation for undo
@@ -129,21 +139,21 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
     color cb = (mark.y != -1 && in_selection(mark0, markf, p))
         ? SELECT_COLOR : bkgd;
     draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
-        text_to_frame(p));
+        text_to_frame(p), true);
     return; }
 
   // Draw single line without adding new lines
-  // if(ins.size() == 1){
-  //   for(int x = p.x; x < text[p.y].size(); ++x){
-  //     color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p.y)))
-  //         ? SELECT_COLOR : bkgd;
-  //     draw_char(fonts[text_scale][cb][text_color[p.y][x]][text[p.y][x]],
-  //         text_to_frame(ipoint(x, p.y))); }
-  //   return; }
+  if(ins.size() == 1){
+    for(int x = p.x; x < text[p.y].size(); ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p.y)))
+          ? SELECT_COLOR : bkgd;
+      draw_char(fonts[text_scale][cb][text_color[p.y][x]][text[p.y][x]],
+          text_to_frame(ipoint(x, p.y)), true); }
+    return; }
 
   // Redraw panel if lines moved
   saved = false;
-  draw(); }
+  draw(true); }
 
 void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   if(p0.y == text.size() - 1 && p0.x == text[p0.y].size()) return;
@@ -182,14 +192,14 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
     markf = (mark0 == c.pos) ? mark : c.pos; }
 
   // Draw over end of line
-  // if(p0.y == pf.y && !endline){
-  //   color tc = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
-  //   for(int x = (int)text[p0.y].size() - (pf.x - p0.x + 1);
-  //       x <= text[p0.y].size(); ++x){
-  //     color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
-  //         ? SELECT_COLOR : bkgd;
-  //     draw_char(fonts[text_scale][cb][tc][' '],
-  //         text_to_frame(ipoint(x, p0.y))); } }
+  if(p0.y == pf.y && !endline){
+    color tc = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
+    for(int x = (int)text[p0.y].size() - (pf.x - p0.x + 1);
+        x <= text[p0.y].size(); ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
+          ? SELECT_COLOR : bkgd;
+      draw_char(fonts[text_scale][cb][tc][' '],
+          text_to_frame(ipoint(x, p0.y)), true); } }
 
   // Remove from text
   str line = text[p0.y].substr(0, p0.x);
@@ -204,17 +214,17 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   highlight_text();
 
   // Draw chars after deletion
-  // if(p0.y == pf.y && !endline){
-  //   for(int x = p0.x; x < text[p0.y].size(); ++x){
-  //     color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
-  //         ? SELECT_COLOR : bkgd;
-  //     draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
-  //         text_to_frame(ipoint(x, p0.y))); }
-  //   return; }
+  if(p0.y == pf.y && !endline){
+    for(int x = p0.x; x < text[p0.y].size(); ++x){
+      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
+          ? SELECT_COLOR : bkgd;
+      draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
+          text_to_frame(ipoint(x, p0.y)), true); }
+    return; }
 
   // Redraw panel if lines moved
   saved = false;
-  draw(); }
+  draw(true); }
 
 void Panel::delete_selection(){
   if(mark.y == -1) return;
@@ -226,7 +236,7 @@ void Panel::delete_selection(){
   if(c.pos == pf)
     c.pos = p0;
   mark = ipoint(-1, -1);
-  draw(); }
+  draw(true); }
 
 void Panel::clean(){
   Cursor& c = cursor;
@@ -246,7 +256,7 @@ void Panel::scroll(const Dir d){
   if(d == UP)
     lines = min(lines, top_line);
   top_line += (d == DOWN) ? lines : -lines;
-  draw(); }
+  draw(true); }
 
 void Panel::move_cursor(const Dir d){
   Cursor& c = cursor;
@@ -312,7 +322,7 @@ void Panel::move_cursor(const Dir d){
     ipoint p0 = (c.pos.y < cp.y || (c.pos.y == cp.y && c.pos.x < cp.x))
         ? c.pos : cp;
     ipoint pf = (c.pos == p0) ? cp : c.pos;
-    draw_selection(p0, pf); }
+    draw_selection(p0, pf, true); }
 
   // Draw char at previous position
   color cb = bkgd;
@@ -324,16 +334,16 @@ void Panel::move_cursor(const Dir d){
       cb = SELECT_COLOR; }
   char ch = (cp.x == text[cp.y].size()) ? ' ' : text[cp.y][cp.x];
   color ct = (ch == ' ') ? COLOR_CODE : text_color[cp.y][cp.x];
-  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(cp));
+  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(cp), true);
 
   // Draw character and cursor
   ch = (c.pos.x == text[c.pos.y].size()) ? ' ' : text[c.pos.y][c.pos.x];
   draw_char(fonts[text_scale][c.fill][BAR_TEXT_COLOR][ch],
-      text_to_frame(c.pos));
+      text_to_frame(c.pos), true);
 
   // Update file bar
   if(!cmd)
-    draw_file_bar(); }
+    draw_cursor_pos(true); }
 
 void Panel::set_file_type(){
   if(ends_with(file, ".cc") || ends_with(file, ".hh"))

@@ -3,44 +3,54 @@
 #ifndef WINDOW_HH
 #define WINDOW_HH
 
+#include "util.hh"
 #include "../gl/image.hh"
 #include "../os/win/util.hh"
 
-struct window : system {
+#define IDT_TIMER1 100
+
+struct Window {
 
   struct KeyPress {
     str key;
     bool down;
-    ipoint mouse; };
+    ipoint mouse;
+    KeyPress(const str& k, const bool d, const ipoint& m); };
 
   HINSTANCE win_param_1;
   int win_param_2;
   HWND hwnd;
 
+  bool updated;
+  clock_t last_update, last_key;
   ipoint size, win_pos, mouse_pos;
   image frame;
   queue<KeyPress> keys;
 
-  virtual void resize(const ipoint& npos, const ipoint& nsize) = 0;
-  virtual void process_key(const str& key, const bool down,
-      const ipoint& mouse) = 0; };
+  virtual void update(const double ms) = 0;
+  virtual void draw() = 0;
+  virtual void resize(const ipoint& npos, const ipoint& nsize) = 0; };
+
+Window::KeyPress::KeyPress(const str& k, const bool d, const ipoint& m):
+  key(k), down(d), mouse(m) {}
 
 // GLOBAL WINDOW POINTER: SET IN EDITOR INIT
-window* _win;
+Window* _win;
 
-void _win_paint(HWND hwnd){
-  if(!_win->updated) return;
+void _win_paint(){
   PAINTSTRUCT ps;
-  HDC hdc = BeginPaint(hwnd, &ps);
-  HBITMAP bmp = image_to_bmp(hdc, &_win->frame);
+  HDC hdc = BeginPaint(_win->hwnd, &ps);
+  RECT r = ps.rcPaint;
+  HBITMAP bmp = image_to_bmp(hdc, &_win->frame, ipoint(r.left, r.top),
+      ipoint(r.right - r.left, r.bottom - r.top));
   HDC hdcMem = CreateCompatibleDC(NULL);
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
-  BitBlt(hdc, 0, 0, _win->size.x, _win->size.y, hdcMem, 0, 0, SRCCOPY);
+  BitBlt(hdc, r.left, r.top, r.right - r.left, r.bottom - r.top,
+      hdcMem, 0, 0, SRCCOPY);
   SelectObject(hdcMem, bmpPrev);
   DeleteObject(bmp);
   DeleteDC(hdcMem);
-  EndPaint(hwnd, &ps);
-  _win->updated = false; }
+  EndPaint(_win->hwnd, &ps); }
 
 str _win_key(WPARAM wParam){
   str s;
@@ -75,57 +85,82 @@ str _win_key(WPARAM wParam){
   return s; }
 
 LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
-  POINT p;
-  GetCursorPos(&p);
-  _win->mouse_pos = ipoint(p.x, p.y);
+  POINT pwin;
+  GetCursorPos(&pwin);
+  ipoint p(pwin.x, pwin.y);
+  _win->mouse_pos = p;
   RECT r;
+
   switch(uMsg){
-  case WM_DESTROY:
-    PostQuitMessage(0);
+  // Update and draw
+  case WM_TIMER:
+    if(wParam != IDT_TIMER1)
+      return 0;
+    SetTimer(hwnd, IDT_TIMER1, UPDATE_MS, NULL);
+    _win->update((double)(clock() - _win->last_update) * 1000.0 / CPS);
     return 0;
   case WM_PAINT:
-    _win_paint(hwnd);
+    _win_paint();
     return 0;
+
+  // Adjust window
   case WM_MOVE:
   case WM_SIZE:
     GetWindowRect(hwnd, &r);
-    _win->resize(
-        ipoint(r.left, r.top),
+    _win->resize(ipoint(r.left, r.top),
         ipoint(r.right - r.left, r.bottom - r.top));
     return 0;
+
+  // Mouse input
   case WM_MOUSEMOVE:
     return 0;
   case WM_LBUTTONDOWN:
   case WM_LBUTTONUP:
-    _win->process_key("LCLICK", uMsg == WM_LBUTTONDOWN, ipoint(p.x, p.y));
+    _win->keys.push(Window::KeyPress("LCLICK", uMsg == WM_MBUTTONDOWN, p));
+    _win->last_key = clock();
     return 0;
   case WM_RBUTTONDOWN:
   case WM_RBUTTONUP:
-    _win->process_key("RCLICK", uMsg == WM_RBUTTONDOWN, ipoint(p.x, p.y));
+    _win->keys.push(Window::KeyPress("RCLICK", uMsg == WM_MBUTTONDOWN, p));
+    _win->last_key = clock();
     return 0;
   case WM_MBUTTONDOWN:
   case WM_MBUTTONUP:
-    _win->process_key("MCLICK", uMsg == WM_MBUTTONDOWN, ipoint(p.x, p.y));
+    _win->keys.push(Window::KeyPress("MCLICK", uMsg == WM_MBUTTONDOWN, p));
+    _win->last_key = clock();
     return 0;
   case WM_MOUSEWHEEL:
     //!
     return 0;
+
+  // Keyboard input
   case WM_KEYDOWN:
   case WM_KEYUP:
   case WM_SYSKEYDOWN:
   case WM_SYSKEYUP:
-    _win->process_key(_win_key(wParam),
-        uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN, ipoint(p.x, p.y));
+    _win->keys.push(Window::KeyPress(_win_key(wParam),
+        uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN, p));
+    _win->last_key = clock();
     return 0;
+
   case WM_CHAR:
   case WM_SYSCHAR:
     // Stop beeping
     return 0;
   case WM_ACTIVATE:
+    // Send alt release on alt+tab
     if(wParam == FALSE)
-      _win->process_key("ALT", false, ipoint(p.x, p.y));
+      _win->keys.push(Window::KeyPress("ALT", false, p));
+    return 0;
+
+  case WM_DESTROY:
+    // Exit application
+    print(str("Terminated at "));
+    print_time(time(NULL));
+    PostQuitMessage(0);
     return 0;
   default:
+    // Defer to default Windows procedure
     return DefWindowProc(hwnd, uMsg, wParam, lParam); } }
 
 void _win_init(){
@@ -143,10 +178,9 @@ void _win_init(){
 
 void _win_run(){
   MSG msg = {};
+  SetTimer(_win->hwnd, IDT_TIMER1, UPDATE_MS, NULL);
   while(GetMessage(&msg, NULL, 0, 0)){
     TranslateMessage(&msg);
-    DispatchMessage(&msg);
-    double ms = (double)(clock() - _win->last_update) * 1000.0 / CLOCKS_PER_SEC;
-    _win->update(ms); } }
+    DispatchMessage(&msg); } }
 
 #endif
