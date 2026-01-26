@@ -2,10 +2,10 @@
 
 //! TODO
 //!
-//! REFACTOR: Speed, keys, update, draw
-//!
+//! Speed bug
 //! Stop commands for cmd panel
 //! Undo more than one character
+//! Resize
 //!
 //! Find/replace
 //! Word wrap

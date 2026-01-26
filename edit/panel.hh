@@ -79,7 +79,7 @@ str Panel::file_bar_text() const {
 // Set size and pos prior
 void Panel::init(){
   cmd = split_ready = false;
-  saved = focus = true;
+  updated = saved = focus = true;
   line_height = LINE_HEIGHT_SCALE_1;
   char_width = CHAR_WIDTH_SCALE_1;
   scroll_lines = size.y / line_height / 2;

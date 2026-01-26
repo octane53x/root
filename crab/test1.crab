@@ -1,0 +1,6 @@
+// BASIC TEST
+
+fn main():
+  Char c
+  c = 1
+  print(c)

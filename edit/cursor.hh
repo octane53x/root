@@ -23,7 +23,8 @@ struct Cursor {
 image* Cursor::frame;
 
 void Cursor::init(){
-  blink = true;
+  updated = blink = true;
+  last_update = 0;
   fill = CURSOR_COLOR;
   bkgd = BKGD_COLOR;
   pos = ipoint(0, 0);
