@@ -51,11 +51,17 @@ bool is_name(const str& s){
     if(!(is_alpha(s[i]) || is_digit(s[i]) || s[i] == '_')) return false;
   return true; }
 
+str strip(str s){
+  while(s != "" && (s[0] == ' ' || s[0] == '\n' || s[0] == '\r'))
+    s = s.substr(1);
+  while(s != "" && (s.back() == ' ' || s.back() == '\n' || s.back() == '\r'))
+    s = s.substr(0, s.size() - 1);
+  return s; }
+
 str next_tok(str line){
+  line = strip(line);
   if(line == "")
     return "";
-  while(line != "" && line[0] == ' ')
-    line = line.substr(1);
   int i = 1;
   // Type or name
   if(is_alpha(line[0]) || line[0] == '_')
@@ -69,10 +75,11 @@ str next_tok(str line){
   return line.substr(0, i); }
 
 vec<str> split_tok(str line){
+  line = strip(line);
   vec<str> r;
   while(line != ""){
     str tok = next_tok(line);
-    line = line.substr(tok.size());
+    line = strip(line.substr(tok.size()));
     r.pb(tok); }
   return r; }
 

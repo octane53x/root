@@ -75,9 +75,13 @@ void Engine::parse_line(str line, const int nline){
       errors.pb(_err + "Invalid type name");
       return; }
 
-    // Expect colon
-    if(++i >= toks.size() || toks[i] != ":"){
-      errors.pb(_err + "Expected colon");
+    // Expect colon otherwise forward declaration
+    if(++i < toks.size()){
+      if(toks[i] != ":"){
+        errors.pb(_err + "Expected colon");
+        return; }
+    }else{
+      types[type.name] = type;
       return; }
 
     // Verify base types
@@ -100,6 +104,8 @@ void Engine::parse_line(str line, const int nline){
           return; } } }
 
     // Add type
+    indent += 2;
+    type.defined = true;
     type.ctr = enc_obj;
     enc_obj = &(types[type.name] = type); }
 
@@ -139,25 +145,45 @@ void Engine::parse_line(str line, const int nline){
     // Verify parameters
     bool got_param = false;
     while(1){
+      // Expect parenthesis or comma
       if(++i >= toks.size()){
         errors.pb(_err + "Expected parenthesis");
         return; }
       if(toks[i] == ")"){
-        if(++i >= toks.size() || toks[i] != ":")
-          errors.pb(_err + "Expected colon");
-        return; }
+        if(++i < toks.size()){
+          if(toks[i] == ":")
+            break;
+          else{
+            errors.pb(_err + "Expected colon");
+            return; }
+        }else{
+          fns[fn.name] = fn;
+          return; } }
       if(got_param && toks[i] != ","){
         errors.pb(_err + "Expected parenthesis or comma");
         return; }
-      if(!is_type(toks[i])){
+
+      // Get param
+      if((toks[i] == "," && ++i >= toks.size()) || !is_type(toks[i])){
         errors.pb(_err + "Expected type");
         return; }
+      if(types.find(toks[i]) == types.end() || !types[toks[i]].defined){
+        errors.pb(_err + "Parameter type not defined");
+        return; }
+      Var var;
+      var.type = &types[toks[i]];
       if(++i >= toks.size() || !is_name(toks[i])){
         errors.pb(_err + "Expected variable name");
         return; }
-      got_param = true;
-    }
-  }
+      var.name = toks[i];
+      fn.params.pb(var);
+      got_param = true; }
+
+    // Add function
+    indent += 2;
+    fn.defined = true;
+    fn.ctr = enc_obj;
+    enc_fn = &(fns[fn.name] = fn); }
 
   //! VAR
   //! OP

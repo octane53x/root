@@ -9,6 +9,8 @@ struct Fn;
 
 struct Type {
 
+  // False if only forward declared
+  bool defined;
   // Identifier
   str name;
   // Containing type
@@ -20,6 +22,11 @@ struct Type {
   // Member variables without address
   umap<str, Var> vars;
   // Member functions
-  uset<Fn*> fns; };
+  uset<Fn*> fns;
+
+  Type(); };
+
+// Set default member state
+Type::Type(): defined(false) {}
 
 #endif

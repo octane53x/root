@@ -9,6 +9,8 @@
 // Sequence of instructions with unset parameters
 struct Fn {
 
+  // False if only forward declared
+  bool defined;
   // Identifier
   str name;
   // Containing type
@@ -20,7 +22,12 @@ struct Fn {
   // Sequence of instructions to execute
   vec<Instr> code;
 
+  Fn();
+
   void call(); };
+
+// Set default member state
+Fn::Fn(): defined(false) {}
 
 // Iterate through instructions, executing each
 void Fn::call(){

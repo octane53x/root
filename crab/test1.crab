@@ -1,14 +1,18 @@
 // BASIC TEST
 
-obj A:
-  Char c
+abstract obj A:
   const fn f()
 
+// fn A::f():
+//   pass
+
+obj D
+
 obj B : A:
-  static Char d
-  fn g(Char a, Char b)
+  A a
+  static D& d
+  fn g(A a, B b)
 
 fn main():
   B b
-  b.c = b.f() + b.g('.', '.')
-  print(c)
+  // b.f()

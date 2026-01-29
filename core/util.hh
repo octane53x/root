@@ -37,9 +37,25 @@ void print(const str& s){
 #endif
 }
 
+// Print int
+void print(const int n){
+  print(to_string(n)); }
+
+// Print double
+void print(const double d){
+  print(to_string(d)); }
+
 // Print with a newline
 void printl(const str& s){
   print(s + str("\n")); }
+
+// Print int
+void printl(const int n){
+  printl(to_string(n)); }
+
+// Print double
+void printl(const double d){
+  printl(to_string(d)); }
 
 // Throw an error, with message
 void err(const str& func, const str& msg){
@@ -71,9 +87,11 @@ void debug(const str& msg){
   printl(msg);
   print_time(); }
 
+// Print debug int
 void debug(const int n){
   debug(to_string(n)); }
 
+// Print debug double
 void debug(const double d){
   debug(to_string(d)); }
 
