@@ -1,6 +1,6 @@
 // COMPILE AND EXECUTE SCRIPT
 
-#include "eng/engine.hh"
+#include "eng/parse.hh"
 
 int main(int argc, const char** argv){
   if(argc != 2)
@@ -10,5 +10,5 @@ int main(int argc, const char** argv){
   if(eng.compile(argv[1]))
     eng.run();
   for(const str& error : eng.errors)
-    println(error + "\n");
+    printl(error + "\n");
   return 0; }

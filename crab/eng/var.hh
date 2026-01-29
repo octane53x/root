@@ -3,15 +3,19 @@
 #ifndef VAR_HH
 #define VAR_HH
 
-#include "type.hh"
+#include "util.hh"
+
+struct Type;
 
 struct Var {
 
   // Identifier
   str name;
   // Structure
-  Type type;
+  Type* type;
   // Address
-  void* addr; };
+  void* addr;
+  // Modifiers
+  uset<str> mods; };
 
 #endif

@@ -8,10 +8,19 @@
 
 struct Engine {
 
+  // PARSING
+
   // Expected number of leading spaces for the current line
   int indent;
-  // Compile errors thus far
-  vec<str> errors;
+  // Number of encompassing control flow blocks
+  int in_block;
+  // Encompassing object definition
+  Type* enc_obj;
+  // Encompassing function definition
+  Fn* enc_fn;
+
+  // ACCESS
+
   // Declared types thus far
   umap<str, Type> types;
   // Declared functions thus far
@@ -21,16 +30,21 @@ struct Engine {
   // Declared variables organized by scope for fast deletion on descope
   umap<llu, uset<Var*> > scope_table;
 
+  // Compile errors thus far
+  vec<str> errors;
+
   void init();
 
   bool compile(const str& file);
-  void process_line(const str& line);
+  void parse_line(str line, const int nline);
 
   void run(); };
 
 // Initialize engine
 void Engine::init(){
-  indent = 0; }
+  indent = in_block = 0;
+  enc_obj = NULL;
+  enc_fn = NULL; }
 
 // Analyze code for errors
 bool Engine::compile(const str& file){
@@ -39,40 +53,9 @@ bool Engine::compile(const str& file){
     return false; }
   vec<str> text = file_to_text(file);
   for(int n = 0; n < text.size(); ++n)
-    process_line(text[n], n + 1);
+    parse_line(text[n], n + 1);
   //! If no main fn, error
   return errors.empty(); }
-
-// Analyze a single instruction
-void Engine::process_line(str line, int nline){
-  // Verify indentation
-  bool good = true;
-  for(int i = 0; i < indent; ++i)
-    if(line[i] != ' '){
-      good = false;
-      break; }
-  if(!good)
-    errors.pb("ERR Line " + to_string(nline) + ": Incorrect indentation");
-
-  while(1){
-    // Delete leading spaces
-    while(!line.empty() && line[0] == ' ')
-      line = line.substr(1);
-
-    // Get next token
-    str tok = next_tok(line);
-    if(tok == "")
-      return;
-    line = line.substr(tok.size());
-
-    // Skip comment
-    if(starts_with(tok, "//"))
-      return;
-
-    //!
-
-    // Syntax error
-    errors.pb("ERR Line " + to_string(nline) + ": Unrecognized syntax"); } }
 
 // Execute the script
 void Engine::run(){}

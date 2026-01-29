@@ -1,6 +1,14 @@
 // BASIC TEST
 
-fn main():
+obj A:
   Char c
-  c = 1
+  const fn f()
+
+obj B : A:
+  static Char d
+  fn g(Char a, Char b)
+
+fn main():
+  B b
+  b.c = b.f() + b.g('.', '.')
   print(c)
