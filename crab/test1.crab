@@ -3,8 +3,8 @@
 abstract obj A:
   const fn f()
 
-// fn A::f():
-//   pass
+fn A::f():
+  pass
 
 obj D
 
@@ -15,4 +15,4 @@ obj B : A:
 
 fn main():
   B b
-  // b.f()
+  b.f()

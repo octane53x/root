@@ -13,7 +13,7 @@ struct Engine {
   // Expected number of leading spaces for the current line
   int indent;
   // Number of encompassing control flow blocks
-  int in_block;
+  int in_blocks;
   // Encompassing object definition
   Type* enc_obj;
   // Encompassing function definition
@@ -42,7 +42,7 @@ struct Engine {
 
 // Initialize engine
 void Engine::init(){
-  indent = in_block = 0;
+  indent = in_blocks = 0;
   enc_obj = NULL;
   enc_fn = NULL; }
 

@@ -18,15 +18,15 @@ struct Type {
   // Modifiers
   uset<str> mods;
   // Direct parents
-  uset<Type*> bases;
+  umap<str, Type*> bases;
   // Member variables without address
   umap<str, Var> vars;
   // Member functions
-  uset<Fn*> fns;
+  umap<str, Fn*> fns;
 
   Type(); };
 
 // Set default member state
-Type::Type(): defined(false) {}
+Type::Type(): defined(false), ctr(NULL) {}
 
 #endif

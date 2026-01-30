@@ -27,7 +27,7 @@ struct Fn {
   void call(); };
 
 // Set default member state
-Fn::Fn(): defined(false) {}
+Fn::Fn(): defined(false), ctr(NULL) {}
 
 // Iterate through instructions, executing each
 void Fn::call(){

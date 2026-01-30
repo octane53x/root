@@ -28,8 +28,8 @@ void Engine::parse_line(str line, const int nline){
 
   // Leave scope
   while(spaces < indent){
-    if(in_block > 0)
-      --in_block;
+    if(in_blocks > 0)
+      --in_blocks;
     else if(enc_fn != NULL)
       enc_fn = NULL;
     else if(enc_obj != NULL){
@@ -46,7 +46,10 @@ void Engine::parse_line(str line, const int nline){
   if(k != str::npos)
     line = line.substr(0, k);
 
-  // Obj declaration
+  // --------------------------------
+  // Object declaration
+  // --------------------------------
+
   vec<str> toks = split_tok(line);
   int i;
   for(i = 0; i < toks.size() && toks[i] != "obj"; ++i);
@@ -55,8 +58,8 @@ void Engine::parse_line(str line, const int nline){
 
     // Verify modifiers
     for(int j = 0; j < i; ++j){
-      if(OBJ_MOD.find(toks[j]) != OBJ_MOD.end()){
-        if(type.mods.find(toks[j]) != type.mods.end()){
+      if(contains(OBJ_MOD, toks[j])){
+        if(contains(type.mods, toks[j])){
           errors.pb(_err + "Modifier declared twice");
           return;
         }else
@@ -90,7 +93,7 @@ void Engine::parse_line(str line, const int nline){
         if(!is_type(toks[i])){
           errors.pb(_err + "Expected type name");
           return; }
-        type.bases.insert(&types[toks[i]]);
+        type.bases[toks[i]] = &types[toks[i]];
         if(++i >= toks.size()){
           errors.pb(_err + "Expected colon or comma");
           return; }
@@ -109,7 +112,10 @@ void Engine::parse_line(str line, const int nline){
     type.ctr = enc_obj;
     enc_obj = &(types[type.name] = type); }
 
+  // --------------------------------
   // Function declaration
+  // --------------------------------
+
   for(i = 0; i < toks.size() && toks[i] != "fn"; ++i);
   if(i < toks.size()){
     Fn fn;
@@ -117,8 +123,8 @@ void Engine::parse_line(str line, const int nline){
     // Verify modifiers
     const uset<str>* MODS = (enc_obj == NULL) ? &FN_MOD : &MEMBER_FN_MOD;
     for(int j = 0; j < i; ++j){
-      if(MODS->find(toks[j]) != MODS->end()){
-        if(fn.mods.find(toks[j]) != fn.mods.end()){
+      if(contains(*MODS, toks[j])){
+        if(contains(fn.mods, toks[j])){
           errors.pb(_err + "Modifier declared twice");
           return;
         }else
@@ -127,15 +133,37 @@ void Engine::parse_line(str line, const int nline){
         errors.pb(_err + "Invalid type modifier");
         return; } }
 
-    // Verify function name
+    // Verify containing type
     if(++i >= toks.size()){
       errors.pb(_err + "Expected function name");
       return; }
+    if(is_type(toks[i])){
+      if(i + 2 >= toks.size() || toks[i+1] != ":" || toks[i+2] != ":"){
+        errors.pb(_err + "Expected double colon");
+        return; }
+      if(!contains(types, toks[i]) || !types[toks[i]].defined){
+        errors.pb(_err + "Type not defined");
+        return; }
+      fn.ctr = &types[toks[i]];
+      if((i += 3) >= toks.size()){
+        errors.pb(_err + "Expected function name");
+        return; } }
+
+    // Verify function name
     if(is_name(toks[i]))
       fn.name = toks[i];
     else{
       errors.pb(_err + "Invalid function name");
       return; }
+
+    // Ensure function is declared on type but not yet defined
+    if(fn.ctr != NULL){
+      if(!contains(fn.ctr->fns, fn.name)){
+        errors.pb(_err + "Function not declared on type");
+        return; }
+      if(fn.ctr->fns[fn.name]->defined){
+        errors.pb(_err + "Function already defined");
+        return; } }
 
     // Expect parenthesis
     if(++i >= toks.size() || toks[i] != "("){
@@ -156,8 +184,11 @@ void Engine::parse_line(str line, const int nline){
           else{
             errors.pb(_err + "Expected colon");
             return; }
+        // Declare function
         }else{
           fns[fn.name] = fn;
+          if(enc_obj != NULL)
+            enc_obj->fns[fn.name] = &fns[fn.name];
           return; } }
       if(got_param && toks[i] != ","){
         errors.pb(_err + "Expected parenthesis or comma");
@@ -167,7 +198,7 @@ void Engine::parse_line(str line, const int nline){
       if((toks[i] == "," && ++i >= toks.size()) || !is_type(toks[i])){
         errors.pb(_err + "Expected type");
         return; }
-      if(types.find(toks[i]) == types.end() || !types[toks[i]].defined){
+      if(!contains(types, toks[i]) || !types[toks[i]].defined){
         errors.pb(_err + "Parameter type not defined");
         return; }
       Var var;
@@ -182,8 +213,10 @@ void Engine::parse_line(str line, const int nline){
     // Add function
     indent += 2;
     fn.defined = true;
-    fn.ctr = enc_obj;
-    enc_fn = &(fns[fn.name] = fn); }
+    enc_fn = &(fns[fn.name] = fn);
+    if(enc_obj != NULL){
+      fn.ctr = enc_obj;
+      enc_obj->fns[fn.name] = enc_fn; } }
 
   //! VAR
   //! OP
