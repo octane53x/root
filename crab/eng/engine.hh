@@ -37,6 +37,7 @@ struct Engine {
 
   bool compile(const str& file);
   void parse_line(str line, const int nline);
+  Type* parse_value(vec<str> toks, const int nline);
 
   void run(); };
 

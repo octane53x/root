@@ -21,6 +21,8 @@ struct Fn {
   vec<Var> params;
   // Sequence of instructions to execute
   vec<Instr> code;
+  // Possible return types
+  uset<Type*> returns;
 
   Fn();
 

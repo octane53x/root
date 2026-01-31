@@ -15,9 +15,7 @@ const uset<str>
 
 // Analyze a single instruction
 void Engine::parse_line(str line, const int nline){
-  const str
-      _fn = "Engine.process_line",
-      _err = "ERR Line " + to_string(nline) + ": ";
+  const str _err = "ERR Line " + to_string(nline) + ": ";
 
   // Verify indentation
   int spaces = 0;
@@ -38,7 +36,7 @@ void Engine::parse_line(str line, const int nline){
       else
         enc_obj = NULL;
     }else
-      err(_fn, "Negative indentation");
+      err("Engine.parse_line", "Negative indentation"); //! remove
     indent -= 2; }
 
   // Toss comment
@@ -47,7 +45,7 @@ void Engine::parse_line(str line, const int nline){
     line = line.substr(0, k);
 
   // --------------------------------
-  // Object declaration
+  // Object Declaration
   // --------------------------------
 
   vec<str> toks = split_tok(line);
@@ -113,7 +111,7 @@ void Engine::parse_line(str line, const int nline){
     enc_obj = &(types[type.name] = type); }
 
   // --------------------------------
-  // Function declaration
+  // Function Declaration
   // --------------------------------
 
   for(i = 0; i < toks.size() && toks[i] != "fn"; ++i);
@@ -218,9 +216,77 @@ void Engine::parse_line(str line, const int nline){
       fn.ctr = enc_obj;
       enc_obj->fns[fn.name] = enc_fn; } }
 
-  //! VAR
-  //! OP
-  //! Control flow: IF FOR WHILE CONTINUE BREAK RETURN
+  // --------------------------------
+  // Operation / Control Flow
+  // --------------------------------
+
+  // Check for variable declaration modifiers
+  const uset<str>* MODS = (enc_obj == NULL) ? &VAR_MOD : &MEMBER_VAR_MOD;
+  Var var;
+  for(i = 0; i < toks.size() && contains(*MODS, toks[i]); ++i){
+    if(contains(var.mods, toks[i])){
+      errors.pb(_err + "Modifier declared twice");
+      return; }
+    var.mods.insert(toks[i]); }
+
+  if(i < toks.size()){
+    // If statement
+    if(toks[i] == "if"){
+      //!
+    }
+
+    // For loop
+    if(toks[i] == "for"){
+      //!
+    }
+
+    // While loop
+    if(toks[i] == "while"){
+      //!
+    }
+
+    // Break or continue
+    if(toks[i] == "break" || toks[i] == "continue"){
+      //!
+    }
+
+    // Return
+    if(toks[i] == "return"){
+      //!
+    }
+
+    // Variable declaration
+    if(is_type(toks[i])){
+      if(!contains(types, toks[i]) || !types[toks[i]].defined){
+        errors.pb(_err + "Variable type not defined");
+        return; }
+      var.type = &types[toks[i]]; }
+
+    if(is_name(toks[i])){
+      if(i + 1 >= toks.size()){
+        // Variable declaration without assignment
+        if(var.type != NULL){
+          var.name = toks[i];
+          vars[var.name] = var;
+        }else
+          errors.pb(_err + "Expected operation");
+        return; }
+
+      // Determine variable or function
+      //!
+
+      //! ensure fn or var existence
+
+    // Syntax error
+    }else{
+      errors.pb(_err + "Invalid operation");
+      return; } } }
+
+// Analyze the value portion of an instruction and find its type
+Type* parse_value(vec<str> toks, const int nline){
+  const str _err = "ERR Line " + to_string(nline) + ": ";
+
+  //!
 }
 
 #endif

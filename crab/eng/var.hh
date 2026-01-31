@@ -16,6 +16,10 @@ struct Var {
   // Address
   void* addr;
   // Modifiers
-  uset<str> mods; };
+  uset<str> mods;
+
+  Var(); };
+
+Var::Var(): type(NULL), addr(NULL) {}
 
 #endif
