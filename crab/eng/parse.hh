@@ -14,7 +14,7 @@ const uset<str>
     MEMBER_VAR_MOD = {"const", "static"};
 
 // Analyze a single instruction
-void Engine::parse_line(str line, const int nline){
+void Engine::parse_line(str line){
   const str _err = "ERR Line " + to_string(nline) + ": ";
 
   // Verify indentation
@@ -37,6 +37,11 @@ void Engine::parse_line(str line, const int nline){
         enc_obj = NULL;
     }else
       err("Engine.parse_line", "Negative indentation"); //! remove
+
+    // Remove vars at scope
+    for(Var* var : scope_table[indent])
+      vars.erase(var->name);
+    scope_table.erase(indent);
     indent -= 2; }
 
   // Toss comment
@@ -148,9 +153,12 @@ void Engine::parse_line(str line, const int nline){
         return; } }
 
     // Verify function name
-    if(is_name(toks[i]))
+    if(is_name(toks[i])){
+      if(contains(fns, toks[i])){
+        errors.pb(_err + "Function already declared");
+        return; }
       fn.name = toks[i];
-    else{
+    }else{
       errors.pb(_err + "Invalid function name");
       return; }
 
@@ -159,7 +167,7 @@ void Engine::parse_line(str line, const int nline){
       if(!contains(fn.ctr->fns, fn.name)){
         errors.pb(_err + "Function not declared on type");
         return; }
-      if(fn.ctr->fns[fn.name]->defined){
+      if(fn.ctr->fns[fn.name].defined){
         errors.pb(_err + "Function already defined");
         return; } }
 
@@ -184,9 +192,10 @@ void Engine::parse_line(str line, const int nline){
             return; }
         // Declare function
         }else{
-          fns[fn.name] = fn;
-          if(enc_obj != NULL)
-            enc_obj->fns[fn.name] = &fns[fn.name];
+          if(enc_obj == NULL)
+            fns[fn.name] = fn;
+          else
+            enc_obj->fns[fn.name] = fn;
           return; } }
       if(got_param && toks[i] != ","){
         errors.pb(_err + "Expected parenthesis or comma");
@@ -210,11 +219,13 @@ void Engine::parse_line(str line, const int nline){
 
     // Add function
     indent += 2;
+    scope_table[indent] = uset<Var*>();
     fn.defined = true;
-    enc_fn = &(fns[fn.name] = fn);
-    if(enc_obj != NULL){
+    if(enc_obj == NULL)
+      enc_fn = &(fns[fn.name] = fn);
+    else{
       fn.ctr = enc_obj;
-      enc_obj->fns[fn.name] = enc_fn; } }
+      enc_fn = &(enc_obj->fns[fn.name] = fn); } }
 
   // --------------------------------
   // Operation / Control Flow
@@ -260,33 +271,57 @@ void Engine::parse_line(str line, const int nline){
       if(!contains(types, toks[i]) || !types[toks[i]].defined){
         errors.pb(_err + "Variable type not defined");
         return; }
-      var.type = &types[toks[i]]; }
+      var.type = &types[toks[i]];
+      if(++i >= toks.size()){
+        errors.pb(_err + "Expected variable name");
+        return; } }
 
     if(is_name(toks[i])){
       if(i + 1 >= toks.size()){
         // Variable declaration without assignment
         if(var.type != NULL){
           var.name = toks[i];
-          vars[var.name] = var;
+          scope_table[indent].insert(&(vars[var.name] = var));
         }else
           errors.pb(_err + "Expected operation");
         return; }
 
-      // Determine variable or function
-      //!
-
-      //! ensure fn or var existence
+      // Send tokens to recursive function
+      for(int j = 0; j < i; ++j)
+        toks.erase(toks.begin());
+      parse_instr(toks);
 
     // Syntax error
     }else{
       errors.pb(_err + "Invalid operation");
       return; } } }
 
+// Convert an instruction into a nested function call
+void Engine::parse_instr(vec<str> toks){
+  const str _err = "ERR Line " + to_string(nline) + ": ";
+  assert(toks.size() >= 2, "Engine.parse_instr", "Not sent enough tokens");
+
+  // First token already verified to be a name
+  // 1. Follow members
+  // 2. Result in a variable or function call
+  int i = 0;
+  while(1){
+    if(!contains(vars, toks[i]) && !contains(fns, toks[i])){
+      errors.pb(_err + "Variable or function not declared");
+      return; }
+    if(contains(fns, toks[i]) && !fns[toks[i]].defined){
+      errors.pb(_err + "Function not defined");
+      return; }
+    //!
+
+  }
+}
+
 // Analyze the value portion of an instruction and find its type
-Type* parse_value(vec<str> toks, const int nline){
+Type* Engine::parse_value(vec<str> toks){
   const str _err = "ERR Line " + to_string(nline) + ": ";
 
   //!
-}
+  return NULL; }
 
 #endif

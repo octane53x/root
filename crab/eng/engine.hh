@@ -10,6 +10,8 @@ struct Engine {
 
   // PARSING
 
+  // Current line number
+  int nline;
   // Expected number of leading spaces for the current line
   int indent;
   // Number of encompassing control flow blocks
@@ -36,8 +38,9 @@ struct Engine {
   void init();
 
   bool compile(const str& file);
-  void parse_line(str line, const int nline);
-  Type* parse_value(vec<str> toks, const int nline);
+  void parse_line(str line);
+  void parse_instr(vec<str> toks);
+  Type* parse_value(vec<str> toks);
 
   void run(); };
 
@@ -53,8 +56,8 @@ bool Engine::compile(const str& file){
     errors.pb("ERR: Cannot access file " + file);
     return false; }
   vec<str> text = file_to_text(file);
-  for(int n = 0; n < text.size(); ++n)
-    parse_line(text[n], n + 1);
+  for(nline = 1; nline <= text.size(); ++nline)
+    parse_line(text[nline - 1]);
   //! If no main fn, error
   return errors.empty(); }
 

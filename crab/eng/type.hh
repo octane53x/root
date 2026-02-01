@@ -19,10 +19,12 @@ struct Type {
   uset<str> mods;
   // Direct parents
   umap<str, Type*> bases;
+  // Internal types
+  umap<str, Type> types;
   // Member variables without address
   umap<str, Var> vars;
   // Member functions
-  umap<str, Fn*> fns;
+  umap<str, Fn> fns;
 
   Type(); };
 

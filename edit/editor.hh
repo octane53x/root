@@ -9,7 +9,7 @@
 //!
 //! Find/replace
 //! Word wrap
-//! Paren highlight
+//! Paren/bracket highlight
 //! Scroll bar
 //! Mouse click to focus panel, select text
 //! Mouse wheel to scroll panel
