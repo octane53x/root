@@ -26,9 +26,16 @@ struct Type {
   // Member functions
   umap<str, Fn> fns;
 
-  Type(); };
+  Type();
+
+  Type* get_type(const str& type) const; };
 
 // Set default member state
 Type::Type(): defined(false), ctr(NULL) {}
+
+Type* Type::get_type(const str& type) const {
+  if(contains(types, type)) return types[type];
+  if(ctr == NULL) return NULL;
+  return ctr->get_type(type); }
 
 #endif

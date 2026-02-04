@@ -1,5 +1,10 @@
 // CODE PARSING
 
+// If X already declared, cannot declare again
+// If X already defined, cannot declare OR define again
+// X = TYPE: within all containing types
+// X = FN or VAR: just within current type
+
 #ifndef PARSE_HH
 #define PARSE_HH
 
@@ -30,13 +35,8 @@ void Engine::parse_line(str line){
       --in_blocks;
     else if(enc_fn != NULL)
       enc_fn = NULL;
-    else if(enc_obj != NULL){
-      if(enc_obj->ctr != NULL)
-        enc_obj = enc_obj->ctr;
-      else
-        enc_obj = NULL;
-    }else
-      err("Engine.parse_line", "Negative indentation"); //! remove
+    else
+      enc_obj = enc_obj->ctr;
 
     // Remove vars at scope
     for(Var* var : scope_table[indent])
@@ -75,19 +75,23 @@ void Engine::parse_line(str line){
     if(++i >= toks.size()){
       errors.pb(_err + "Expected type name");
       return; }
-    if(is_type(toks[i]))
-      type.name = toks[i];
-    else{
+    if(!is_type(toks[i]))
       errors.pb(_err + "Invalid type name");
       return; }
+    type.name = toks[i];
 
-    // Expect colon otherwise forward declaration
-    if(++i < toks.size()){
-      if(toks[i] != ":"){
-        errors.pb(_err + "Expected colon");
-        return; }
-    }else{
-      types[type.name] = type;
+    // Declare type
+    if(++i >= toks.size()){
+      Type* t = enc_obj->get_type(type.name);
+      if(t == NULL)
+        enc_obj->types[type.name] = type;
+      else
+        errors.pb(_err + "Type already declared");
+      return; }
+
+    // Expect colon
+    if(toks[i] != ":"){
+      errors.pb(_err + "Expected colon");
       return; }
 
     // Verify base types
@@ -96,7 +100,11 @@ void Engine::parse_line(str line){
         if(!is_type(toks[i])){
           errors.pb(_err + "Expected type name");
           return; }
-        type.bases[toks[i]] = &types[toks[i]];
+        Type* base = enc_obj->get_type(toks[i]);
+        if(base == NULL || !base->defined){
+          errors.pb(_err + "Base type not defined");
+          return; }
+        type.bases[toks[i]] = base;
         if(++i >= toks.size()){
           errors.pb(_err + "Expected colon or comma");
           return; }
@@ -109,11 +117,17 @@ void Engine::parse_line(str line){
           errors.pb(_err + "Expected type name");
           return; } } }
 
-    // Add type
+    // Ensure not already defined
+    Type* t = enc_obj->get_type(type.name);
+    if(t != NULL && t->defined){
+      errors.pb(_err + "Type already defined");
+      return; }
+
+    // Define type
     indent += 2;
     type.defined = true;
     type.ctr = enc_obj;
-    enc_obj = &(types[type.name] = type); }
+    enc_obj = &(enc_obj->types[type.name] = type); }
 
   // --------------------------------
   // Function Declaration
@@ -141,21 +155,35 @@ void Engine::parse_line(str line){
       errors.pb(_err + "Expected function name");
       return; }
     if(is_type(toks[i])){
-      if(i + 2 >= toks.size() || toks[i+1] != ":" || toks[i+2] != ":"){
-        errors.pb(_err + "Expected double colon");
+      if(enc_obj->name != "___main"){
+        errors.pb(_err + "Scoped function definition inside object");
         return; }
-      if(!contains(types, toks[i]) || !types[toks[i]].defined){
+      if(!contains(enc_obj->types, toks[i])
+          || !enc_obj->types[toks[i]].defined){
         errors.pb(_err + "Type not defined");
         return; }
-      fn.ctr = &types[toks[i]];
-      if((i += 3) >= toks.size()){
-        errors.pb(_err + "Expected function name");
-        return; } }
+      Type* t = enc_obj->types[toks[i]];
+      while(1){
+        if(++i >= toks.size() || toks[i] != "::"){
+          errors.pb(_err + "Expected double colon");
+          return; }
+        if(++i >= toks.size()){
+          errors.pb(_err + "Expected function name");
+          return; }
+        if(is_name(toks[i]))
+          break;
+        if(!is_type(toks[i])){
+          errors.pb(_err + "Expected function name");
+          return; }
+        if(!contains(t->types, toks[i]) || !t->types[toks[i]].defined){
+          errors.pb(_err + "Type not defined");
+          return; }
+        fn.ctr = t = &t->types[toks[i]]; } }
 
     // Verify function name
     if(is_name(toks[i])){
-      if(contains(fns, toks[i])){
-        errors.pb(_err + "Function already declared");
+      if(contains(enc_obj->fns, toks[i]) && enc_obj->fns[toks[i]].defined){
+        errors.pb(_err + "Function already defined");
         return; }
       fn.name = toks[i];
     }else{
@@ -190,6 +218,7 @@ void Engine::parse_line(str line){
           else{
             errors.pb(_err + "Expected colon");
             return; }
+
         // Declare function
         }else{
           if(enc_obj == NULL)
@@ -217,7 +246,7 @@ void Engine::parse_line(str line){
       fn.params.pb(var);
       got_param = true; }
 
-    // Add function
+    // Define function
     indent += 2;
     scope_table[indent] = uset<Var*>();
     fn.defined = true;
@@ -293,7 +322,7 @@ void Engine::parse_line(str line){
 
     // Syntax error
     }else{
-      errors.pb(_err + "Invalid operation");
+      errors.pb(_err + "Expected variable name");
       return; } } }
 
 // Convert an instruction into a nested function call
@@ -301,20 +330,40 @@ void Engine::parse_instr(vec<str> toks){
   const str _err = "ERR Line " + to_string(nline) + ": ";
   assert(toks.size() >= 2, "Engine.parse_instr", "Not sent enough tokens");
 
-  // First token already verified to be a name
-  // 1. Follow members
-  // 2. Result in a variable or function call
+  // Ensure variable or function is accessible
+  Var* var = NULL;
+  Fn* fn = NULL;
   int i = 0;
-  while(1){
-    if(!contains(vars, toks[i]) && !contains(fns, toks[i])){
-      errors.pb(_err + "Variable or function not declared");
-      return; }
-    if(contains(fns, toks[i]) && !fns[toks[i]].defined){
-      errors.pb(_err + "Function not defined");
-      return; }
-    //!
+  if(!is_name(toks[i])){
+    errors.pb(_err + "Expected variable or function name");
+    return; }
+  if(!contains(vars, toks[i]) && !contains(fns, toks[i])){
+    errors.pb(_err + "Variable or function not declared");
+    return; }
+  if(contains(fns, toks[i]) && !fns[toks[i]].defined){
+    errors.pb(_err + "Function not defined");
+    return; }
+  if(contains(vars, toks[i]))
+    var = &vars[toks[i]];
+  else
+    fn = &fns[toks[i]];
+  if(++i >= toks.size()){
+    errors.pb(_err + "Expected member, parenthesis, or assignment");
+    return; }
 
-  }
+  // Member
+  if(toks[i] == "."){
+
+  // Function
+  }else if(toks[i] == "("){
+
+  // Assignment
+  }else if(contains(ASN_OPS, toks[i])){
+
+  // Syntax error
+  }else{
+    errors.pb(_err + "Expected member, parenthesis, or assignment");
+    return; }
 }
 
 // Analyze the value portion of an instruction and find its type

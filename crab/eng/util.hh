@@ -5,9 +5,11 @@
 
 #include "../../core/util.hh"
 
-uset<str> TOKS = {
-    "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<", ">>", "<<=", ">>=",
-    "++", "--", "&&", "||", "==", "<=", ">=", "->", "//", "/*", "*/", "::" };
+uset<str>
+    OPS = {"+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=",
+    "<<", ">>", "++", "--", "&&", "||", "==", "<=", ">=", "->", "//",
+    "/*", "*/", "::"},
+    ASN_OPS = {"+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="};
 
 vec<str> file_to_text(const str& file){
   ifstream fs(file);
@@ -79,12 +81,12 @@ str next_tok(str line){
   // Operator - 3 chars
   else if(line.size() >= 3){
     str s = line.substr(0, 3);
-    if(contains(TOKS, s))
+    if(contains(OPS, s))
       return s;
   // Operator - 2 chars
   }else if(line.size() >= 2){
     str s = line.substr(0, 2);
-    if(contains(TOKS, s))
+    if(contains(OPS, s))
       return s; }
   return line.substr(0, i); }
 

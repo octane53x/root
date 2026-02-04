@@ -8,8 +8,6 @@
 
 struct Engine {
 
-  // PARSING
-
   // Current line number
   int nline;
   // Expected number of leading spaces for the current line
@@ -20,13 +18,6 @@ struct Engine {
   Type* enc_obj;
   // Encompassing function definition
   Fn* enc_fn;
-
-  // ACCESS
-
-  // Declared types thus far
-  umap<str, Type> types;
-  // Declared functions thus far
-  umap<str, Fn> fns;
   // Declared variables
   umap<str, Var> vars;
   // Declared variables organized by scope for fast deletion on descope
@@ -47,7 +38,9 @@ struct Engine {
 // Initialize engine
 void Engine::init(){
   indent = in_blocks = 0;
-  enc_obj = NULL;
+  Type type;
+  type.name = "___main";
+  enc_obj = &(types[type.name] = type);
   enc_fn = NULL; }
 
 // Analyze code for errors
