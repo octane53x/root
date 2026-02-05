@@ -5,6 +5,10 @@
 
 #include "../core/thing.hh"
 
+#define uchar unsigned char
+#define ui unsigned int
+#define to_string std::to_string
+
 // An RGB color, with a few other options
 struct color : virtual thing {
 

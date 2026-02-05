@@ -3,12 +3,14 @@
 #ifndef THING_HH
 #define THING_HH
 
-#include "util.hh"
+#include <string>
+
+#define str std::string
 
 // Base class for everything
 struct thing {
 
-  virtual void validate(const str& func) = 0; // Ensure valid state
+  virtual void validate(const str& _fn) = 0; // Ensure valid state
   virtual str to_str() const; };
 
 // Convert to string
