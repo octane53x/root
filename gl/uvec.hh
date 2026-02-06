@@ -3,10 +3,8 @@
 #ifndef UVEC_HH
 #define UVEC_HH
 
-#include "../core/thing.hh"
-
 // Unit vector whose coordinates are of distance 1.0 from origin
-struct uvec : virtual thing {
+struct uvec {
 
   // Coordinates of the tip of the unit vector
   double x, y, z;

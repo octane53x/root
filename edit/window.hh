@@ -7,7 +7,7 @@
 #include "../gl/image.hh"
 #include "../os/win/util.hh"
 
-#define IDT_TIMER1 100
+#define IDT_TIMER1 223
 
 struct Window {
 

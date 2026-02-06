@@ -6,8 +6,6 @@
 #include "../gl/color.hh"
 #include "../gl/ipoint.hh"
 
-#include "../core/util.hh"
-
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")
 
@@ -34,7 +32,7 @@ vec<vec<color> > frame;
 const ipoint frame_size = ipoint(2000, 2000);
 ipoint frame_pos = ipoint(0, 0);
 int phase = 1;
-int shift = 5;
+int shift = 1;
 
 void init(){
   last_update = 0;

@@ -7,7 +7,7 @@
 #include "ipoint.hh"
 
 // A 2D or 3D coordinate point
-struct point : virtual thing {
+struct point {
 
   // (x,y,z) coordinates
   double x, y, z;

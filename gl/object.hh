@@ -6,7 +6,6 @@
 #ifndef OBJECT_HH
 #define OBJECT_HH
 
-#include "../core/system.hh"
 #include "point.hh"
 #include "viewport.hh"
 
@@ -14,7 +13,7 @@ struct image;
 
 // Object with position, inherited by something with an image to draw
 // Held by a 2D or 3D scene, which updates and draws the objects
-struct object : virtual system {
+struct object {
 
   // Holds movement data, used to automatically move an object
   struct movement {
@@ -63,8 +62,7 @@ struct object : virtual system {
   point move(const double ms); };
 
 // Set default member state
-object::object(): fill(DEFAULT_COLOR), mov(NULL) {
-  type = "object"; }
+object::object(): fill(DEFAULT_COLOR), mov(NULL) {}
 
 // Construct with movement pattern
 object::movement::movement(mov_pattern p):
@@ -72,7 +70,6 @@ object::movement::movement(mov_pattern p):
 
 // Ensure valid state
 void object::validate(const str& func){
-  system::validate(func);
   if(mov != NULL &&
       (mov->pat == movement::ROOT || mov->pat == movement::ORBIT))
     assert(mov->root != NULL, func, "movement.root not set"); }

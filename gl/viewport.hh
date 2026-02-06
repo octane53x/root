@@ -6,7 +6,7 @@
 #include "point.hh"
 
 // Window into the environment translating points to pixel coordinates
-struct viewport : virtual thing {
+struct viewport {
 
   // Size in environment coordinates
   double size_in;

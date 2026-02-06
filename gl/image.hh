@@ -37,7 +37,6 @@ struct image : virtual object {
 
 // Set default member state
 image::image(){
-  type = "image";
   size = ipoint(0, 0); }
 
 // Construct at a certain size

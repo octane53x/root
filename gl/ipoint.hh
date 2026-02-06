@@ -3,9 +3,9 @@
 #ifndef IPOINT_HH
 #define IPOINT_HH
 
-#include "../core/thing.hh"
+#include "../core/util.hh"
 
-struct ipoint : virtual thing {
+struct ipoint {
 
   int x, y;
 
@@ -15,8 +15,7 @@ struct ipoint : virtual thing {
   bool operator==(const ipoint& o) const;
   bool operator!=(const ipoint& o) const;
 
-  virtual void validate(const str& func);
-  virtual str to_str() const; };
+  str to_str() const; };
 
 ipoint::ipoint():
     x(0), y(0) {}
@@ -29,8 +28,6 @@ bool ipoint::operator==(const ipoint& o) const {
 
 bool ipoint::operator!=(const ipoint& o) const {
   return !(*this == o); }
-
-void ipoint::validate(const str& func){}
 
 str ipoint::to_str() const {
   return "(" + to_string(x) + ", " + to_string(y) + ")"; }

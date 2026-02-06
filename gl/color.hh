@@ -3,14 +3,10 @@
 #ifndef COLOR_HH
 #define COLOR_HH
 
-#include "../core/thing.hh"
-
-#define uchar unsigned char
-#define ui unsigned int
-#define to_string std::to_string
+#include "../core/util.hh"
 
 // An RGB color, with a few other options
-struct color : virtual thing {
+struct color {
 
   // Other color options
   enum Custom : uchar {
@@ -34,9 +30,7 @@ struct color : virtual thing {
   bool operator==(const color& c) const;
   bool operator!=(const color& c) const;
 
-  virtual void validate(const str& func);
-  virtual str to_str() const;
-
+  str to_str() const;
   bool approximately(const color& c1) const ;
   color avg(const color& c) const;
 
@@ -91,9 +85,6 @@ bool color::operator==(const color& c) const {
 // Not equals comparator
 bool color::operator!=(const color& c) const {
   return !(*this == c); }
-
-// Implemented to remove abstraction
-void color::validate(const str& func){}
 
 // Convert to text
 str color::to_str() const {
