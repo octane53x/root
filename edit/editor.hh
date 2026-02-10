@@ -9,36 +9,34 @@
 //!
 //! Find/replace
 //! Word wrap
+//! Detect other monitor
 //! Paren/bracket highlight
 //! Scroll bar
-//! Mouse click to focus panel, select text
-//! Mouse wheel to scroll panel
 //! Comment selection
 //! Info panel
+//! Mouse click to focus panel, select text
+//! Mouse wheel to scroll panel
 //! Autocomplete
 
 #ifndef EDITOR_HH
 #define EDITOR_HH
 
-#include "window.hh"
 #include "panel.hh"
+#include "../os/win/application.hh"
 
 // Text editor application
-struct Editor : virtual Window {
+struct Editor : virtual Application {
 
-  bool shift, ctrl, alt, keyrep;
+  bool updated, shift, ctrl, alt;
   ipoint frame_size;
-  str keydown;
   vec<str> clipboard;
   font font_base;
   Panel cmd_panel, info_panel, *focus, *prev_panel;
   vec<Panel> panels;
 
-  void init_members(const HINSTANCE wp1, const int wp2);
-  void init();
-
-  virtual void update(const double ms);
-  virtual void resize(const ipoint& npos, const ipoint& nsize);
+  virtual void init();
+  virtual void update();
+  virtual void resize();
 
   // Defined in draw.hh
   virtual void draw();
@@ -57,7 +55,7 @@ struct Editor : virtual Window {
   void complete_file();
 
   // Defined in input.hh
-  bool process_key(const str& key, const bool down, const ipoint& mouse);
+  virtual void input(const KeyEvent& ke);
   bool parse_char(const str& key);
   void indent();
   void backspace();
@@ -86,15 +84,11 @@ struct Editor : virtual Window {
   void split_vertical();
   void close_panel(); };
 
-void Editor::init_members(const HINSTANCE wp1, const int wp2){
-  win_param_1 = wp1, win_param_2 = wp2; }
-
 void Editor::init(){
-  _win = this;
+  Application::init();
+  start_maximized = always_draw = false;
   updated = true;
-  shift = ctrl = alt = keyrep = false;
-  last_key = 0;
-  keydown = "";
+  shift = ctrl = alt = false;
   Panel::frame = Cursor::frame = &frame;
 
   // Window init
@@ -104,7 +98,7 @@ void Editor::init(){
       + VERTICAL_DIVIDE), rect.bottom - rect.top + FRAME_HEIGHT_OFFSET);
   size = ipoint(frame_size.x + WIN_WIDTH_OFFSET,
       frame_size.y + WIN_HEIGHT_OFFSET);
-  win_pos = ipoint(rect.right - size.x + WIN_XPOS_OFFSET, 0);
+  pos = ipoint(rect.right - size.x + WIN_XPOS_OFFSET, 0);
   frame.set_size(frame_size);
 
   // Initial panel
@@ -136,24 +130,14 @@ void Editor::init(){
   // Display frame
   draw(); }
 
-void Editor::update(const double ms){
-  if(keydown != ""){
-    if((double)(clock() - last_key) / CPS > KEY_HOLD_DELAY)
-      keyrep = true;
-    if(keyrep && (double)(clock() - last_key) / CPS > KEY_HOLD_REP){
-      keys.push(KeyPress(keydown, true, mouse_pos));
-      last_key = clock(); } }
-  while(!keys.empty()){
-    KeyPress kp = keys.front();
-    keys.pop();
-    if(process_key(kp.key, kp.down, kp.mouse))
-      updated = true; }
+void Editor::update(){
+  Application::update();
   for(Panel& p : panels){
-    p.update(ms);
+    p.update();
     if(p.updated){
       updated = true;
       p.updated = false; } }
-  cmd_panel.update(ms);
+  cmd_panel.update();
   if(cmd_panel.updated){
     updated = true;
     cmd_panel.updated = false; }
@@ -162,7 +146,7 @@ void Editor::update(const double ms){
 
 //! probably needs to consider offsets
 //! frame_size
-void Editor::resize(const ipoint& npos, const ipoint& nsize){
+void Editor::resize(){
   // if(nsize.x == size.x && nsize.y == size.y){
   //   win_pos = npos;
   //   return; }

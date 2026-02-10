@@ -19,7 +19,7 @@ void Editor::draw_cmd(const bool blt){
       for(int x = 0; x < cmd_panel.size.x; ++x)
         frame.data[y][x] = BKGD_COLOR;
   if(blt)
-    InvalidateRect(_win->hwnd, &get_rect(cmd_panel.pos, cmd_panel.size),
+    InvalidateRect(_win->hWnd, &get_rect(cmd_panel.pos, cmd_panel.size),
         FALSE); }
 
 void Panel::draw(const bool blt){
@@ -39,7 +39,7 @@ void Panel::draw(const bool blt){
   draw_divider(false);
   draw_file_bar(false);
   if(blt)
-    InvalidateRect(_win->hwnd, &get_rect(pos, ipoint(size.x + VERTICAL_DIVIDE,
+    InvalidateRect(_win->hWnd, &get_rect(pos, ipoint(size.x + VERTICAL_DIVIDE,
         size.y + LINE_HEIGHT_SCALE_1)), FALSE); }
 
 // Draw one character
@@ -54,7 +54,7 @@ void Panel::draw_char(const image& img, const ipoint& p,
         xo < frame->size.x && xi < img.size.x; ++xo, ++xi)
       frame->data[yo][xo] = img.data[yi][xi];
   if(blt)
-    InvalidateRect(_win->hwnd, &get_rect(tl, sz), FALSE); }
+    InvalidateRect(_win->hWnd, &get_rect(tl, sz), FALSE); }
 
 void Panel::draw_selection(const ipoint& p0, const ipoint& pf,
     const bool blt){
@@ -108,7 +108,7 @@ void Panel::draw_divider(const bool blt){
       frame->data[y][x] = DIVIDER_COLOR;
   //! draw scroll marker
   if(blt)
-    InvalidateRect(_win->hwnd, &get_rect(ipoint(pos.x + size.x, pos.y),
+    InvalidateRect(_win->hWnd, &get_rect(ipoint(pos.x + size.x, pos.y),
         ipoint(VERTICAL_DIVIDE, size.y)), FALSE); }
 
 void Panel::draw_cursor_pos(const bool blt){
@@ -134,7 +134,7 @@ void Panel::draw_file_bar(const bool blt){
   draw_cursor_pos(false);
   // Blt to window
   if(blt)
-    InvalidateRect(_win->hwnd, &get_rect(ipoint(pos.x, pos.y + size.y),
+    InvalidateRect(_win->hWnd, &get_rect(ipoint(pos.x, pos.y + size.y),
         ipoint(size.x, LINE_HEIGHT_SCALE_1)), FALSE); }
 
 // Handled by panel.update when in focus
@@ -147,6 +147,6 @@ void Cursor::draw(const ipoint& win_pos, const bool blt){
     frame->data[win_pos.y][x] = CURSOR_COLOR;
     frame->data[win_pos.y + size.y - 1][x] = CURSOR_COLOR; }
   if(blt)
-    InvalidateRect(_win->hwnd, &get_rect(win_pos, size), FALSE); }
+    InvalidateRect(_win->hWnd, &get_rect(win_pos, size), FALSE); }
 
 #endif

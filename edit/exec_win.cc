@@ -12,9 +12,8 @@
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
   debug_init();
-  Editor edit;
-  edit.init_members(hInst, nCmdShow);
-  edit.init();
-  _win_init();
-  _win_run();
+  Editor app;
+  app.hInst = hInst;
+  app.init();
+  app.run();
   return 0; }

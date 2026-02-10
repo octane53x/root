@@ -6,163 +6,157 @@
 #include "editor.hh"
 
 // Returns whether the editor has updated
-bool Editor::process_key(const str& key, const bool down, const ipoint& mouse){
+void Editor::input(const KeyEvent& ke){
   // Modifiers
-  if(key == "SHIFT"){
-    shift = down;
-    return false; }
-  if(key == "CONTROL"){
-    ctrl = down;
-    return false; }
-  if(key == "ALT"){
-    alt = down;
-    return false; }
-
-  // Key hold
-  if(down){
-    keydown = key;
-  }else{
-    keydown = "";
-    keyrep = false;
-    return false; }
+  if(ke.key == "SHIFT"){
+    shift = ke.down;
+    return; }
+  if(ke.key == "CONTROL"){
+    ctrl = ke.down;
+    return; }
+  if(ke.key == "ALT"){
+    alt = ke.down;
+    return; }
 
   Panel& p = *focus;
   Cursor& c = p.cursor;
 
   // Cancel split
-  if(p.split_ready && !(key == "K" || key == "L")){
+  if(p.split_ready && !(ke.key == "K" || ke.key == "L")){
     p.split_ready = false;
-    return false; }
+    return; }
 
-  // Key or Shift + Key
+  // Ke.Key or Shift + Ke.Key
   if(!ctrl && !alt){
-    if(parse_char(key))
-      return true;
-    if(key == "TAB"){
+    if(parse_char(ke.key)){
+      updated = true;
+      return; }
+    if(ke.key == "TAB"){
       if(p.cmd)
         complete_file();
       else
         indent();
-    }else if(key == "BACKSPACE")
+    }else if(ke.key == "BACKSPACE")
       backspace();
-    else if(key == "ENTER")
+    else if(ke.key == "ENTER")
       enter();
-    else if(key == "ESCAPE")
+    else if(ke.key == "ESCAPE")
       escape();
-    else if(key == "UP")
+    else if(ke.key == "UP")
       p.move_cursor(UP);
-    else if(key == "LEFT")
+    else if(ke.key == "LEFT")
       p.move_cursor(LEFT);
-    else if(key == "DOWN")
+    else if(ke.key == "DOWN")
       p.move_cursor(DOWN);
-    else if(key == "RIGHT")
+    else if(ke.key == "RIGHT")
       p.move_cursor(RIGHT);
-    else return false;
+    else return;
 
-  // Alt + Key
+  // Alt + Ke.Key
   }else if(!ctrl && alt && !shift){
-    if(key == "I")
+    if(ke.key == "I")
       p.move_cursor(UP);
-    else if(key == "J")
+    else if(ke.key == "J")
       p.move_cursor(LEFT);
-    else if(key == "K")
+    else if(ke.key == "K")
       p.move_cursor(DOWN);
-    else if(key == "L")
+    else if(ke.key == "L")
       p.move_cursor(RIGHT);
-    else return false;
+    else return;
 
-  // Ctrl + Key
+  // Ctrl + Ke.Key
   }else if(ctrl && !alt && !shift){
-    if(key == "I")
+    if(ke.key == "I")
       ctrl_move(UP);
-    else if(key == "J")
+    else if(ke.key == "J")
       ctrl_move(LEFT);
-    else if(key == "K")
+    else if(ke.key == "K")
       ctrl_move(DOWN);
-    else if(key == "L")
+    else if(ke.key == "L")
       ctrl_move(RIGHT);
-    else if(key == "UP")
+    else if(ke.key == "UP")
       move_max(UP);
-    else if(key == "LEFT")
+    else if(ke.key == "LEFT")
       move_max(LEFT);
-    else if(key == "DOWN")
+    else if(ke.key == "DOWN")
       move_max(DOWN);
-    else if(key == "RIGHT")
+    else if(ke.key == "RIGHT")
       move_max(RIGHT);
-    else if(key == "BACKSPACE")
+    else if(ke.key == "BACKSPACE")
       ctrl_backspace();
-    else if(key == "D")
+    else if(ke.key == "D")
       del();
-    else if(key == "W")
+    else if(ke.key == "W")
       del_space();
-    else if(key == "O")
+    else if(ke.key == "O")
       open_file();
-    else if(key == "S")
+    else if(ke.key == "S")
       save_file();
-    else if(key == "EQUALS")
+    else if(ke.key == "EQUALS")
       scale_font(SCALE_FACTOR);
-    else if(key == "MINUS")
+    else if(ke.key == "MINUS")
       scale_font(1.0 / SCALE_FACTOR);
-    else if(key == "G")
+    else if(ke.key == "G")
       goto_line();
-    else if(key == "SPACE")
+    else if(ke.key == "SPACE")
       set_mark();
-    else if(key == "A")
+    else if(ke.key == "A")
       select_all();
-    else if(key == "TAB")
+    else if(ke.key == "TAB")
       indent_selection();
-    else if(key == "Q")
+    else if(ke.key == "Q")
       unindent_selection();
-    else if(key == "X")
+    else if(ke.key == "X")
       cut();
-    else if(key == "C")
+    else if(ke.key == "C")
       copy();
-    else if(key == "V")
+    else if(ke.key == "V")
       paste();
-    else if(key == "Z")
+    else if(ke.key == "Z")
       undo();
-    else return false;
+    else return;
 
-  // Ctrl + Alt + Key
+  // Ctrl + Alt + Ke.Key
   }else if(ctrl && alt && !shift){
-    if(key == "I")
+    if(ke.key == "I")
       move_max(UP);
-    else if(key == "J")
+    else if(ke.key == "J")
       move_max(LEFT);
-    else if(key == "K")
+    else if(ke.key == "K")
       move_max(DOWN);
-    else if(key == "L")
+    else if(ke.key == "L")
       move_max(RIGHT);
-    else if(key == "Q")
+    else if(ke.key == "Q")
       quit();
-    else return false;
+    else return;
 
-  // Ctrl + Shift + Key
+  // Ctrl + Shift + Ke.Key
   }else if(ctrl && !alt && shift){
-    if(key == "I")
+    if(ke.key == "I")
       close_panel();
-    else if(key == "J")
+    else if(ke.key == "J")
       left_panel();
-    else if(key == "K" && focus != &cmd_panel){
+    else if(ke.key == "K" && focus != &cmd_panel){
       if(p.split_ready){
         p.split_ready = false;
         split_horizontal();
       }else
         p.split_ready = true;
-    }else if(key == "L" && focus != &cmd_panel){
+    }else if(ke.key == "L" && focus != &cmd_panel){
       if(p.split_ready){
         p.split_ready = false;
         split_vertical();
       }else
         right_panel();
-    }else if(key == "S")
+    }else if(ke.key == "S")
       save_new_file();
-    else return false;
+    else return;
 
   // Unhandled modifier combo
-  }else return false;
+  }else return;
   // Fall-through from successful command
-  return true; }
+  updated = true;
+  return; }
 
 // Returns true if action was taken
 bool Editor::parse_char(const str& key){

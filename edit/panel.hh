@@ -37,7 +37,7 @@ struct Panel {
   str file_bar_text() const;
 
   void init();
-  void update(const double ms);
+  void update();
 
   // Defined in draw.hh
   void draw(const bool blt);
@@ -94,10 +94,10 @@ void Panel::init(){
   file_type = NO_FILE_TYPE;
   cursor.init(); }
 
-void Panel::update(const double ms){
+void Panel::update(){
   Cursor& c = cursor;
   if(!focus) return;
-  c.update(ms);
+  c.update();
   if(!c.updated) return;
   c.updated = false;
   // Draw character or cursor

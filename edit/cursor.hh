@@ -15,7 +15,7 @@ struct Cursor {
   static image* frame;
 
   void init();
-  void update(const double ms);
+  void update();
 
   // Defined in draw.hh
   void draw(const ipoint& win_pos, const bool blt); };
@@ -30,7 +30,7 @@ void Cursor::init(){
   pos = ipoint(0, 0);
   size = ipoint(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1); }
 
-void Cursor::update(const double ms){
+void Cursor::update(){
   double sec = (double)(clock() - last_update) / CPS;
   if(sec >= CURSOR_BLINK){
     blink = !blink;
