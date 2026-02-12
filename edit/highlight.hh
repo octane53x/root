@@ -5,14 +5,21 @@
 
 #include "panel.hh"
 
-void Panel::highlight_text(){
+void Panel::highlight_text(const int y0, const int yf){
   // Set default color
-  text_color.clear();
+  //! error: ins lines
   while(text_color.size() < text.size())
     text_color.pb(vec<color>());
   color ct = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
-  for(int y = 0; y < text.size(); ++y)
+  for(int y = 0; y < y0; ++y)
+    while(text_color[y].size() < text[y].size())
+      text_color[y].pb(ct);
+  for(int y = y0; y <= yf; ++y){
+    text_color[y].clear();
     for(int x = 0; x < text[y].size(); ++x)
+      text_color[y].pb(ct); }
+  for(int y = yf + 1; y < text.size(); ++y)
+    while(text_color[y].size() < text[y].size())
       text_color[y].pb(ct);
   if(cmd) return;
 
@@ -22,10 +29,10 @@ void Panel::highlight_text(){
         in_obj_decl = false,
         ready_for_type = true, type_found = false, name_found = false;
     int in_obj = 0, braces = 0, parens = 0;
-    ipoint pos(0, 0), type_pt, tok_pt, last_pt;
+    ipoint pos(0, y0), type_pt, tok_pt, last_pt;
     str tok, last_tok, last_tok2;
-    while(pos.y < text.size()){
 
+    while(pos.y <= yf){
       // Next line
       if(pos.x >= text[pos.y].size()){
         if(in_preproc){

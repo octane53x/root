@@ -21,13 +21,13 @@ struct Application : virtual Window {
 
   virtual void init() = 0;
   virtual void update() = 0;
-  virtual void draw() = 0;
+  virtual bool draw() = 0;
   virtual void resize() = 0;
   virtual void input(const KeyEvent& ke) = 0;
   virtual void run(); };
 
 // Set default member state
-// Called by: PROJECT
+// Called by: PROJECT init()
 void Application::init(){
   Window::init();
   always_draw = true;
@@ -35,29 +35,32 @@ void Application::init(){
   last_update = last_draw = 0; }
 
 // Send key events to derived application
-// Called by PROJECT
+// Called by: PROJECT update()
 void Application::update(){
   key_router.update();
-  for(const KeyEvent& ke : key_router.keys){
+  for(const KeyEvent& ke : key_router.keys)
     input(ke); //* time
-    key_router.last_key_send = clock(); }
   key_router.keys.clear();
   last_update = clock(); }
+
+// Manage draw calls to derived application
+// Called by: msg_proc()
+bool Application::draw(){
+  double sec = (double)(clock() - last_draw) / CPS;
+  if(!always_draw || sec < 1.0 / max_fps)
+    return false;
+  last_draw = clock();
+  InvalidateRect(hWnd, NULL, FALSE);
+  return true; }
 
 // Display window and run main loop
 // Called by: PROJECT
 void Application::run(){
   display();
-  MSG msg = {};
   SetTimer(hWnd, IDT_TIMER1, 1, NULL);
+  MSG msg = {};
   while(GetMessage(&msg, NULL, 0, 0)){
     TranslateMessage(&msg);
-    DispatchMessage(&msg);
-    update(); //* time
-    double sec = (double)(clock() - last_draw) / CPS;
-    if(sec < 1.0 / max_fps) continue;
-    draw(); //* time
-    if(always_draw)
-      InvalidateRect(hWnd, NULL, FALSE); } }
+    DispatchMessage(&msg); } }
 
 #endif

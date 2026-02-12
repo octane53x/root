@@ -37,6 +37,8 @@ struct Window {
   KeyRouter key_router;
 
   virtual void init() = 0;
+  virtual void update() = 0;
+  virtual bool draw() = 0;
   virtual void resize() = 0;
 
   void display();
@@ -84,10 +86,12 @@ void Window::refresh(){
 void Window::paint_proc(){
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(_win->hWnd, &ps);
-  HBITMAP bmp = image_to_bmp(hdc, &_win->frame, ipoint(0, 0), _win->frame.size);
+  RECT r = ps.rcPaint;
+  HBITMAP bmp = image_to_bmp(hdc, &_win->frame, ipoint(r.left, r.top),
+      ipoint(r.right - r.left, r.bottom - r.top));
   HDC hdcMem = CreateCompatibleDC(NULL);
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
-  BitBlt(hdc, 0, 0, _win->frame.size.x, _win->frame.size.y,
+  BitBlt(hdc, r.left, r.top, r.right - r.left, r.bottom - r.top,
       hdcMem, 0, 0, SRCCOPY);
   SelectObject(hdcMem, bmpPrev);
   DeleteObject(bmp);
@@ -145,7 +149,8 @@ LRESULT CALLBACK Window::msg_proc(
   // Update and draw
   case WM_TIMER:
     if(wParam != IDT_TIMER1) return 0;
-    SetTimer(_hWnd, IDT_TIMER1, 1, NULL);
+    _win->update();
+    _win->draw();
     return 0;
   case WM_PAINT:
     paint_proc();
@@ -168,22 +173,22 @@ LRESULT CALLBACK Window::msg_proc(
     return 0;
   case WM_LBUTTONDOWN:
   case WM_LBUTTONUP:
-    _win->key_router.keys.pb(
+    _win->key_router.send(
         KeyEvent("LCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
     return 0;
   case WM_RBUTTONDOWN:
   case WM_RBUTTONUP:
-    _win->key_router.keys.pb(
+    _win->key_router.send(
         KeyEvent("RCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
     return 0;
   case WM_MBUTTONDOWN:
   case WM_MBUTTONUP:
-    _win->key_router.keys.pb(
+    _win->key_router.send(
         KeyEvent("MCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
     return 0;
   case WM_MOUSEWHEEL:
     wheel = (int)GET_WHEEL_DELTA_WPARAM(wParam);
-    _win->key_router.keys.pb(KeyEvent("SCROLL", (wheel < 0), p, msg_time));
+    _win->key_router.send(KeyEvent("SCROLL", (wheel < 0), p, msg_time));
     return 0;
 
   // Keyboard input
@@ -191,7 +196,7 @@ LRESULT CALLBACK Window::msg_proc(
   case WM_KEYUP:
   case WM_SYSKEYDOWN:
   case WM_SYSKEYUP:
-    _win->key_router.keys.pb(KeyEvent(key_proc(wParam),
+    _win->key_router.send(KeyEvent(key_proc(wParam),
         uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN, p, msg_time));
     return 0;
 
@@ -202,7 +207,7 @@ LRESULT CALLBACK Window::msg_proc(
   case WM_ACTIVATE:
     // Send alt release on alt+tab
     if(wParam == FALSE)
-      _win->key_router.keys.pb(KeyEvent("ALT", false, p, msg_time));
+      _win->key_router.send(KeyEvent("ALT", false, p, msg_time));
     return 0;
 
   case WM_DESTROY:

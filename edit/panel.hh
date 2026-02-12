@@ -57,8 +57,9 @@ struct Panel {
   void scroll(const Dir d);
   void move_cursor(const Dir d);
   void set_file_type();
+
   // Defined in highlight.hh
-  void highlight_text(); };
+  void highlight_text(const int y0, const int yf); };
 
 umap<double, umap<color, umap<color, font> > > Panel::fonts;
 image* Panel::frame;
@@ -124,7 +125,7 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   text[p.y] = text[p.y].substr(0, p.x) + ins[0];
   text.insert(text.begin() + p.y + 1, ins.begin() + 1, ins.end());
   text[p.y + ins.size() - 1] += tail;
-  highlight_text();
+  highlight_text(p.y, p.y + ins.size() - 1);
 
   // Determine selection
   Cursor& c = cursor;
@@ -211,7 +212,7 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
     line += text[pf2.y].substr(pf2.x + 1);
     text.erase(text.begin() + p0.y + 1, text.begin() + pf2.y + 1); }
   text[p0.y] = line;
-  highlight_text();
+  highlight_text(p0.y, p0.y);
 
   // Draw chars after deletion
   if(p0.y == pf.y && !endline){

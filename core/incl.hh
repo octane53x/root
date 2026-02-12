@@ -15,6 +15,7 @@
 #include <climits>
 #include <cfloat>
 #include <algorithm>
+#include <thread>
 
 #include <string>
 #include <queue>

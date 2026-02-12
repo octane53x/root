@@ -6,6 +6,7 @@
 //! Stop commands for cmd panel
 //! Undo more than one character
 //! Resize
+//! Comments
 //!
 //! Find/replace
 //! Word wrap
@@ -39,7 +40,8 @@ struct Editor : virtual Application {
   virtual void resize();
 
   // Defined in draw.hh
-  virtual void draw();
+  virtual bool draw();
+  void draw_all();
   void draw_cmd(const bool blt);
 
   void load_font();
@@ -128,7 +130,7 @@ void Editor::init(){
   left_panel();
 
   // Display frame
-  draw(); }
+  draw_all(); }
 
 void Editor::update(){
   Application::update();

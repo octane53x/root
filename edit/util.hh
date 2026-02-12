@@ -16,16 +16,12 @@ const int
     LINE_HEIGHT_SCALE_1 = 18,
     CHAR_WIDTH_SCALE_1 = 9,
     VERTICAL_DIVIDE = 20,
-    PANEL_CHARS = 80,
-    // Time
-    UPDATE_MS = 10;
+    PANEL_CHARS = 80;
 
 const double
     SCALE_FACTOR = 1.1,
     // Seconds
-    CURSOR_BLINK = 0.5,
-    KEY_HOLD_DELAY = 0.3,
-    KEY_HOLD_REP = 0.05;
+    CURSOR_BLINK = 0.5;
 
 const color
     BKGD_COLOR = BLACK,

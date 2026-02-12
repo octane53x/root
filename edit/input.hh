@@ -17,6 +17,8 @@ void Editor::input(const KeyEvent& ke){
   if(ke.key == "ALT"){
     alt = ke.down;
     return; }
+  if(!ke.down)
+    return;
 
   Panel& p = *focus;
   Cursor& c = p.cursor;
@@ -251,7 +253,7 @@ void Editor::enter(){
       return; }
     p.text[0] = "";
     c.pos = ipoint(0, 0);
-    draw();
+    draw_all();
     return; }
 
   // Newline
@@ -602,6 +604,6 @@ void Editor::close_panel(){
   panels.erase(panels.begin() + i);
   if(i < j)
     --focus;
-  draw(); }
+  draw_all(); }
 
 #endif

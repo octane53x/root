@@ -9,8 +9,7 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")
 
-#define vec std::vector
-#define pb push_back
+#define IDT_TIMER1 223
 
 const double MAX_FPS = 60.0;
 
@@ -32,7 +31,7 @@ vec<vec<color> > frame;
 const ipoint frame_size = ipoint(2000, 2000);
 ipoint frame_pos = ipoint(0, 0);
 int phase = 1;
-int shift = 1;
+int shift = 10;
 
 void init(){
   last_update = 0;
@@ -73,19 +72,35 @@ void paint(){
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(_hwnd, &ps);
   RECT r = ps.rcPaint;
+clock_t t0 = clock();
   HBITMAP bmp = image_to_bmp(hdc, frame, frame_pos, win_size);
+clock_t t1 = clock();
   HDC hdcMem = CreateCompatibleDC(NULL);
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
+clock_t t2 = clock();
   BitBlt(hdc, r.left, r.top, r.right - r.left, r.bottom - r.top,
       hdcMem, 0, 0, SRCCOPY);
+clock_t t3 = clock();
   SelectObject(hdcMem, bmpPrev);
   DeleteObject(bmp);
   DeleteDC(hdcMem);
-  EndPaint(_hwnd, &ps); }
+  EndPaint(_hwnd, &ps);
+debug(str("paint ")+to_string((double)(t1-t0)/CPS)+" "
+    +to_string((double)(t3-t2)/CPS));
+}
 
 LRESULT CALLBACK _win_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   _hwnd = hwnd;
   switch(uMsg){
+  case WM_TIMER:
+    if(wParam != IDT_TIMER1)
+      return 0;
+    if((double)(clock() - last_update) / CPS < 1.0 / MAX_FPS)
+      return 0;
+    update();
+    InvalidateRect(hwnd, NULL, FALSE);
+    last_update = clock();
+    return 0;
   case WM_DESTROY:
     PostQuitMessage(0);
     return 0;
@@ -118,14 +133,9 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
 
   init();
 
+  SetTimer(hwnd, IDT_TIMER1, 1, NULL);
   MSG msg = {};
   while(GetMessage(&msg, NULL, 0, 0)){
     TranslateMessage(&msg);
-    DispatchMessage(&msg);
-    double sec = (double)(clock() - last_update) / CLOCKS_PER_SEC;
-    if(sec < 1.0 / MAX_FPS) continue;
-    update();
-    InvalidateRect(hwnd, NULL, FALSE);
-    last_update = clock(); }
-
+    DispatchMessage(&msg); }
   return 0; }

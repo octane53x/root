@@ -34,7 +34,7 @@ bool Editor::process_cmd(const str& cmd){
         p.text.pb(line);
     }else
       p.text.pb("");
-    p.highlight_text();
+    p.highlight_text(0, p.text.size() - 1);
     p.top_line = 0;
     return true;
 
@@ -121,7 +121,7 @@ void Editor::complete_file(){
   // Display completion
   c.text[0] = "Open: " + dir + tok;
   c.cursor.pos = ipoint(c.text[0].size(), 0);
-  c.highlight_text();
+  c.highlight_text(0, 0);
   c.draw(true); }
 
 #endif

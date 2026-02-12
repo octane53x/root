@@ -5,7 +5,11 @@
 
 #include "editor.hh"
 
-void Editor::draw(){
+// Do nothing since this app draws on update
+bool Editor::draw(){
+  return false; }
+
+void Editor::draw_all(){
   updated = false;
   for(Panel& p : panels)
     p.draw(true);
@@ -43,8 +47,7 @@ void Panel::draw(const bool blt){
         size.y + LINE_HEIGHT_SCALE_1)), FALSE); }
 
 // Draw one character
-void Panel::draw_char(const image& img, const ipoint& p,
-    const bool blt){
+void Panel::draw_char(const image& img, const ipoint& p, const bool blt){
   ipoint tl(max(0, p.x), max(0, p.y));
   ipoint sz(min(frame->size.x - tl.x, img.size.x - max(0, -p.x)),
       min(frame->size.y - tl.y, img.size.y - max(0, -p.y)));
@@ -56,8 +59,7 @@ void Panel::draw_char(const image& img, const ipoint& p,
   if(blt)
     InvalidateRect(_win->hWnd, &get_rect(tl, sz), FALSE); }
 
-void Panel::draw_selection(const ipoint& p0, const ipoint& pf,
-    const bool blt){
+void Panel::draw_selection(const ipoint& p0, const ipoint& pf, const bool blt){
   // Find selection to determine background color
   Cursor& c = cursor;
   ipoint mark0, markf;
