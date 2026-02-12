@@ -1,5 +1,7 @@
 // Windows CL Test Window
 
+//! Windows doesn't always grant both cores, slows back down to 25 fps
+
 #include <time.h>
 #include <vector>
 #include <windows.h>

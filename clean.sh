@@ -2,3 +2,4 @@
 find . -type f -name '*~' -delete
 rm *.obj
 rm *.exe
+rm debug.txt

@@ -65,4 +65,14 @@ HBITMAP image_to_bmp(image* f, const ipoint& pos, const ipoint& size){
           | ((ui)f->data[i][j].g << 8) | f->data[i][j].b;
   return CreateBitmap(size.x, size.y, 1, 32, bmp_data); }
 
+// Get screen rects of all connected monitors
+struct GetScreens {
+  vec<RECT> rects;
+  static BOOL CALLBACK os_fn(HMONITOR hMon, HDC hdc, LPRECT rect, LPARAM _ptr){
+    GetScreens* ptr = reinterpret_cast<GetScreens*>(_ptr);
+    ptr->rects.pb(*rect);
+    return TRUE; }
+  GetScreens(){
+    EnumDisplayMonitors(0, 0, os_fn, (LPARAM)this); } };
+
 #endif

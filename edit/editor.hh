@@ -2,6 +2,7 @@
 
 //! TODO
 //!
+//! Draw unsaved asterisks
 //! Stop commands for cmd panel
 //! Undo more than one character
 //! Resize
@@ -9,7 +10,6 @@
 //!
 //! Find/replace
 //! Word wrap
-//! Detect other monitor
 //! Paren/bracket highlight
 //! Scroll bar
 //! Comment selection
@@ -38,11 +38,6 @@ struct Editor : virtual Application {
   virtual void update();
   virtual void resize();
 
-  // Defined in draw.hh
-  virtual bool draw();
-  void draw_all();
-  void draw_cmd(const bool blt);
-
   void load_font();
   void color_font(const double scale);
   image color_char(const image& img, const color& ctext, const color& cbkgd);
@@ -54,6 +49,11 @@ struct Editor : virtual Application {
   // Defined in cmd.hh
   bool process_cmd(const str& cmd);
   void complete_file();
+
+  // Defined in draw.hh
+  virtual bool draw();
+  void draw_all();
+  void draw_cmd(const bool blt);
 
   // Defined in input.hh
   virtual void input(const KeyEvent& ke);
@@ -93,13 +93,28 @@ void Editor::init(){
   Panel::frame = Cursor::frame = &frame;
 
   // Window init
-  RECT rect;
-  SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0);
+  GetScreens screens;
+  // Find biggest screen
+  int mi = -1, mx = -1;
+  for(int i = 0; i < screens.rects.size(); ++i){
+    const RECT& r = screens.rects[i];
+    int area = (r.right - r.left) * (r.bottom - r.top);
+    if(area > mx){
+      mx = area;
+      mi = i; } }
+  RECT rect = screens.rects[mi];
+  // Find taskbar height
+  RECT work_area;
+  SystemParametersInfo(SPI_GETWORKAREA, 0, &work_area, 0);
+  int taskbar_height = GetSystemMetrics(SM_CYSCREEN)
+      - (work_area.bottom - work_area.top);
+  // Set size and position
   frame_size = ipoint(2 * ((PANEL_CHARS * CHAR_WIDTH_SCALE_1)
-      + VERTICAL_DIVIDE), rect.bottom - rect.top + FRAME_HEIGHT_OFFSET);
+      + VERTICAL_DIVIDE),
+      rect.bottom - rect.top - taskbar_height + FRAME_HEIGHT_OFFSET);
   size = ipoint(frame_size.x + WIN_WIDTH_OFFSET,
       frame_size.y + WIN_HEIGHT_OFFSET);
-  pos = ipoint(rect.right - size.x + WIN_XPOS_OFFSET, 0);
+  pos = ipoint(rect.right - size.x + WIN_XPOS_OFFSET, rect.top);
   frame.set_size(frame_size);
 
   // Initial panel

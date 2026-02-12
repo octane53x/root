@@ -24,8 +24,6 @@ struct KeyEvent {
 
   KeyEvent(const str& k, const bool d, const ipoint& c, const clock_t t); };
 
-struct Application;
-
 // Stores key events and creates held key repeat events
 struct KeyRouter {
 
