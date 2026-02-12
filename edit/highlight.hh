@@ -7,7 +7,6 @@
 
 void Panel::highlight_text(const int y0, const int yf){
   // Set default color
-  //! error: ins lines
   while(text_color.size() < text.size())
     text_color.pb(vec<color>());
   color ct = cmd ? BAR_TEXT_COLOR : COLOR_CODE;

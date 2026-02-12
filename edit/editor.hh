@@ -2,7 +2,6 @@
 
 //! TODO
 //!
-//! Speed bug
 //! Stop commands for cmd panel
 //! Undo more than one character
 //! Resize

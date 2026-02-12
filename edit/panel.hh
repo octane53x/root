@@ -125,6 +125,7 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   text[p.y] = text[p.y].substr(0, p.x) + ins[0];
   text.insert(text.begin() + p.y + 1, ins.begin() + 1, ins.end());
   text[p.y + ins.size() - 1] += tail;
+  text_color.insert(text_color.begin() + p.y + 1, ins.size() - 1, vec<color>());
   highlight_text(p.y, p.y + ins.size() - 1);
 
   // Determine selection
@@ -208,9 +209,13 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
     if(pf2.y + 1 < text.size() && text[pf2.y + 1] != "")
       line += text[pf2.y + 1];
     text.erase(text.begin() + p0.y + 1, text.begin() + pf2.y + 2);
+    text_color.erase(text_color.begin() + p0.y + 1,
+        text_color.begin() + pf2.y + 2);
   }else{
     line += text[pf2.y].substr(pf2.x + 1);
-    text.erase(text.begin() + p0.y + 1, text.begin() + pf2.y + 1); }
+    text.erase(text.begin() + p0.y + 1, text.begin() + pf2.y + 1);
+    text_color.erase(text_color.begin() + p0.y + 1,
+        text_color.begin() + pf2.y + 1); }
   text[p0.y] = line;
   highlight_text(p0.y, p0.y);
 

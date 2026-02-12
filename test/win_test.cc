@@ -15,14 +15,6 @@ const double MAX_FPS = 60.0;
 
 ui bmp_data[10000000]={0};
 
-HBITMAP image_to_bmp(HDC hdc, const vec<vec<color> >& f,
-    const ipoint& pos, const ipoint& size){
-  for(int i = pos.y; i < pos.y + size.y; ++i)
-    for(int j = pos.x; j < pos.x + size.x; ++j)
-      bmp_data[(i - pos.y) * size.x + j - pos.x] = ((ui)f[i][j].r << 16)
-          | ((ui)f[i][j].g << 8) | f[i][j].b;
-  return CreateBitmap(size.x, size.y, 1, 32, bmp_data); }
-
 HWND _hwnd;
 clock_t last_update;
 ipoint win_size;
@@ -33,15 +25,48 @@ ipoint frame_pos = ipoint(0, 0);
 int phase = 1;
 int shift = 10;
 
+bool lock = true;
+
+void image_to_bmp_thd(){
+  while(1){
+    while(lock);
+    ipoint pos(frame_pos.x, frame_pos.y + (win_size.y >> 1));
+    for(int i = pos.y;
+        i < pos.y + (win_size.y >> 1) + ((win_size.y & 1) ? 1 : 0); ++i)
+      for(int j = pos.x; j < pos.x + win_size.x; ++j)
+        bmp_data[(i - frame_pos.y) * win_size.x + j - frame_pos.x]
+            = ((ui)frame[i][j].r << 16) | ((ui)frame[i][j].g << 8)
+            | frame[i][j].b;
+    lock = true; } }
+
+HBITMAP image_to_bmp(){
+  // Kick off helper thread
+  lock = false;
+  // Transfer top half of frame
+  ipoint pos = frame_pos;
+  for(int i = pos.y; i < pos.y + (win_size.y >> 1); ++i)
+    for(int j = pos.x; j < pos.x + win_size.x; ++j)
+      bmp_data[(i - frame_pos.y) * win_size.x + j - frame_pos.x]
+          = ((ui)frame[i][j].r << 16) | ((ui)frame[i][j].g << 8)
+          | frame[i][j].b;
+  // Wait on helper thread
+  while(!lock);
+  // Create bitmap wrapper
+  return CreateBitmap(win_size.x, win_size.y, 1, 32, bmp_data); }
+
 void init(){
   last_update = 0;
   RECT r;
   GetWindowRect(_hwnd, &r);
   win_size = ipoint(r.right - r.left, r.bottom - r.top);
+
   for(int y = 0; y < frame_size.y; ++y){
     frame.pb(vec<color>());
     for(int x = 0; x < frame_size.x; ++x)
-      frame[y].pb((((y/100)&1) && ((x/100)&1)) ? BLUE : RED); } }
+      frame[y].pb((((y/100)&1) && ((x/100)&1)) ? BLUE : RED); }
+
+  thread thd1(image_to_bmp_thd);
+  thd1.detach(); }
 
 void update(){
   switch(phase){
@@ -73,7 +98,7 @@ void paint(){
   HDC hdc = BeginPaint(_hwnd, &ps);
   RECT r = ps.rcPaint;
 clock_t t0 = clock();
-  HBITMAP bmp = image_to_bmp(hdc, frame, frame_pos, win_size);
+  HBITMAP bmp = image_to_bmp();
 clock_t t1 = clock();
   HDC hdcMem = CreateCompatibleDC(NULL);
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);

@@ -87,7 +87,7 @@ void Window::paint_proc(){
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(_win->hWnd, &ps);
   RECT r = ps.rcPaint;
-  HBITMAP bmp = image_to_bmp(hdc, &_win->frame, ipoint(r.left, r.top),
+  HBITMAP bmp = image_to_bmp(&_win->frame, ipoint(r.left, r.top),
       ipoint(r.right - r.left, r.bottom - r.top));
   HDC hdcMem = CreateCompatibleDC(NULL);
   HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);

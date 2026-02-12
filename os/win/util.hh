@@ -58,7 +58,7 @@ void save_bmp(image f, str file){
   fclose(fp); }
 
 // Convert image object to Windows bitmap
-HBITMAP image_to_bmp(HDC hdc, image* f, const ipoint& pos, const ipoint& size){
+HBITMAP image_to_bmp(image* f, const ipoint& pos, const ipoint& size){
   for(int i = pos.y; i < pos.y + size.y; ++i)
     for(int j = pos.x; j < pos.x + size.x; ++j)
       bmp_data[(i - pos.y) * size.x + j - pos.x] = ((ui)f->data[i][j].r << 16)
