@@ -31,7 +31,7 @@ void Panel::draw(const bool blt){
   // Clear panel
   for(int y = pos.y; y < pos.y + size.y; ++y)
     for(int x = pos.x; x < pos.x + size.x; ++x)
-      frame->data[y][x] = BKGD_COLOR;
+      frame->data[y][x] = bkgd;
   // Draw text
   int yf = min((int)text.size() - 1,
       top_line + (int)ceil((double)size.y / line_height) - 1);
@@ -105,6 +105,7 @@ void Panel::draw_selection(const ipoint& p0, const ipoint& pf, const bool blt){
           text_to_frame(ipoint(x, y)), blt); } }
 
 void Panel::draw_divider(const bool blt){
+  if(cmd) return;
   for(int y = pos.y; y < pos.y + size.y; ++y)
     for(int x = pos.x + size.x; x < pos.x + size.x + VERTICAL_DIVIDE; ++x)
       frame->data[y][x] = DIVIDER_COLOR;
@@ -123,6 +124,7 @@ void Panel::draw_cursor_pos(const bool blt){
         ipoint(pos.x + (x + n) * char_width, pos.y + size.y), blt); }
 
 void Panel::draw_file_bar(const bool blt){
+  if(cmd) return;
   // Draw bar
   color cbkgd = focus ? FOCUS_FILE_BAR_COLOR : UNFOCUS_FILE_BAR_COLOR;
   for(int y = pos.y + size.y; y < pos.y + size.y + LINE_HEIGHT_SCALE_1; ++y)

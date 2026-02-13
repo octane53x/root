@@ -1,13 +1,13 @@
 // EDITOR
 
 //! TODO
-//!
-//! Draw unsaved asterisks
+
+//! Fix selection line end
 //! Stop commands for cmd panel
 //! Undo more than one character
 //! Resize
 //! Comments
-//!
+
 //! Find/replace
 //! Word wrap
 //! Paren/bracket highlight
@@ -86,15 +86,15 @@ struct Editor : virtual Application {
   void close_panel(); };
 
 void Editor::init(){
+  // Set default member state
   Application::init();
   start_maximized = always_draw = false;
   updated = true;
   shift = ctrl = alt = false;
   Panel::frame = Cursor::frame = &frame;
 
-  // Window init
-  GetScreens screens;
   // Find biggest screen
+  GetScreens screens;
   int mi = -1, mx = -1;
   for(int i = 0; i < screens.rects.size(); ++i){
     const RECT& r = screens.rects[i];
@@ -103,12 +103,14 @@ void Editor::init(){
       mx = area;
       mi = i; } }
   RECT rect = screens.rects[mi];
+
   // Find taskbar height
   RECT work_area;
   SystemParametersInfo(SPI_GETWORKAREA, 0, &work_area, 0);
   int taskbar_height = GetSystemMetrics(SM_CYSCREEN)
       - (work_area.bottom - work_area.top);
-  // Set size and position
+
+  // Set window size and position
   frame_size = ipoint(2 * ((PANEL_CHARS * CHAR_WIDTH_SCALE_1)
       + VERTICAL_DIVIDE),
       rect.bottom - rect.top - taskbar_height + FRAME_HEIGHT_OFFSET);

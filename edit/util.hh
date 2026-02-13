@@ -53,16 +53,20 @@ const str
     _SYMBOLS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         " .,/?:;'\"+=-_\\|~!@#$%^&*()[]{}<>";
 
-const uset<str> KEYWORDS = {
-    // Crab
-    "obj", "fn", "if", "else", "for", "while", "return", "break", "continue",
-    "const", "virtual", "final", "include", "this", "operator", "static",
+const uset<str>
+    KEYWORDS_SHARED = {
+    "if", "else", "for", "while", "return", "break", "continue"},
+    KEYWORDS_CPP_CRAB = {
+    "const", "virtual", "final", "this", "operator", "static",
     "template", "abstract", "force", "true", "false", "enum", "switch", "case",
-    "try", "catch", "typedef", "enum", "namespace", "NULL",
-    // Other languages
-    "struct", "def", "delete", "in", "and", "or", "bitand", "bitor", "xor",
-    "static_cast", "dynamic_cast", "typename", "class", "do", "inline", "new",
-    "public", "protected", "private"};
+    "try", "catch", "typedef", "enum", "namespace", "NULL"},
+    KEYWORDS_CPP = {"struct", "class", "typename", "do", "new", "delete",
+    "volatile", "override", "inline", "static_cast", "dynamic_cast",
+    "reinterpret_cast", "public", "protected", "private"},
+    KEYWORDS_PYTH = {"def", "import", "in", "and", "or", "elif", "as", "with",
+    "True", "False", "None", "assert", "class", "del", "except", "finally",
+    "from", "global", "is", "lambda", "not", "pass", "raise", "yield"},
+    KEYWORDS_CRAB = {"obj", "fn", "include", "force"};
 
 enum FileType { NO_FILE_TYPE, CPP, PYTH, CRAB };
 

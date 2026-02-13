@@ -22,6 +22,7 @@ void Panel::highlight_text(const int y0, const int yf){
       text_color[y].pb(ct);
   if(cmd) return;
 
+  uset<str> KEYWORDS;
   if(file_type == CPP){
     bool in_comment_block = false, in_str = false, in_val = false,
         in_fn = false, in_preproc = false, in_params = false, in_for = false,
@@ -30,6 +31,10 @@ void Panel::highlight_text(const int y0, const int yf){
     int in_obj = 0, braces = 0, parens = 0;
     ipoint pos(0, y0), type_pt, tok_pt, last_pt;
     str tok, last_tok, last_tok2;
+
+    KEYWORDS.insert(KEYWORDS_SHARED.begin(), KEYWORDS_SHARED.end());
+    KEYWORDS.insert(KEYWORDS_CPP_CRAB.begin(), KEYWORDS_CPP_CRAB.end());
+    KEYWORDS.insert(KEYWORDS_CPP.begin(), KEYWORDS_CPP.end());
 
     while(pos.y <= yf){
       // Next line

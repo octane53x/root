@@ -18,7 +18,7 @@ bool Editor::process_cmd(const str& cmd){
       if(path[i] == '/') break;
     if(i < 0) return false;
     str dir = path.substr(0, i + 1);
-    if(!exists(dir)) return false;
+    if(!exists(dir) || is_directory(path)) return false;
     p.dir = dir;
     p.file = path.substr(i + 1);
     p.set_file_type();

@@ -137,20 +137,23 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
     markf = (mark0 == c.pos) ? mark : c.pos; }
 
   // Draw single character at end of line
-  if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
-    color cb = (mark.y != -1 && in_selection(mark0, markf, p))
-        ? SELECT_COLOR : bkgd;
-    draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
-        text_to_frame(p), true);
-    return; }
+  // if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
+  //   color cb = (mark.y != -1 && in_selection(mark0, markf, p))
+  //       ? SELECT_COLOR : bkgd;
+  //   draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
+  //       text_to_frame(p), true);
+  //   return; }
 
   // Draw single line without adding new lines
   if(ins.size() == 1){
-    for(int x = p.x; x < text[p.y].size(); ++x){
+    for(int x = 0; x < text[p.y].size(); ++x){
       color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p.y)))
           ? SELECT_COLOR : bkgd;
       draw_char(fonts[text_scale][cb][text_color[p.y][x]][text[p.y][x]],
           text_to_frame(ipoint(x, p.y)), true); }
+    if(saved){
+      saved = false;
+      draw_file_bar(true); }
     return; }
 
   // Redraw panel if lines moved
@@ -339,7 +342,8 @@ void Panel::move_cursor(const Dir d){
     if(in_selection(p0, ipoint(pf.x - 1, pf.y), cp))
       cb = SELECT_COLOR; }
   char ch = (cp.x == text[cp.y].size()) ? ' ' : text[cp.y][cp.x];
-  color ct = (ch == ' ') ? COLOR_CODE : text_color[cp.y][cp.x];
+  color ct = (ch == ' ') ? (cmd ? BAR_TEXT_COLOR : COLOR_CODE)
+      : text_color[cp.y][cp.x];
   draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(cp), true);
 
   // Draw character and cursor

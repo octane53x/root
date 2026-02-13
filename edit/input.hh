@@ -28,7 +28,7 @@ void Editor::input(const KeyEvent& ke){
     p.split_ready = false;
     return; }
 
-  // Ke.Key or Shift + Ke.Key
+  // Key or Shift + Key
   if(!ctrl && !alt){
     if(parse_char(ke.key)){
       updated = true;
@@ -54,7 +54,7 @@ void Editor::input(const KeyEvent& ke){
       p.move_cursor(RIGHT);
     else return;
 
-  // Alt + Ke.Key
+  // Alt + Key
   }else if(!ctrl && alt && !shift){
     if(ke.key == "I")
       p.move_cursor(UP);
@@ -66,7 +66,7 @@ void Editor::input(const KeyEvent& ke){
       p.move_cursor(RIGHT);
     else return;
 
-  // Ctrl + Ke.Key
+  // Ctrl + Key
   }else if(ctrl && !alt && !shift){
     if(ke.key == "I")
       ctrl_move(UP);
@@ -118,7 +118,7 @@ void Editor::input(const KeyEvent& ke){
       undo();
     else return;
 
-  // Ctrl + Alt + Ke.Key
+  // Ctrl + Alt + Key
   }else if(ctrl && alt && !shift){
     if(ke.key == "I")
       move_max(UP);
@@ -132,7 +132,7 @@ void Editor::input(const KeyEvent& ke){
       quit();
     else return;
 
-  // Ctrl + Shift + Ke.Key
+  // Ctrl + Shift + Key
   }else if(ctrl && !alt && shift){
     if(ke.key == "I")
       close_panel();
@@ -271,11 +271,9 @@ void Editor::escape(){
   Panel& p = *focus;
   if(&p != &cmd_panel) return;
   switch_panel(prev_panel);
-  for(int y = p.pos.y; y < p.pos.y + p.size.y; ++y)
-    for(int x = p.pos.x; x < p.pos.x + p.size.x; ++x)
-      frame.data[y][x] = BKGD_COLOR;
   p.text[0] = "";
-  p.cursor.pos = ipoint(0, 0); }
+  p.cursor.pos = ipoint(0, 0);
+  draw_cmd(true); }
 
 void Editor::ctrl_move(const Dir d){
   Panel& p = *focus;
