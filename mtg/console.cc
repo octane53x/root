@@ -11,6 +11,9 @@ int main(){
   printf("Parsed %d cards in %lf seconds\n",
       cards.size(), (double)(tf - t0) / CPS);
 
-  //!
+  for(pair<str, Card> entry : cards){
+    for(Cost& c : entry.second.cost)
+      if(c.color == 'Y' || c.color == 'Z')
+        entry.second.print(), printf("\n\n"); }
 
   return 0; }
