@@ -1,6 +1,6 @@
-// Execute custom Windows application
+// Execute Terminal
 
-//! #include "custom_application.hh"
+#include "terminal.hh"
 
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")
@@ -10,7 +10,7 @@
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
   debug_init();
-  //! CustomApplication app;
+  Terminal app;
   app.hInst = hInst;
   app.init();
   app.run();
