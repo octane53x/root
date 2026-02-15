@@ -141,6 +141,18 @@ template <typename K, typename V>
 bool contains(const umap<K, V>& u, const K& item){
   return u.find(item) != u.end(); }
 
+// Is character uppercase
+bool is_upper(const char c){
+  return (c >= 'A' && c <= 'Z'); }
+
+// Is character lowercase
+bool is_lower(const char c){
+  return (c >= 'a' && c <= 'z'); }
+
+// Is character a letter
+bool is_alpha(const char c){
+  return (is_lower(c) || is_upper(c)); }
+
 // Is character a digit
 bool is_digit(const char c){
   return (c >= '0' && c <= '9'); }
@@ -153,6 +165,14 @@ bool is_integer(const str& s){
     if(!is_digit(s[i]))
       return false;
   return true; }
+
+// Convert a string to lowercase
+str to_lower(const str& s){
+  str r = s;
+  for(int i = 0; i < r.size(); ++i)
+    if(is_upper(r[i]))
+      r[i] = r[i] - 'A' + 'a';
+  return r; }
 
 // Split string by delimiter
 vec<str> split(const str& s, const str& d){

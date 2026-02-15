@@ -1,9 +1,14 @@
-// CARD
+// MTG CARD
 
 #ifndef CARD_HH
 #define CARD_HH
 
 #include "../core/util.hh"
+
+const uset<str> MODS {
+  "flying", "defender", "trample", "deathtouch", "haste", "lifelink", "reach",
+  "first strike", "double strike", "flash", "hexproof", "indestructible",
+  "menace", "vigilance" };
 
 struct Card {
 
@@ -18,18 +23,27 @@ struct Card {
 
     Cost(); };
 
+  // Base data
   int pow, tuf;
   str name, text;
   vec<Cost> cost;
   uset<str> types;
 
+  // Abilities from text
+  uset<str> mods;
+
+  // Game data
+  int p1p1cntr;
+
   Card();
 
   bool is_color(const char c) const;
+  str next_tok(const int i) const;
   void print() const;
 
   bool add_field(const str& key, const str& val);
-  void condense_cost(); };
+  void condense_cost();
+  bool process_text(); };
 
 Card::Cost::Cost(): type(NONE), color('-'), color2('-'), count(0) {}
 
@@ -39,18 +53,27 @@ bool Card::is_color(const char c) const {
   return (c == 'W' || c == 'U' || c == 'K' || c == 'R' || c == 'G'
       || c == 'C'); }
 
+str Card::next_tok(const int i) const {
+  int j = i;
+  while(is_alpha(text[j]))
+    ++j;
+  if(j == i)
+    ++j;
+  return text.substr(i, j - i); }
+
 void Card::print() const {
   printf("%s\n", name.c_str());
   for(const Cost& c : cost){
     if(c.type == Cost::GENERIC)
       printf("%d ", c.count);
     else if(c.type == Cost::COLOR)
-      printf("%c ", c.color);
+      printf("%d%c ", c.count, c.color);
     else if(c.type == Cost::VARIABLE)
-      printf("X ");
+      printf("%dX ", c.count);
     else
-      printf("# "); }
-  printf("\n");
+      printf("%d# ", c.count); }
+  if(!cost.empty())
+    printf("\n");
   if(contains(types, str("Creature")))
     printf("%d / %d\n", pow, tuf);
   for(const str& t : types)
@@ -136,7 +159,31 @@ bool Card::add_field(const str& key, const str& val){
   return true; }
 
 void Card::condense_cost(){
-  //!
-}
+  vec<Cost> cn;
+  while(!cost.empty()){
+    Cost c = cost[0];
+    for(int i = 1; i < cost.size(); ++i)
+      if(c.type == cost[i].type
+          && ((c.color == cost[i].color && c.color2 == cost[i].color2)
+          || (c.color == cost[i].color2 && c.color2 == cost[i].color))){
+        c.count += cost[i].count;
+        cost.erase(cost.begin() + i);
+        --i; }
+    cn.pb(c);
+    cost.erase(cost.begin()); }
+  cost = cn; }
+
+bool Card::process_text(){
+  int i = 0;
+  while(i < text.size()){
+    str tok = next_tok(i);
+    if(contains(MODS, to_lower(tok))){
+      mods.insert(to_lower(tok));
+      i += tok.size();
+    }else if(tok == "," || tok == " ")
+      ++i;
+    else
+      return false; }
+  return true; }
 
 #endif
