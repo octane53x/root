@@ -36,6 +36,7 @@ umap<str, Card> parse(){
         break;
       assert(text[i] == '{', "parse", "bad char 1");
       ++i;
+      bool keep = true;
       Card card;
 
       while(1){
@@ -98,7 +99,8 @@ umap<str, Card> parse(){
           val = text.substr(i, j - i);
           i = j; }
 
-        card.add_field(key, val);
+        if(!card.add_field(key, val))
+          keep = false;
         if(text[i] == ',')
           i += 2;
         else if(text[i] == '}')
@@ -106,9 +108,11 @@ umap<str, Card> parse(){
         else{
           err("parse", "bad char 5"); } }
 
-      if(contains(cards, card.name))
-        cards[card.name].compare(card);
-      else
+      if(contains(cards, card.name)){
+        if(card.name.find("//") != str::npos){
+          card.name += "(2)";
+          cards[card.name] = card; }
+      }else if(keep)
         cards[card.name] = card;
 
       ++i;

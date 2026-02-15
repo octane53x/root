@@ -141,6 +141,38 @@ template <typename K, typename V>
 bool contains(const umap<K, V>& u, const K& item){
   return u.find(item) != u.end(); }
 
+// Is character a digit
+bool is_digit(const char c){
+  return (c >= '0' && c <= '9'); }
+
+// Is string an integer
+bool is_integer(const str& s){
+  if(!(is_digit(s[0]) || s[0] == '-'))
+    return false;
+  for(int i = 1; i < s.size(); ++i)
+    if(!is_digit(s[i]))
+      return false;
+  return true; }
+
+// Split string by delimiter
+vec<str> split(const str& s, const str& d){
+  vec<str> r;
+  vec<int> loc;
+  for(int i = 0; i < s.size(); ++i){
+    bool found = true;
+    for(int j = i, k = 0; j < s.size() && k < d.size(); ++j, ++k)
+      if(s[j] != d[k]){
+        found = false;
+        break; }
+    if(found)
+      loc.pb(i); }
+  loc.pb(s.size());
+  if(loc[0] > 0)
+    r.pb(s.substr(0, loc[0]));
+  for(int i = 1; i < loc.size(); ++i)
+    r.pb(s.substr(loc[i - 1] + d.size(), loc[i] - loc[i - 1] - d.size()));
+  return r; }
+
 // Double equals comparator
 bool deq(const double a, const double b){
   return fabs(a - b) < SAFE_ZERO; }

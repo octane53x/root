@@ -5,18 +5,18 @@
 
 #include "../core/util.hh"
 
-struct Cost {
-
-  enum CostType {
-    COLOR, GENERIC, HYBRID_2COL, HYBRID_2GEN, PHYREXIAN, SNOW, VARIABLE
-  } type;
-
-  char color, color2;
-  int count;
-
-  Cost(); };
-
 struct Card {
+
+  struct Cost {
+
+    enum CostType {
+      NONE, COLOR, GENERIC, HYBRID_2COL, HYBRID_2GEN, PHYREXIAN, SNOW, VARIABLE
+    } type;
+
+    char color, color2;
+    int count;
+
+    Cost(); };
 
   int pow, tuf;
   str name, text;
@@ -25,26 +25,33 @@ struct Card {
 
   Card();
 
-  void print();
-  bool add_field(const str& key, const str& val);
-  void condense_cost();
-  void compare(const Card& c); };
+  bool is_color(const char c) const;
+  void print() const;
 
-Cost::Cost(): color('-'), color2('-'), count(0) {}
+  bool add_field(const str& key, const str& val);
+  void condense_cost(); };
+
+Card::Cost::Cost(): type(NONE), color('-'), color2('-'), count(0) {}
 
 Card::Card(): pow(0), tuf(0) {}
 
-void Card::print(){
+bool Card::is_color(const char c) const {
+  return (c == 'W' || c == 'U' || c == 'K' || c == 'R' || c == 'G'
+      || c == 'C'); }
+
+void Card::print() const {
   printf("%s\n", name.c_str());
-  for(Cost& c : cost){
+  for(const Cost& c : cost){
     if(c.type == Cost::GENERIC)
       printf("%d ", c.count);
     else if(c.type == Cost::COLOR)
       printf("%c ", c.color);
     else if(c.type == Cost::VARIABLE)
-      printf("X "); }
+      printf("X ");
+    else
+      printf("# "); }
   printf("\n");
-  if(contains(types, "Creature"))
+  if(contains(types, str("Creature")))
     printf("%d / %d\n", pow, tuf);
   for(const str& t : types)
     printf("%s ", t.c_str());
@@ -52,19 +59,23 @@ void Card::print(){
 
 bool Card::add_field(const str& key, const str& val){
   if(key == "power"){
-    try{
+    if(is_integer(val))
       pow = stoi(val);
-    }catch(invalid_argument& e){
-      pow = -1; }
+    else
+      pow = -1;
   }else if(key == "toughness"){
-    try{
+    if(is_integer(val))
       tuf = stoi(val);
-    }catch(invalid_argument& e){
-      tuf = -1; }
+    else
+      tuf = -1;
   }else if(key == "name"){
     name = val;
   }else if(key == "text"){
     text = val;
+  }else if(key == "types" || key == "subtypes"){
+    vec<str> sv = split(val.substr(1, val.size() - 2), ", ");
+    for(const str& s : sv)
+      types.insert(s.substr(1, s.size() - 2));
 
   }else if(key == "manaCost"){
     for(int i = 0; i < val.size(); ++i){
@@ -77,49 +88,54 @@ bool Card::add_field(const str& key, const str& val){
           s[j] = 'K';
 
       Cost c;
-      try{
+      if(is_integer(s)){
         c.type = Cost::GENERIC;
         c.count = stoi(s);
 
-      }catch(invalid_argument& e){
-        if(s.size() == 1){
-          if(s == "X")
-            c.type = Cost::VARIABLE;
-          else if(s == "W" || s == "U" || s == "K" || s == "R" || s == "G"
-              || s == "C"){
-            c.type = Cost::COLOR;
-            c.color = s[0];
-          }else if(s == "S")
-            c.type = Cost::SNOW;
-          else
-            return false;
+      }else if(s.size() == 1){
+        if(s == "X")
+          c.type = Cost::VARIABLE;
+        else if(is_color(s[0])){
+          c.type = Cost::COLOR;
+          c.color = s[0];
+        }else if(s == "S")
+          c.type = Cost::SNOW;
+        else
+          return false;
+        c.count = 1;
+
+      }else if(s.size() == 3 && s[1] == '/'){
+        if(s[0] == '2' && is_color(s[2])){
+          c.type = Cost::HYBRID_2GEN;
+          c.color = s[2];
+        }else if(s[2] == 'P' && is_color(s[0])){
+          c.type = Cost::PHYREXIAN;
+          c.color = s[0];
+        }else if(is_color(s[0]) && is_color(s[2])){
+          c.type = Cost::HYBRID_2COL;
+          c.color = s[0];
+          c.color2 = s[2];
+        }else
+          return false;
+        c.count = 1;
+
+      }else if(s.size() == 5 && s[1] == '/' && s[3] == '/'){
+        if(s[4] == 'P' && is_color(s[0]) && is_color(s[2])){
+          c.type = Cost::PHYREXIAN;
+          c.color = s[0];
+          c.color2 = s[2];
           c.count = 1;
+        }else
+          return false;
 
-        }else if(s.size() == 3 && s[1] == '/'){
-          // c.color = s[0];
-          // if(s[2] == 'P')
-          //   c.type = Cost::PHYREXIAN;
-          // else{
-          //   c.type = Cost::HYBRID_2COL
-
-        }else{
-          //printf("%s\n", s.c_str());
-          //!
-        }
-      }
+      }else
+        return false;
 
       cost.pb(c); }
-    condense_cost();
-
-  }else if(key == "types" || key == "subtypes"){
-    //!
-  } }
+    condense_cost(); }
+  return true; }
 
 void Card::condense_cost(){
-  //!
-}
-
-void Card::compare(const Card& c){
   //!
 }
 
