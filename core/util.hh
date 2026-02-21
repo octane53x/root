@@ -1,27 +1,9 @@
-// UTIL
+// UTILITY
 
 #ifndef UTIL_HH
 #define UTIL_HH
 
-#include "def.hh"
-
-const int
-    // Infinity
-    INF = INT_MAX,
-    // Divide (clock() - last_clock) by this
-    CPS = CLOCKS_PER_SEC;
-
-const double
-    // Infinity for double
-    INFD = DBL_MAX,
-    // Margin of error for comparing doubles
-    SAFE_ZERO = 0.00000001,
-    // Mathematical pi
-    PI = 3.14159265358979323846;
-
-const str
-    // Debug log file location, print goes here when there's no console
-    DEBUG_FILE = "debug.txt";
+#include "double.hh"
 
 // Do nothing, used to follow if/else when the condition just needs to be seen
 void pass(){}
@@ -64,7 +46,7 @@ void err(const str& func, const str& msg){
 
 // Check a condition and throw an error if it fails
 //! Takes a lot more time than it should, don't use in critical loops
-inline void assert(const bool b, const str& func, const str& msg){
+void assert(const bool b, const str& func, const str& msg){
   if(!b) err(func, msg); }
 
 // Print a given time
@@ -124,95 +106,6 @@ void sleep(const int ms){
     int p = (int)floor((double)(t - start) / CLOCKS_PER_SEC * 1000.0);
     if(p >= ms) break; } }
 
-// Return whether a vector contains an element O(N)
-template <typename T>
-bool contains(const vec<T>& v, const T& item){
-  for(int i = 0; i < v.size(); ++i)
-    if(v[i] == item) return true;
-  return false; }
-
-// Return whether an unordered set contains an element
-template <typename T>
-bool contains(const uset<T>& u, const T& item){
-  return u.find(item) != u.end(); }
-
-// Return whether an unordered map contains an element
-template <typename K, typename V>
-bool contains(const umap<K, V>& u, const K& item){
-  return u.find(item) != u.end(); }
-
-// Is character uppercase
-bool is_upper(const char c){
-  return (c >= 'A' && c <= 'Z'); }
-
-// Is character lowercase
-bool is_lower(const char c){
-  return (c >= 'a' && c <= 'z'); }
-
-// Is character a letter
-bool is_alpha(const char c){
-  return (is_lower(c) || is_upper(c)); }
-
-// Is character a digit
-bool is_digit(const char c){
-  return (c >= '0' && c <= '9'); }
-
-// Is string an integer
-bool is_integer(const str& s){
-  if(!(is_digit(s[0]) || s[0] == '-'))
-    return false;
-  for(int i = 1; i < s.size(); ++i)
-    if(!is_digit(s[i]))
-      return false;
-  return true; }
-
-// Convert a string to lowercase
-str to_lower(const str& s){
-  str r = s;
-  for(int i = 0; i < r.size(); ++i)
-    if(is_upper(r[i]))
-      r[i] = r[i] - 'A' + 'a';
-  return r; }
-
-// Split string by delimiter
-vec<str> split(const str& s, const str& d){
-  vec<str> r;
-  vec<int> loc;
-  for(int i = 0; i < s.size(); ++i){
-    bool found = true;
-    for(int j = i, k = 0; j < s.size() && k < d.size(); ++j, ++k)
-      if(s[j] != d[k]){
-        found = false;
-        break; }
-    if(found)
-      loc.pb(i); }
-  loc.pb(s.size());
-  if(loc[0] > 0)
-    r.pb(s.substr(0, loc[0]));
-  for(int i = 1; i < loc.size(); ++i)
-    r.pb(s.substr(loc[i - 1] + d.size(), loc[i] - loc[i - 1] - d.size()));
-  return r; }
-
-// Double equals comparator
-bool deq(const double a, const double b){
-  return fabs(a - b) < SAFE_ZERO; }
-
-// Double less than or equals comparator
-bool dleq(const double a, const double b){
-  return a < b || deq(a, b); }
-
-// Double greater than or equals comparator
-bool dgeq(const double a, const double b){
-  return a > b || deq(a, b); }
-
-// Double less than comparator
-bool dlt(const double a, const double b){
-  return a < b && !deq(a, b); }
-
-// Double greater than comparator
-bool dgt(const double a, const double b){
-  return a > b && !deq(a, b); }
-
 // Greatest common denominator
 int gcd(const int a, const int b){
   return b ? gcd(b, a % b) : a; }
@@ -236,5 +129,22 @@ int crand(){
   while(r == 1)
     r = (int)floor((double)RMAX / (rand() % RMAX + 1));
   return r - 1; }
+
+// Return whether a vector contains an element O(N)
+template <typename T>
+bool contains(const vec<T>& v, const T& item){
+  for(int i = 0; i < v.size(); ++i)
+    if(v[i] == item) return true;
+  return false; }
+
+// Return whether an unordered set contains an element O(logN)
+template <typename T>
+bool contains(const uset<T>& u, const T& item){
+  return u.find(item) != u.end(); }
+
+// Return whether an unordered map contains an element O(logN)
+template <typename K, typename V>
+bool contains(const umap<K, V>& u, const K& item){
+  return u.find(item) != u.end(); }
 
 #endif

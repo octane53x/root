@@ -1,69 +1,74 @@
 REPO README
 
-Primarily C++ and perhaps some Python files
+Primarily C++, some Python
 
 
-DIRECTORIES
+PROJECTS
 
-/Window: Windows window driver (Visual Studio)
-/ai:     Artificial intelligence
 /chef:   Codechef submissions
 /core:   Universal resources
+/crab:   New language
 /gl:     Graphics library
 /imp:    Impact game
 /misc:   Miscellaneous
 /mtg:    Magic deck simulator
 /net:    Network operations
-/test:   Tests
-
-
-COMMENTS
-
-Dynamically allocated:
-  gl/button, gl/object
-  imp/feature, imp/unit
-
-These structures require formal deletion to prevent memory leaks because
-they need to be stored as pointers to a base class. This both allows usage of
-virtual functions and prevents needing a unique container for every derivation.
-
-Note many structures inherit from these and are not listed here.
+/os:     Operating system utilities
+/satan:  Artificial intelligence
+/studio: Code editor & terminal
+/test:   Non-project tests
+/tool:   Code tools
+/web:    Website design
 
 
 TODO
 
-! Window stops displaying after several minutes
+/core
+! Num division
+! Str algos (lcs, etc)
 
-! imp console
-! demo square rotate
-! clear out data.hh
+/os
+! Multithread update/draw
+! Resize window -> viewport
 
-! unit.target
-! unit.path
-! unit.activity
+/studio
+! REFACTOR
+! Fix selection line end
+! Undo more than one character
+! Resize panels
+! Find/replace
+! Word wrap
+! Paren/bracket highlight
+! Scroll bar
+! Comment selection
+! Cmd panel expand
+! Info panel
+! Mouse click to focus panel, select text
+! Mouse wheel to scroll panel
+! Autocomplete?
 
-! const params & funcs
+/gl
+! REFACTOR
+! studio/color_char() -> gl/font, replace bkgd color with alpha
+! Font clarity
+! Cube raytracing
 ! ellipse.draw
 ! curve, shape
 ! image.rotate, image.flip
 ! point/uvec rotate
 ! orbit around uvec
-! button click manager?
-! resize window
-! delete objects properly
-! call validates
-! scene draw time
-! root scene objs onto scene (make scene an object?)
-! Planet.move_unit around obstacles
-! dynamic_cast -> functional cast OR c-style cast
+! button click manager
 
-! Comments
+/imp
+! REFACTOR
+! Unit move around obstacles
 ! Scene: Title Screen
-! Multithread
-! Cube raytracing
 ! Mining
 ! Planet gen
 ! Textures
+
+/chef
+! Scrape all submissions from Rodomonte
 
 
 ACKNOWLEDGEMENTS

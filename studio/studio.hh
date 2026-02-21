@@ -1,59 +1,58 @@
-// EDITOR
+// DEVELOPMENT STUDIO
 
-//! TODO
+#ifndef STUDIO_HH
+#define STUDIO_HH
 
-//! Fix selection line end
-//! Stop commands for cmd panel
-//! Undo more than one character
-//! Resize
-//! Comments
-
-//! Find/replace
-//! Word wrap
-//! Paren/bracket highlight
-//! Scroll bar
-//! Comment selection
-//! Info panel
-//! Mouse click to focus panel, select text
-//! Mouse wheel to scroll panel
-//! Autocomplete
-
-#ifndef EDITOR_HH
-#define EDITOR_HH
-
-#include "panel.hh"
 #include "../os/win/application.hh"
+#include "../edit/editor.hh"
+#include "../term/terminal.hh"
 
-// Text editor application
-struct Editor : virtual Application {
+// Windowed application with code editor and terminal panels
+struct Studio : virtual Application {
 
-  bool updated, shift, ctrl, alt;
-  ipoint frame_size;
+  // Whether key modifiers are held down
+  bool shift, ctrl, alt;
+
+  // Text clipboard for cut/copy/paste
   vec<str> clipboard;
+
+  // Map of character images from disk
+  // Modified images (color & scale) are a static member of TextPanel
   font font_base;
-  Panel cmd_panel, info_panel, *focus, *prev_panel;
-  vec<Panel> panels;
+
+  // Panels
+  Panel* cmd, *info, *focus, *prev;
+  vec<Panel*> panels;
 
   virtual void init();
   virtual void update();
   virtual void resize();
 
+  // Defined in draw.hh
+  virtual bool draw();
+  void draw_all();
+  void draw_cmd(const bool blt);
+
+  // Defined in font.hh (for now - will be moved to /gl)
   void load_font();
   void color_font(const double scale);
   image color_char(const image& img, const color& ctext, const color& cbkgd);
   void scale_font(const double factor);
-  void clip();
+
+  // Defined in layout.hh
   void switch_panel(Panel* p);
+  void left_panel();
+  void right_panel();
+  void split_horizontal();
+  void split_vertical();
+  void close_panel();
+
+  void clip();
   bool write_file();
 
   // Defined in cmd.hh
   bool process_cmd(const str& cmd);
   void complete_file();
-
-  // Defined in draw.hh
-  virtual bool draw();
-  void draw_all();
-  void draw_cmd(const bool blt);
 
   // Defined in input.hh
   virtual void input(const KeyEvent& ke);
@@ -78,14 +77,9 @@ struct Editor : virtual Application {
   void copy();
   void paste();
   void undo();
-  void move_max(const Dir d);
-  void left_panel();
-  void right_panel();
-  void split_horizontal();
-  void split_vertical();
-  void close_panel(); };
+  void move_max(const Dir d); };
 
-void Editor::init(){
+void Studio::init(){
   // Set default member state
   Application::init();
   start_maximized = always_draw = false;
@@ -148,23 +142,15 @@ void Editor::init(){
   // Display frame
   draw_all(); }
 
-void Editor::update(){
+void Studio::update(){
   Application::update();
-  for(Panel& p : panels){
-    p.update();
-    if(p.updated){
-      updated = true;
-      p.updated = false; } }
-  cmd_panel.update();
-  if(cmd_panel.updated){
-    updated = true;
-    cmd_panel.updated = false; }
-  if(updated){
-    last_update = clock(); } }
+  for(Panel* p : panels)
+    p->update();
+  cmd_panel->update(); }
 
 //! probably needs to consider offsets
 //! frame_size
-void Editor::resize(){
+void Studio::resize(){
   // if(nsize.x == size.x && nsize.y == size.y){
   //   win_pos = npos;
   //   return; }
@@ -182,70 +168,7 @@ void Editor::resize(){
   // win_pos = npos, size = nsize;
 }
 
-// Split characters from font image
-void Editor::load_font(){
-  image font_img = load_bmp(_FONT_LOC);
-  for(int i = 0; i < _SYMBOLS.size(); ++i){
-    image c(ipoint(CHAR_WIDTH_SCALE_1, LINE_HEIGHT_SCALE_1));
-    for(int xi = i * c.size.x, xo = 0; xo < c.size.x; ++xi, ++xo)
-      for(int y = 0; y < c.size.y; ++y)
-        c.set_pixel(ipoint(xo, y), font_img.data[y][xi]);
-    font_base[_SYMBOLS[i]] = c; } }
-
-void Editor::color_font(const double scale){
-  if(Panel::fonts.find(scale) != Panel::fonts.end()) return;
-  umap<color, umap<color, font> > cmbkgd;
-  // Code colors
-  vec<color> bkgds = {BKGD_COLOR, SELECT_COLOR};
-  for(const color& cb : bkgds){
-    umap<color, font> cmtext;
-    for(const color& ct : TEXT_COLORS){
-      font f;
-      for(const char c : _SYMBOLS)
-        f[c] = color_char(font_base[c], ct, cb).scale(scale);
-      cmtext[ct] = f; }
-    cmbkgd[cb] = cmtext; }
-  // File and command bar colors
-  bkgds = {CMD_BAR_COLOR, FOCUS_FILE_BAR_COLOR, UNFOCUS_FILE_BAR_COLOR,
-      CURSOR_COLOR};
-  for(const color& cb : bkgds){
-    umap<color, font> cmtext;
-    font f;
-    for(const char c : _SYMBOLS)
-      f[c] = color_char(font_base[c], BAR_TEXT_COLOR, cb).scale(scale);
-    cmtext[BAR_TEXT_COLOR] = f;
-    cmbkgd[cb] = cmtext; }
-  Panel::fonts[scale] = cmbkgd; }
-
-image Editor::color_char(const image& img, const color& ctext,
-    const color& cbkgd){
-  image r = img;
-  for(int y = 0; y < img.size.y; ++y)
-    for(int x = 0; x < img.size.x; ++x){
-      color ci = img.data[y][x];
-      double brt = (double)((int)ci.r + ci.g + ci.b) / (255 * 3);
-      color co;
-      if(brt > 0.2){
-        brt = min(1.0, brt * 1.2);
-        co = color((uchar)floor(brt * ctext.r),
-                   (uchar)floor(brt * ctext.g),
-                   (uchar)floor(brt * ctext.b));
-      }else
-        co = color((uchar)floor((1.0 - brt) * cbkgd.r),
-                   (uchar)floor((1.0 - brt) * cbkgd.g),
-                   (uchar)floor((1.0 - brt) * cbkgd.b));
-      r.data[y][x] = co; }
-  return r; }
-
-void Editor::scale_font(const double factor){
-  Panel& p = *focus;
-  Cursor& c = p.cursor;
-  p.text_scale *= factor;
-  c.size.y = p.line_height = (int)ceil(p.text_scale * LINE_HEIGHT_SCALE_1);
-  c.size.x = p.char_width = (int)ceil(p.text_scale * CHAR_WIDTH_SCALE_1);
-  color_font(p.text_scale); }
-
-void Editor::clip(){
+void Studio::clip(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   if(p.mark.y == -1) return;
@@ -266,7 +189,7 @@ void Editor::clip(){
       ++y0;
       x0 = 0; } } }
 
-void Editor::switch_panel(Panel* p){
+void Studio::switch_panel(Panel* p){
   Panel& p0 = *focus;
   Cursor& c0 = p0.cursor;
   c0.blink = false;
@@ -285,7 +208,7 @@ void Editor::switch_panel(Panel* p){
   if(&p0 != &cmd_panel && p != &cmd_panel)
     p->draw_file_bar(true); }
 
-bool Editor::write_file(){
+bool Studio::write_file(){
   Panel& p = *focus;
   ofstream fs(p.dir + p.file);
   if(!fs.is_open()) return false;

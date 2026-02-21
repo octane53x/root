@@ -3,7 +3,11 @@
 #ifndef CMD_HH
 #define CMD_HH
 
-#include "editor.hh"
+#include "panel.hh"
+
+struct Cmd : TextPanel {
+
+};
 
 // Returns whether the cmd was successful
 bool Editor::process_cmd(const str& cmd){

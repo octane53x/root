@@ -1,11 +1,11 @@
 // EDITOR PANEL
 
-#ifndef PANEL_HH
-#define PANEL_HH
+#ifndef EDITOR_HH
+#define EDITOR_HH
 
-#include "cursor.hh"
+#include "panel.hh"
 
-struct Panel {
+struct Editor : TextPanel {
 
   // Used for undo
   struct Op {
@@ -17,8 +17,7 @@ struct Panel {
   int line_height, char_width, scroll_lines, top_line;
   double text_scale;
   clock_t last_update;
-  color bkgd;
-  ipoint pos, size, mark;
+  ipoint mark;
   str dir, file;
   vec<str> text;
   vec<vec<color> > text_color;
@@ -31,7 +30,7 @@ struct Panel {
   // Editor window frame
   static image* frame;
 
-  Panel();
+  Editor();
 
   ipoint text_to_frame(const ipoint& p) const;
   str file_bar_text() const;
@@ -64,21 +63,21 @@ struct Panel {
 umap<double, umap<color, umap<color, font> > > Panel::fonts;
 image* Panel::frame;
 
-Panel::Panel():
+Editor::Editor():
     size(0, 0), pos(0, 0) {}
 
-ipoint Panel::text_to_frame(const ipoint& p) const {
+ipoint Editor::text_to_frame(const ipoint& p) const {
   return ipoint(p.x * char_width + pos.x,
       (p.y - top_line) * line_height + pos.y); }
 
-str Panel::file_bar_text() const {
+str Editor::file_bar_text() const {
   str bar_text = str(saved ? "-----" : "*****") + "     ";
   if(dir.find("/root/") != str::npos)
     bar_text += dir.substr(dir.find("/root/") + 6) + file + "     ";
   return bar_text; }
 
 // Set size and pos prior
-void Panel::init(){
+void Editor::init(){
   cmd = split_ready = false;
   updated = saved = focus = true;
   line_height = LINE_HEIGHT_SCALE_1;
@@ -95,7 +94,7 @@ void Panel::init(){
   file_type = NO_FILE_TYPE;
   cursor.init(); }
 
-void Panel::update(){
+void Editor::update(){
   Cursor& c = cursor;
   if(!focus) return;
   c.update();
@@ -112,7 +111,7 @@ void Panel::update(){
   updated = true;
   last_update = clock(); }
 
-void Panel::insert_text(const vec<str>& ins, const ipoint& p){
+void Editor::insert_text(const vec<str>& ins, const ipoint& p){
   // Store operation for undo
   Op op;
   op.ins = true;
@@ -160,7 +159,7 @@ void Panel::insert_text(const vec<str>& ins, const ipoint& p){
   saved = false;
   draw(true); }
 
-void Panel::remove_text(const ipoint& p0, const ipoint& pf){
+void Editor::remove_text(const ipoint& p0, const ipoint& pf){
   if(p0.y == text.size() - 1 && p0.x == text[p0.y].size()) return;
   bool endline = (p0.y == pf.y && p0.x == text[p0.y].size());
 
@@ -235,7 +234,7 @@ void Panel::remove_text(const ipoint& p0, const ipoint& pf){
   saved = false;
   draw(true); }
 
-void Panel::delete_selection(){
+void Editor::delete_selection(){
   if(mark.y == -1) return;
   Cursor& c = cursor;
   ipoint p0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
@@ -247,7 +246,7 @@ void Panel::delete_selection(){
   mark = ipoint(-1, -1);
   draw(true); }
 
-void Panel::clean(){
+void Editor::clean(){
   Cursor& c = cursor;
   // Delete trailing whitespace
   for(int y = 0; y < text.size(); ++y){
@@ -260,14 +259,14 @@ void Panel::clean(){
   while(c.pos.x > text[c.pos.y].size())
     --c.pos.x; }
 
-void Panel::scroll(const Dir d){
+void Editor::scroll(const Dir d){
   int lines = min((int)text.size() - top_line - 1, scroll_lines);
   if(d == UP)
     lines = min(lines, top_line);
   top_line += (d == DOWN) ? lines : -lines;
   draw(true); }
 
-void Panel::move_cursor(const Dir d){
+void Editor::move_cursor(const Dir d){
   Cursor& c = cursor;
   c.blink = true;
   c.fill = CURSOR_COLOR;
@@ -355,7 +354,7 @@ void Panel::move_cursor(const Dir d){
   if(!cmd)
     draw_cursor_pos(true); }
 
-void Panel::set_file_type(){
+void Editor::set_file_type(){
   if(ends_with(file, ".cc") || ends_with(file, ".hh"))
     file_type = CPP;
   else if(ends_with(file, ".py"))

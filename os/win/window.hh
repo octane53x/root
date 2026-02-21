@@ -25,7 +25,9 @@ struct Window {
   // Whether to open the window maximized
   bool start_maximized;
   // Pixel position and size of window on screen
-  ipoint pos, size;
+  ipoint win_pos, win_size;
+  // Pixel size of image frame on screen (pos is always 0,0)
+  ipoint frame_size;
   // Pixel position of cursor on screen
   ipoint cursor;
   // Title displayed in top bar of window
