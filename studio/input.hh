@@ -347,38 +347,6 @@ void Studio::del_space(){
   while(c.pos.x < p.text[c.pos.y].size() && p.text[c.pos.y][c.pos.x] == ' ')
     p.remove_text(c.pos, c.pos); }
 
-void Studio::open_file(){
-  if(focus == &cmd_panel) return;
-  prev_panel = focus;
-  switch_panel(&cmd_panel);
-  Panel& p = *focus;
-  Cursor& c = p.cursor;
-  p.draw(true);
-  p.insert_text({"Open: " + prev_panel->dir}, c.pos);
-  c.pos.x = (int)p.text[0].size(); }
-
-bool Studio::save_file(){
-  Panel& p = *focus;
-  Cursor& c = p.cursor;
-  if(p.file == ""){
-    save_new_file();
-    return false; }
-  p.clean();
-  bool success = write_file();
-  if(success)
-    p.saved = true;
-  p.draw(true);
-  return success; }
-
-void Studio::save_new_file(){
-  prev_panel = focus;
-  switch_panel(&cmd_panel);
-  Panel& p = *focus;
-  Cursor& c = p.cursor;
-  p.draw(true);
-  p.insert_text({"Save: " + prev_panel->dir}, c.pos);
-  c.pos.x = (int)p.text[0].size(); }
-
 void Studio::goto_line(){
   prev_panel = focus;
   switch_panel(&cmd_panel);
@@ -424,41 +392,6 @@ void Studio::unindent_selection(){
     if(p.text[y].size() > 1 && p.text[y][0] == ' ' && p.text[y][1] == ' ')
       p.remove_text(ipoint(0, y), ipoint(1, y)); }
 
-void Studio::cut(){
-  Panel& p = *focus;
-  if(p.mark.y == -1) return;
-  clip();
-  p.delete_selection(); }
-
-void Studio::copy(){
-  Panel& p = *focus;
-  Cursor& c = p.cursor;
-  if(p.mark.y == -1) return;
-  clip();
-  ipoint p0, pf;
-  if(p.mark.y < c.pos.y || (p.mark.y == c.pos.y && p.mark.x < c.pos.x)){
-    p0 = p.mark;
-    pf = c.pos;
-  }else{
-    p0 = c.pos;
-    pf = c.pos = p.mark; }
-  --pf.x;
-  p.mark = ipoint(-1, -1);
-  p.draw_selection(p0, pf, true); }
-
-void Studio::paste(){
-  Panel& p = *focus;
-  Cursor& c = p.cursor;
-  if(clipboard.empty()) return;
-  p.insert_text(clipboard, c.pos);
-  c.pos.y += (int)clipboard.size() - 1;
-  if(clipboard.size() == 1)
-    c.pos.x += (int)clipboard.back().size();
-  else
-    c.pos.x = (int)clipboard.back().size();
-  while(c.pos.y > p.top_line + p.size.y / p.line_height)
-    p.scroll(DOWN); }
-
 void Studio::undo(){
   Panel& p = *focus;
   Cursor& c = p.cursor;
@@ -501,107 +434,5 @@ void Studio::move_max(const Dir d){
   }else if(d == RIGHT){
     while(c.pos.x < p.text[c.pos.y].size())
       p.move_cursor(RIGHT); } }
-
-void Studio::left_panel(){
-  int i;
-  for(i = 0; i < panels.size(); ++i)
-    if(focus == &panels[i]) break;
-  switch_panel(&panels[(i == 0) ? panels.size() - 1 : i - 1]); }
-
-void Studio::right_panel(){
-  int i;
-  for(i = 0; i < panels.size(); ++i)
-    if(focus == &panels[i]) break;
-  switch_panel(&panels[(i == panels.size() - 1) ? 0 : i + 1]); }
-
-void Studio::split_horizontal(){
-  Panel& p = *focus;
-  int h1 = (int)ceil((double)(p.size.y + LINE_HEIGHT_SCALE_1) / 2.0);
-  int h2 = (int)floor((double)(p.size.y + LINE_HEIGHT_SCALE_1) / 2.0);
-  p.size.y = h1 - LINE_HEIGHT_SCALE_1;
-  int i;
-  for(i = 0; i < panels.size(); ++i)
-    if(focus == &panels[i]) break;
-  if(i + 1 == panels.size())
-    panels.pb(p);
-  else
-    panels.insert(panels.begin() + i + 1, p);
-  Panel& p2 = panels[i];
-  Panel& p3 = panels[i + 1];
-  p3.pos = ipoint(p2.pos.x, p2.pos.y + p2.size.y + LINE_HEIGHT_SCALE_1);
-  p3.size.y = h2 - LINE_HEIGHT_SCALE_1;
-  p3.focus = false;
-  focus = &p2;
-  p2.draw_divider(true);
-  p3.draw(true);
-  switch_panel(&p3); }
-
-void Studio::split_vertical(){
-  Panel& p = *focus;
-  int w1 = (int)ceil((double)(p.size.x + VERTICAL_DIVIDE) / 2.0);
-  int w2 = (int)floor((double)(p.size.x + VERTICAL_DIVIDE) / 2.0);
-  p.size.x = w1 - VERTICAL_DIVIDE;
-  int i;
-  for(i = 0; i < panels.size(); ++i)
-    if(focus == &panels[i]) break;
-  if(i + 1 == panels.size())
-    panels.pb(p);
-  else
-    panels.insert(panels.begin() + i + 1, p);
-  Panel& p2 = panels[i];
-  Panel& p3 = panels[i + 1];
-  p3.pos = ipoint(p2.pos.x + p2.size.x + VERTICAL_DIVIDE, p2.pos.y);
-  p3.size.x = w2 - VERTICAL_DIVIDE;
-  p3.focus = false;
-  focus = &p2;
-  p2.draw_divider(true);
-  p3.draw(true);
-  switch_panel(&p3); }
-
-void Studio::close_panel(){
-  Panel& pdel = *focus;
-  // Find panel to expand
-  Panel* xpd = NULL;
-  for(Panel& p : panels){
-    if(&p == &pdel) continue;
-    xpd = &p;
-    // Is expanding panel above closing panel
-    if(p.size.x == pdel.size.x && p.pos.x == pdel.pos.x
-        && p.pos.y + p.size.y + LINE_HEIGHT_SCALE_1 == pdel.pos.y){
-      p.size.y += pdel.size.y + LINE_HEIGHT_SCALE_1;
-      break;
-    // Is expanding panel below closing panel
-    }else if(p.size.x == pdel.size.x && p.pos.x == pdel.pos.x
-        && p.pos.y == pdel.pos.y + pdel.size.y + LINE_HEIGHT_SCALE_1){
-      p.size.y += pdel.size.y + LINE_HEIGHT_SCALE_1;
-      p.pos.y = pdel.pos.y;
-      break;
-    // Is expanding panel left of closing panel
-    }else if(p.size.y == pdel.size.y && p.pos.y == pdel.pos.y
-        && p.pos.x + p.size.x + VERTICAL_DIVIDE == pdel.pos.x){
-      p.size.x += pdel.size.x + VERTICAL_DIVIDE;
-      break;
-    // Is expanding panel right of closing panel
-    }else if(p.size.y == pdel.size.y && p.pos.y == pdel.pos.y
-        && p.pos.x == pdel.pos.x + pdel.size.x + VERTICAL_DIVIDE){
-      p.size.x += pdel.size.x + VERTICAL_DIVIDE;
-      p.pos.x = pdel.pos.x;
-      break;
-    }else
-      xpd = NULL; }
-  if(xpd == NULL) return;
-
-  // Delete original panel and draw
-  int i;
-  for(i = 0; i < panels.size(); ++i)
-    if(&pdel == &panels[i]) break;
-  switch_panel(xpd);
-  int j;
-  for(j = 0; j < panels.size(); ++j)
-    if(xpd == &panels[j]) break;
-  panels.erase(panels.begin() + i);
-  if(i < j)
-    --focus;
-  draw_all(); }
 
 #endif

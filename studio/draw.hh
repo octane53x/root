@@ -5,17 +5,17 @@
 
 #include "editor.hh"
 
-// Do nothing since this app draws on update
-bool Editor::draw(){
-  return false; }
+// Draw entire studio
+// Returns true if draw was performed
+bool Studio::draw(){
+  if(!Application::draw())
+    return false;
+  for(Panel* p : panels)
+    p->draw();
+  cmd_panel.draw();
+  return true; }
 
-void Editor::draw_all(){
-  updated = false;
-  for(Panel& p : panels)
-    p.draw(true);
-  draw_cmd(true); }
-
-void Editor::draw_cmd(const bool blt){
+void CmdPanel::draw(){
   if(&cmd_panel == focus)
     cmd_panel.draw(false);
   else

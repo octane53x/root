@@ -23,13 +23,11 @@ PROJECTS
 
 TODO
 
-/core
-! Num division
-! Str algos (lcs, etc)
-
 /os
+! CreateBitmap -> DIB
 ! Multithread update/draw
-! Resize window -> viewport
+! Top bar color
+! Prevent resizing too small
 
 /studio
 ! REFACTOR
@@ -47,8 +45,11 @@ TODO
 ! Mouse wheel to scroll panel
 ! Autocomplete?
 
+/core
+! Num division
+! Str algos (lcs, etc)
+
 /gl
-! REFACTOR
 ! studio/color_char() -> gl/font, replace bkgd color with alpha
 ! Font clarity
 ! Cube raytracing
@@ -60,7 +61,6 @@ TODO
 ! button click manager
 
 /imp
-! REFACTOR
 ! Unit move around obstacles
 ! Scene: Title Screen
 ! Mining
@@ -69,8 +69,3 @@ TODO
 
 /chef
 ! Scrape all submissions from Rodomonte
-
-
-ACKNOWLEDGEMENTS
-
-Fonts from www.dafont.com

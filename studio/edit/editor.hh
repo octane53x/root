@@ -39,14 +39,11 @@ struct Editor : TextPanel {
   void update();
 
   // Defined in draw.hh
-  void draw(const bool blt);
-  void draw_char(const image& img, const ipoint& p,
-      const bool blt);
-  void draw_selection(const ipoint& p0, const ipoint& pf,
-      const bool blt);
-  void draw_divider(const bool blt);
-  void draw_cursor_pos(const bool blt);
-  void draw_file_bar(const bool blt);
+  void draw();
+  void draw_selection(const ipoint& p0, const ipoint& pf);
+  void draw_divider();
+  void draw_cursor_pos();
+  void draw_file_bar();
 
   void resize(const ipoint& _pos, const ipoint& _size);
   void insert_text(const vec<str>& ins, const ipoint& p);

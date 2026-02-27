@@ -22,6 +22,8 @@ struct str {
   str(double d);
 
   // Const operators
+  bool operator==(const str& s) const;
+  bool operator!=(const str& s) const;
   char operator[](size_t index) const;
   str operator+(const str& s) const;
 
@@ -74,6 +76,14 @@ str::str(llu n){
 // Construct from double
 str::str(double d){
   data = to_string(d); }
+
+// Return whether strings are equal
+bool str::operator==(const str& s) const {
+  return data == s.data; }
+
+// Return whether strings are not equal
+bool str::operator!=(const str& s) const {
+  return data != s.data; }
 
 // Return character at index
 char str::operator[](size_t index) const {

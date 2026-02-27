@@ -5,7 +5,7 @@
 
 #include "panel.hh"
 
-struct Cmd : TextPanel {
+struct CmdBar : TextPanel {
 
 };
 

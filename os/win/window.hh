@@ -4,10 +4,16 @@
 #ifndef WINDOW_HH
 #define WINDOW_HH
 
+//! #include "../../gl/ipoint.hh"
 #include "keyrouter.hh"
 
 // Windows timer identifier
 #define IDT_TIMER1 223
+
+// Difference between reported window size and actual frame size
+const int
+    FRAME_X_OFFSET = -16,
+    FRAME_Y_OFFSET = -39;
 
 //-------- GLOBAL APPLICATION POINTER --------
 // For static functions to call application
@@ -21,6 +27,10 @@ struct Window {
   HINSTANCE hInst;
   // Window handle
   HWND hWnd;
+  // Frame memory device context
+  HDC hdcMem;
+  // Bitmaps in memory
+  HBITMAP bmpDIB, bmpOld;
 
   // Whether to open the window maximized
   bool start_maximized;
@@ -32,19 +42,22 @@ struct Window {
   ipoint cursor;
   // Title displayed in top bar of window
   str title;
-  // Image frame passed in draw
-  image frame;
+  // Color buffer for drawing
+  ui* color_buf;
 
   // Input processor
   KeyRouter key_router;
 
-  virtual void init() = 0;
-  virtual void update() = 0;
+  virtual void init();
+  virtual bool update() = 0;
   virtual bool draw() = 0;
-  virtual void resize() = 0;
+  virtual void resize();
+
+  BITMAPINFO get_bmi() const;
 
   void display();
-  void refresh();
+  void set_title(const str& _title);
+  void draw_pixel(const ipoint pos, const ui color);
 
   static void paint_proc();
   static str key_proc(WPARAM wParam);
@@ -56,48 +69,87 @@ struct Window {
 void Window::init(){
   _win = this;
   start_maximized = true;
+  color_buf = NULL;
   key_router.init(); }
 
+// Resize the window, recreating the frame buffer
+// Called by: msg_proc() OR Application::X.resize()
+void Window::resize(){
+  frame_size = ipoint(win_size.x + FRAME_X_OFFSET, win_size.y + FRAME_Y_OFFSET);
+  SelectObject(hdcMem, bmpOld);
+  DeleteObject(bmpDIB);
+  color_buf = NULL;
+  BITMAPINFO bmi = get_bmi();
+  HDC hdc = GetDC(hWnd);
+  bmpDIB = CreateDIBSection(
+      hdc, &bmi, DIB_RGB_COLORS, &(void*)color_buf, NULL, 0);
+  ReleaseDC(hWnd, hdc);
+  bmpOld = (HBITMAP)SelectObject(hdcMem, bmpDIB); }
+
+// Set up parameters to device-independent bitmap creation
+// Called by: resize(), display()
+BITMAPINFO Window::get_bmi() const {
+  BITMAPINFO bmi = {0};
+  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+  bmi.bmiHeader.biWidth = frame_size.x;
+  bmi.bmiHeader.biHeight = -frame_size.y;
+  bmi.bmiHeader.biPlanes = 1;
+  bmi.bmiHeader.biBitCount = 32;
+  bmi.bmiHeader.biCompression = BI_RGB;
+  return bmi; }
+
 // Display the window in the OS
+// Called after Application.init() so pos and size are set
 // Called by: Application.run()
 void Window::display(){
+  // Set up the window
   const char* CLASS = "WindowClass";
   WNDCLASS wc = {};
   wc.lpfnWndProc = msg_proc;
   wc.hInstance = hInst;
   wc.lpszClassName = CLASS;
   RegisterClass(&wc);
+
+  // Create the window
   hWnd = CreateWindowEx(
       0, CLASS, title.c_str(), WS_OVERLAPPEDWINDOW,
-      start_maximized ? CW_USEDEFAULT : pos.x,
-      start_maximized ? CW_USEDEFAULT : pos.y,
-      start_maximized ? CW_USEDEFAULT : size.x,
-      start_maximized ? CW_USEDEFAULT : size.y,
+      start_maximized ? CW_USEDEFAULT : win_pos.x,
+      start_maximized ? CW_USEDEFAULT : win_pos.y,
+      start_maximized ? CW_USEDEFAULT : win_size.x,
+      start_maximized ? CW_USEDEFAULT : win_size.y,
       NULL, NULL, hInst, NULL);
   assert(hWnd != NULL, "Application.display", "could not create window");
+
+  // Prepare memory for drawing
+  BITMAPINFO bmi = get_bmi();
+  HDC hdc = GetDC(hWnd);
+  hdcMem = CreateCompatibleDC(hdc);
+  bmpDIB = CreateDIBSection(
+      hdc, &bmi, DIB_RGB_COLORS, &(void*)color_buf, NULL, 0);
+  ReleaseDC(hWnd, hdc);
+  bmpOld = (HBITMAP)SelectObject(hdcMem, bmpDIB);
+
+  // Display the window
   ShowWindow(hWnd, start_maximized ? SW_SHOWMAXIMIZED : SW_SHOWDEFAULT); }
 
-// Refresh window
+// Set the window title in the top bar
 // Called by: PROJECT
-void Window::refresh(){
-  SetWindowText(hWnd, title.c_str());
-  InvalidateRect(hWnd, NULL, FALSE); }
+void Window::set_title(const str& _title){
+  title = _title;
+  SetWindowText(hWnd, title.c_str()); }
+
+// Set a pixel in the frame memory
+// Called by: PROJECT
+void Window::draw_pixel(const ipoint pos, const ui color){
+  color_buf[pos.y * frame_size.x + pos.x] = color; }
 
 // Draw the frame to the window with BitBlt
 // Called by: msg_proc()
 void Window::paint_proc(){
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(_win->hWnd, &ps);
-  RECT r = ps.rcPaint;
-  HBITMAP bmp = image_to_bmp(&_win->frame, ipoint(r.left, r.top),
-      ipoint(r.right - r.left, r.bottom - r.top));
-  HDC hdcMem = CreateCompatibleDC(NULL);
-  HBITMAP bmpPrev = (HBITMAP)SelectObject(hdcMem, bmp);
-  BitBlt(hdc, r.left, r.top, r.right - r.left, r.bottom - r.top,
-      hdcMem, 0, 0, SRCCOPY);
-  SelectObject(hdcMem, bmpPrev);
-  DeleteObject(bmp);
-  DeleteDC(hdcMem);
+  BitBlt(hdc, 0, 0, _win->frame_size.x, _win->frame_size.y,
+      _win->hdcMem, 0, 0, SRCCOPY);
   EndPaint(_win->hWnd, &ps); }
 
 // Translate the key code into a string message
@@ -137,8 +189,8 @@ str Window::key_proc(WPARAM wParam){
 // Sent to Windows for window message processing
 // Called by: OPERATING SYSTEM
 LRESULT CALLBACK Window::msg_proc(
-    HWND _hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
-  _win->hWnd = _hWnd;
+    HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
+  _win->hWnd = hWnd;
   POINT pwin;
   GetCursorPos(&pwin);
   ipoint p(pwin.x, pwin.y);
@@ -151,8 +203,9 @@ LRESULT CALLBACK Window::msg_proc(
   // Update and draw
   case WM_TIMER:
     if(wParam != IDT_TIMER1) return 0;
-    _win->update();
-    _win->draw();
+    if(_win->update()){
+      _win->draw();
+      InvalidateRect(hWnd, NULL, FALSE); }
     return 0;
   case WM_PAINT:
     paint_proc();
@@ -160,12 +213,12 @@ LRESULT CALLBACK Window::msg_proc(
 
   // Adjust window
   case WM_MOVE:
-    GetWindowRect(_hWnd, &r);
-    _win->pos = ipoint(r.left, r.top);
+    GetWindowRect(hWnd, &r);
+    _win->win_pos = ipoint(r.left, r.top);
     return 0;
   case WM_SIZE:
-    GetWindowRect(_hWnd, &r);
-    _win->size = ipoint(r.right - r.left, r.bottom - r.top);
+    GetWindowRect(hWnd, &r);
+    _win->win_size = ipoint(r.right - r.left, r.bottom - r.top);
     _win->resize();
     return 0;
 
@@ -220,6 +273,6 @@ LRESULT CALLBACK Window::msg_proc(
     return 0;
   default:
     // Defer to default Windows procedure
-    return DefWindowProc(_hWnd, uMsg, wParam, lParam); } }
+    return DefWindowProc(hWnd, uMsg, wParam, lParam); } }
 
 #endif

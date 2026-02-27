@@ -8,9 +8,16 @@
 
 #define IDT_TIMER1 223
 
+const int FONT_SIZES[] =
+    {18, 18, 18, 18, 14};
+const char* FONTS[] =
+    {"Courier", "Courier New", "Consolas", "Cascadia Code", "Lucida Console"};
+
 HWND _hWnd;
 HDC hdcMem;
 HBITMAP bmpDIB, bmpOld;
+HFONT fontOld;
+vec<HFONT> fonts;
 
 ipoint win_pos, win_size;
 void* buf = NULL;
@@ -42,7 +49,26 @@ void init(){
 
   for(int y = 0; y < win_size.y; ++y)
     for(int x = 0; x < win_size.x; ++x)
-      draw_pixel(ipoint(x, y), 0x0); }
+      draw_pixel(ipoint(x, y), 0x0);
+
+  for(int i = 0; i < 5; ++i){
+    fonts.pb(CreateFont(
+      FONT_SIZES[i], 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+      DEFAULT_CHARSET, OUT_TT_ONLY_PRECIS, CLIP_DEFAULT_PRECIS,
+      PROOF_QUALITY, FIXED_PITCH | FF_MODERN, FONTS[i])); }
+
+  for(int i = 0; i < fonts.size(); ++i){
+    fontOld = (HFONT)SelectObject(hdcMem, fonts[i]);
+    SetTextColor(hdcMem, RGB(255, 255, 255));
+    SetBkMode(hdcMem, TRANSPARENT);
+    TextOut(hdcMem, 0, 50 + i * 20,
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "!@#$%^&*()-=[];,./_+{}|:<>?~"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "!@#$%^&*()-=[];,./_+{}|:<>?~", 160);
+    SelectObject(hdcMem, fontOld); } }
 
 void update(){
   clock_t t0 = clock();

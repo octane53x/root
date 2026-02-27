@@ -4,6 +4,8 @@
 #define UTIL_HH
 
 #include "double.hh"
+#include "math.hh"
+#include "obj.hh"
 
 // Do nothing, used to follow if/else when the condition just needs to be seen
 void pass(){}
@@ -12,7 +14,7 @@ void pass(){}
 void print(const str& s){
 #ifdef _WIN32
   ofstream fs(DEBUG_FILE.c_str(), ios::app);
-  fs << s;
+  fs << s.data;
   fs.close();
 #else
   printf("%s", s.c_str());
@@ -38,16 +40,6 @@ void printl(const int n){
 // Print double
 void printl(const double d){
   printl(to_string(d)); }
-
-// Throw an error, with message
-void err(const str& func, const str& msg){
-  print(str("ERR: ") + func + str(": ") + msg + str("\n"));
-  exit(-1); }
-
-// Check a condition and throw an error if it fails
-//! Takes a lot more time than it should, don't use in critical loops
-void assert(const bool b, const str& func, const str& msg){
-  if(!b) err(func, msg); }
 
 // Print a given time
 void print_time(const time_t time){
@@ -91,6 +83,15 @@ void debug_init(){
   print(str("Executed at "));
   print_time(t); }
 
+// Throw an error, with message
+void err(const str& func, const str& msg){
+  print(str("ERR: ") + func + str(": ") + msg + str("\n"));
+  exit(-1); }
+
+// Check a condition and throw an error if it fails
+void assert(const bool b, const str& func, const str& msg){
+  if(!b) err(func, msg); }
+
 // Terminate the program
 void quit(){
   time_t t = time(NULL);
@@ -105,46 +106,5 @@ void sleep(const int ms){
     clock_t t = clock();
     int p = (int)floor((double)(t - start) / CLOCKS_PER_SEC * 1000.0);
     if(p >= ms) break; } }
-
-// Greatest common denominator
-int gcd(const int a, const int b){
-  return b ? gcd(b, a % b) : a; }
-
-// Random number generator, but up to a 64 bit value (default RAND_MAX is less)
-llu lrand(){
-  int bits = 1;
-  llu t = 1;
-  while(t < RAND_MAX)
-    ++bits, t <<= 1;
-  llu r = 0;
-  for(int i = 0; i < 64/bits; ++i)
-    r = r * rand() + rand();
-  return r; }
-
-// Curved random number generator, favoring smaller numbers
-//! Curve param
-int crand(){
-  const int RMAX = 1000000;
-  int r = 1;
-  while(r == 1)
-    r = (int)floor((double)RMAX / (rand() % RMAX + 1));
-  return r - 1; }
-
-// Return whether a vector contains an element O(N)
-template <typename T>
-bool contains(const vec<T>& v, const T& item){
-  for(int i = 0; i < v.size(); ++i)
-    if(v[i] == item) return true;
-  return false; }
-
-// Return whether an unordered set contains an element O(logN)
-template <typename T>
-bool contains(const uset<T>& u, const T& item){
-  return u.find(item) != u.end(); }
-
-// Return whether an unordered map contains an element O(logN)
-template <typename K, typename V>
-bool contains(const umap<K, V>& u, const K& item){
-  return u.find(item) != u.end(); }
 
 #endif
