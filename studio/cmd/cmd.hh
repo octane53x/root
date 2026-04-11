@@ -3,14 +3,29 @@
 #ifndef CMD_HH
 #define CMD_HH
 
-#include "panel.hh"
+#include "../panel/panel.hh"
 
-struct CmdBar : TextPanel {
+struct CmdBar : InputPanel {
 
-};
+  // Whether the command bar is visible
+  bool vis;
+  // Checked by studio update() for a pending command
+  str cmd_pending;
+
+  // Defined in this file
+  virtual void init();
+  // Defined in ../draw.hh
+  virtual void draw();
+  // Defined in ../input.hh
+  virtual void input();
+
+  // Defined in ops.hh
+  void show(const str& prompt);
+  void hide();
+  void complete_file(); };
 
 // Returns whether the cmd was successful
-bool Editor::process_cmd(const str& cmd){
+bool CmdBar::show(const str& prompt){
   Panel& p = *focus;
   Cursor& c = p.cursor;
   // Open file

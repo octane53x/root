@@ -5,7 +5,7 @@
 
 #include "card.hh"
 
-const str CARDS_JSON = "C:/home/data/AllPrintings.json";
+const char* CARDS_JSON = "C:/home/data/AllPrintings.json";
 
 int find(const str& text, const str& tok, int pos){
   while(pos < text.size()){
@@ -20,7 +20,7 @@ umap<str, Card> parse(){
   // Read file
   ifstream fs(CARDS_JSON);
   str text;
-  getline(fs, text);
+  getline(fs, text.data);
 
   // Parse cards
   umap<str, Card> cards;
@@ -109,7 +109,7 @@ umap<str, Card> parse(){
           err("parse", "bad char 5"); } }
 
       if(contains(cards, card.name)){
-        if(card.name.find("//") != str::npos){
+        if(card.name.find("//") != string::npos){
           card.name += "(2)";
           cards[card.name] = card; }
       }else if(keep)

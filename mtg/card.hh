@@ -82,13 +82,13 @@ void Card::print() const {
 
 bool Card::add_field(const str& key, const str& val){
   if(key == "power"){
-    if(is_integer(val))
-      pow = stoi(val);
+    if(val.is_integer())
+      pow = stoi(val.data);
     else
       pow = -1;
   }else if(key == "toughness"){
-    if(is_integer(val))
-      tuf = stoi(val);
+    if(val.is_integer())
+      tuf = stoi(val.data);
     else
       tuf = -1;
   }else if(key == "name"){
@@ -96,7 +96,7 @@ bool Card::add_field(const str& key, const str& val){
   }else if(key == "text"){
     text = val;
   }else if(key == "types" || key == "subtypes"){
-    vec<str> sv = split(val.substr(1, val.size() - 2), ", ");
+    vec<str> sv = val.substr(1, val.size() - 2).split(", ");
     for(const str& s : sv)
       types.insert(s.substr(1, s.size() - 2));
 
@@ -111,9 +111,9 @@ bool Card::add_field(const str& key, const str& val){
           s[j] = 'K';
 
       Cost c;
-      if(is_integer(s)){
+      if(s.is_integer()){
         c.type = Cost::GENERIC;
-        c.count = stoi(s);
+        c.count = stoi(s.data);
 
       }else if(s.size() == 1){
         if(s == "X")
@@ -177,8 +177,8 @@ bool Card::process_text(){
   int i = 0;
   while(i < text.size()){
     str tok = next_tok(i);
-    if(contains(MODS, to_lower(tok))){
-      mods.insert(to_lower(tok));
+    if(contains(MODS, tok.to_lower())){
+      mods.insert(tok.to_lower());
       i += tok.size();
     }else if(tok == "," || tok == " ")
       ++i;

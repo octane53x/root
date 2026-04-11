@@ -10,27 +10,23 @@
 // Windowed application with code editor and terminal panels
 struct Studio : Application {
 
-  // Whether key modifiers are held down
-  bool shift, ctrl, alt;
-
   // Text clipboard for cut/copy/paste
   vec<str> clipboard;
-
   // Panels
-  Panel* cmd, *info, *focus, *prev;
+  Panel *focus, *prev;
   vec<Panel*> panels;
+  CmdBar cmd;
+  InfoPanel info;
 
   // Defined in this file
   virtual void init();
   virtual void update();
-
   // Defined in draw.hh
-  virtual bool draw();
-
+  virtual void draw();
   // Defined in input.hh
   virtual void input(const KeyEvent& ke);
 
-  // Defined in layout.hh
+  // Defined in ops/layout.hh
   virtual void resize();
   void switch_panel(Panel* p);
   void left_panel();
@@ -39,48 +35,22 @@ struct Studio : Application {
   void split_vertical();
   void close_panel();
 
-  // Defined in clip.hh
+  // Defined in ops/clip.hh
   void clip();
   void cut();
   void copy();
-  void paste();
+  void paste(); };
 
-  // Defined in file.hh
-  void load_file();
-  void write_file();
-  void open();
-  void save();
-  void save_new();
-
-  // Defined in cmd.hh
-  bool process_cmd(const str& cmd);
-  void complete_file();
-
-  bool parse_char(const str& key);
-  void indent();
-  void backspace();
-  void enter();
-  void escape();
-  void ctrl_move(const Dir d);
-  void ctrl_backspace();
-  void del();
-  void del_space();
-  void goto_line();
-  void set_mark();
-  void select_all();
-  void indent_selection();
-  void unindent_selection();
-  void undo();
-  void move_max(const Dir d); };
-
+// Initialize Studio
+// Called by: wWinMain()
 void Studio::init(){
   // Set default member state
   Application::init();
   start_maximized = false;
-  shift = ctrl = alt = false;
 
   // Find biggest screen
   GetScreens screens;
+  assert(screens.rects.size() < 1, "Studio.init", "Zero screens detected");
   int mi = -1, mx = -1;
   for(int i = 0; i < screens.rects.size(); ++i){
     const RECT& r = screens.rects[i];
@@ -131,10 +101,12 @@ void Studio::init(){
   process_cmd("Open: C:/home/root/edit/input.hh");
   left_panel(); }
 
+// Update the Studio
+// Called by: msg_proc()
 void Studio::update(){
   Application::update();
   for(Panel* p : panels)
     p->update();
-  cmd_panel->update(); }
+  cmd.update(); }
 
 #endif

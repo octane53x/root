@@ -21,6 +21,8 @@ struct KeyEvent {
   ipoint cursor;
   // Time of event
   clock_t time;
+  // Modifiers
+  bool shift, ctrl, alt;
 
   KeyEvent(const str& k, const bool d, const ipoint& c, const clock_t t); };
 
@@ -46,7 +48,8 @@ struct KeyRouter {
 // Called by: Window.msg_proc(), route()
 KeyEvent::KeyEvent(
     const str& k, const bool d, const ipoint& c, const clock_t t):
-    key(k), down(d), cursor(c), time(t) {}
+    key(k), down(d), cursor(c), time(t),
+    shift(false), ctrl(false), alt(false) {}
 
 // Set default member state
 // Called by: Window.init()

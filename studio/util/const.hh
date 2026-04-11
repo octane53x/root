@@ -70,6 +70,4 @@ const uset<str>
 
 enum FileType { NO_FILE_TYPE, CPP, PYTH, CRAB };
 
-enum Dir { UP, LEFT, DOWN, RIGHT };
-
 #endif

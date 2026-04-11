@@ -7,61 +7,41 @@
 
 struct Editor : TextPanel {
 
-  // Used for undo
-  struct Op {
-    bool ins; // False if remove
-    ipoint pos;
-    vec<str> text; };
-
-  bool updated, cmd, saved, focus, split_ready;
-  int line_height, char_width, scroll_lines, top_line;
-  double text_scale;
-  clock_t last_update;
-  ipoint mark;
+  // Whether the file is currently saved
+  bool saved;
+  // Command flags for certain operations
+  // True if last pressed and pending another key
+  bool ctrl_k, ctrl_h;
+  // Directory and filename loaded into the edit panel
   str dir, file;
-  vec<str> text;
-  vec<vec<color> > text_color;
-  vec<Op> opstack;
+  // Language of file used for highlighting
   FileType file_type;
-  Cursor cursor;
 
-  // Key 1: Scale, Key 2: Bkgd color, Key 3: Text color, Key 4: Character
-  static umap<double, umap<color, umap<color, font> > > fonts;
-  // Editor window frame
-  static image* frame;
-
-  Editor();
-
-  ipoint text_to_frame(const ipoint& p) const;
+  // Defined in this file
+  virtual bool init();
+  virtual bool update();
   str file_bar_text() const;
+  bool set_file_type();
 
-  void init();
-  void update();
+  // Defined in ../draw.hh
+  virtual bool draw();
+  bool draw_selection(const ipoint& p0, const ipoint& pf);
+  bool draw_cursor_pos();
+  bool draw_divider();
+  bool draw_file_bar();
 
-  // Defined in draw.hh
-  void draw();
-  void draw_selection(const ipoint& p0, const ipoint& pf);
-  void draw_divider();
-  void draw_cursor_pos();
-  void draw_file_bar();
+  // Defined in ../input.hh
+  virtual void input(const KeyEvent& ke);
 
-  void resize(const ipoint& _pos, const ipoint& _size);
-  void insert_text(const vec<str>& ins, const ipoint& p);
-  void remove_text(const ipoint& p0, const ipoint& pf);
-  void delete_selection();
-  void clean();
-  void scroll(const Dir d);
-  void move_cursor(const Dir d);
-  void set_file_type();
+  // Defined in file.hh
+  bool load_file();
+  bool write_file();
+  bool open();
+  bool save();
+  bool save_new();
 
   // Defined in highlight.hh
   void highlight_text(const int y0, const int yf); };
-
-umap<double, umap<color, umap<color, font> > > Panel::fonts;
-image* Panel::frame;
-
-Editor::Editor():
-    size(0, 0), pos(0, 0) {}
 
 ipoint Editor::text_to_frame(const ipoint& p) const {
   return ipoint(p.x * char_width + pos.x,
@@ -108,141 +88,6 @@ void Editor::update(){
   updated = true;
   last_update = clock(); }
 
-void Editor::insert_text(const vec<str>& ins, const ipoint& p){
-  // Store operation for undo
-  Op op;
-  op.ins = true;
-  op.pos = p;
-  op.text = ins;
-  opstack.pb(op);
-
-  // Modify text
-  str tail = text[p.y].substr(p.x);
-  text[p.y] = text[p.y].substr(0, p.x) + ins[0];
-  text.insert(text.begin() + p.y + 1, ins.begin() + 1, ins.end());
-  text[p.y + ins.size() - 1] += tail;
-  text_color.insert(text_color.begin() + p.y + 1, ins.size() - 1, vec<color>());
-  highlight_text(p.y, p.y + ins.size() - 1);
-
-  // Determine selection
-  Cursor& c = cursor;
-  ipoint mark0, markf;
-  if(mark.y != -1){
-    mark0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
-        ? c.pos : mark;
-    markf = (mark0 == c.pos) ? mark : c.pos; }
-
-  // Draw single character at end of line
-  // if(ins.size() == 1 && ins[0].size() == 1 && p.x == text[p.y].size() - 1){
-  //   color cb = (mark.y != -1 && in_selection(mark0, markf, p))
-  //       ? SELECT_COLOR : bkgd;
-  //   draw_char(fonts[text_scale][cb][text_color[p.y][p.x]][ins[0][0]],
-  //       text_to_frame(p), true);
-  //   return; }
-
-  // Draw single line without adding new lines
-  if(ins.size() == 1){
-    for(int x = 0; x < text[p.y].size(); ++x){
-      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p.y)))
-          ? SELECT_COLOR : bkgd;
-      draw_char(fonts[text_scale][cb][text_color[p.y][x]][text[p.y][x]],
-          text_to_frame(ipoint(x, p.y)), true); }
-    if(saved){
-      saved = false;
-      draw_file_bar(true); }
-    return; }
-
-  // Redraw panel if lines moved
-  saved = false;
-  draw(true); }
-
-void Editor::remove_text(const ipoint& p0, const ipoint& pf){
-  if(p0.y == text.size() - 1 && p0.x == text[p0.y].size()) return;
-  bool endline = (p0.y == pf.y && p0.x == text[p0.y].size());
-
-  // Adjust endpoint
-  ipoint pf2 = pf;
-  if(pf.x == -1){
-    --pf2.y;
-    pf2.x = (int)text[pf2.y].size(); }
-
-  // Store operation for undo
-  Op op;
-  op.ins = false;
-  op.pos = p0;
-  op.text.pb("");
-  ipoint pt = p0;
-  while(1){
-    if(pt.x == text[pt.y].size()){
-      op.text.pb("");
-      if(pt == pf2) break;
-      ++pt.y;
-      pt.x = 0;
-      continue; }
-    op.text.back() += str(1, text[pt.y][pt.x]);
-    if(pt == pf2) break;
-    ++pt.x; }
-  opstack.pb(op);
-
-  // Determine selection
-  Cursor& c = cursor;
-  ipoint mark0, markf;
-  if(mark.y != -1){
-    mark0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
-        ? c.pos : mark;
-    markf = (mark0 == c.pos) ? mark : c.pos; }
-
-  // Draw over end of line
-  if(p0.y == pf.y && !endline){
-    color tc = cmd ? BAR_TEXT_COLOR : COLOR_CODE;
-    for(int x = (int)text[p0.y].size() - (pf.x - p0.x + 1);
-        x <= text[p0.y].size(); ++x){
-      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
-          ? SELECT_COLOR : bkgd;
-      draw_char(fonts[text_scale][cb][tc][' '],
-          text_to_frame(ipoint(x, p0.y)), true); } }
-
-  // Remove from text
-  str line = text[p0.y].substr(0, p0.x);
-  if(pf2.x == text[pf2.y].size()){
-    if(pf2.y + 1 < text.size() && text[pf2.y + 1] != "")
-      line += text[pf2.y + 1];
-    text.erase(text.begin() + p0.y + 1, text.begin() + pf2.y + 2);
-    text_color.erase(text_color.begin() + p0.y + 1,
-        text_color.begin() + pf2.y + 2);
-  }else{
-    line += text[pf2.y].substr(pf2.x + 1);
-    text.erase(text.begin() + p0.y + 1, text.begin() + pf2.y + 1);
-    text_color.erase(text_color.begin() + p0.y + 1,
-        text_color.begin() + pf2.y + 1); }
-  text[p0.y] = line;
-  highlight_text(p0.y, p0.y);
-
-  // Draw chars after deletion
-  if(p0.y == pf.y && !endline){
-    for(int x = p0.x; x < text[p0.y].size(); ++x){
-      color cb = (mark.y != -1 && in_selection(mark0, markf, ipoint(x, p0.y)))
-          ? SELECT_COLOR : bkgd;
-      draw_char(fonts[text_scale][cb][text_color[p0.y][x]][text[p0.y][x]],
-          text_to_frame(ipoint(x, p0.y)), true); }
-    return; }
-
-  // Redraw panel if lines moved
-  saved = false;
-  draw(true); }
-
-void Editor::delete_selection(){
-  if(mark.y == -1) return;
-  Cursor& c = cursor;
-  ipoint p0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
-      ? c.pos : mark;
-  ipoint pf = (c.pos == p0) ? mark : c.pos;
-  remove_text(p0, ipoint(pf.x - 1, pf.y));
-  if(c.pos == pf)
-    c.pos = p0;
-  mark = ipoint(-1, -1);
-  draw(true); }
-
 void Editor::clean(){
   Cursor& c = cursor;
   // Delete trailing whitespace
@@ -262,94 +107,6 @@ void Editor::scroll(const Dir d){
     lines = min(lines, top_line);
   top_line += (d == DOWN) ? lines : -lines;
   draw(true); }
-
-void Editor::move_cursor(const Dir d){
-  Cursor& c = cursor;
-  c.blink = true;
-  c.fill = CURSOR_COLOR;
-  c.updated = true;
-  c.last_update = clock();
-  ipoint cp = c.pos;
-
-  // Move cursor
-  switch(d){
-  case UP:
-    if(c.pos.y == 0){
-      if(c.pos.x > 0)
-        c.pos.x = 0;
-      break; }
-    --c.pos.y;
-    if(c.pos.x > text[c.pos.y].size())
-      c.pos.x = (int)text[c.pos.y].size();
-    if(c.pos.y < top_line)
-      scroll(UP);
-    break;
-
-  case LEFT:
-    if(c.pos.x == 0){
-      if(c.pos.y == 0) break;
-      --c.pos.y;
-      c.pos.x = (int)text[c.pos.y].size();
-      if(c.pos.y < top_line)
-        scroll(UP);
-    }else
-      --c.pos.x;
-    break;
-
-  case DOWN:
-    if(c.pos.y == text.size() - 1){
-      if(c.pos.x < text[c.pos.y].size())
-        c.pos.x = (int)text[c.pos.y].size();
-      break; }
-    ++c.pos.y;
-    if(c.pos.x > text[c.pos.y].size())
-      c.pos.x = (int)text[c.pos.y].size();
-    if(c.pos.y - top_line >= size.y / line_height - 1)
-      scroll(DOWN);
-    break;
-
-  case RIGHT:
-    if(c.pos.x == text[c.pos.y].size()){
-      if(c.pos.y == text.size() - 1) break;
-      ++c.pos.y;
-      c.pos.x = 0;
-      if(c.pos.y - top_line >= size.y / line_height - 1)
-        scroll(DOWN);
-    }else
-      ++c.pos.x;
-    break;
-  default:
-    err("move_cursor", "impossible direction"); }
-
-  // Draw whole lines if mark is set
-  if(mark.y != -1 && (c.pos.y != cp.y
-      || (c.pos.y == cp.y && abs(c.pos.x - cp.x) > 1))){
-    ipoint p0 = (c.pos.y < cp.y || (c.pos.y == cp.y && c.pos.x < cp.x))
-        ? c.pos : cp;
-    ipoint pf = (c.pos == p0) ? cp : c.pos;
-    draw_selection(p0, pf, true); }
-
-  // Draw char at previous position
-  color cb = bkgd;
-  if(mark.y != -1){
-    ipoint p0 = (c.pos.y < mark.y || (c.pos.y == mark.y && c.pos.x < mark.x))
-        ? c.pos : mark;
-    ipoint pf = (c.pos == p0) ? mark : c.pos;
-    if(in_selection(p0, ipoint(pf.x - 1, pf.y), cp))
-      cb = SELECT_COLOR; }
-  char ch = (cp.x == text[cp.y].size()) ? ' ' : text[cp.y][cp.x];
-  color ct = (ch == ' ') ? (cmd ? BAR_TEXT_COLOR : COLOR_CODE)
-      : text_color[cp.y][cp.x];
-  draw_char(fonts[text_scale][cb][ct][ch], text_to_frame(cp), true);
-
-  // Draw character and cursor
-  ch = (c.pos.x == text[c.pos.y].size()) ? ' ' : text[c.pos.y][c.pos.x];
-  draw_char(fonts[text_scale][c.fill][BAR_TEXT_COLOR][ch],
-      text_to_frame(c.pos), true);
-
-  // Update file bar
-  if(!cmd)
-    draw_cursor_pos(true); }
 
 void Editor::set_file_type(){
   if(ends_with(file, ".cc") || ends_with(file, ".hh"))

@@ -35,6 +35,7 @@ struct str {
   const char* c_str() const;
   char at(size_t index) const;
   size_t size() const;
+  size_t find(const str& s) const;
   str substr(size_t index) const;
   str substr(size_t index, size_t len) const;
 
@@ -115,6 +116,10 @@ char str::at(size_t index) const {
 // Return length of string
 size_t str::size() const {
   return data.size(); }
+
+// Return first position of substring, else string::npos
+size_t str::find(const str& s) const {
+  return data.find(s.data); }
 
 // Return substring from index to end
 str str::substr(size_t index) const {
@@ -197,5 +202,12 @@ vec<str> str::split(const str& delim) const {
   for(int i = 1; i < loc.size(); ++i)
     r.pb(substr(loc[i - 1] + delim.size(), loc[i] - loc[i - 1] - delim.size()));
   return r; }
+
+// Allow str to be hashed as a map key
+namespace std {
+  template <>
+  struct hash<str> {
+    size_t operator()(const str& s) const {
+      return hash<string>()(s.data); } }; }
 
 #endif

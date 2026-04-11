@@ -39,6 +39,18 @@
       <p>
         This is the content. Somehow pull this from a file with JavaScript.
       </p>
+      <script>
+        function process_text(){
+          var s = document.getElementById("textbox1").value;
+          var r = "";
+          for(var i = s.length - 1; i >= 0; --i)
+            r += s[i];
+          document.getElementById("label1").textContent = r;
+        }
+      </script>
+      <input type="text" id="textbox1">
+      <button onclick="process_text()">Submit</button>
+      <label id="label1">TEST</label>
     </div>
   </div>
 </body>

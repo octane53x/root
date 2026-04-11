@@ -4,7 +4,7 @@
 #ifndef WINDOW_HH
 #define WINDOW_HH
 
-//! #include "../../gl/ipoint.hh"
+#include "../../gl/ui/interface.hh"
 #include "keyrouter.hh"
 
 // Windows timer identifier
@@ -21,7 +21,7 @@ struct Window;
 Window* _win;
 
 // Window appearing in Windows OS
-struct Window {
+struct Window : Interface {
 
   // Windows application instance passed by WinMain
   HINSTANCE hInst;
@@ -34,6 +34,8 @@ struct Window {
 
   // Whether to open the window maximized
   bool start_maximized;
+  // Whether the frame has been updated
+  bool updated;
   // Pixel position and size of window on screen
   ipoint win_pos, win_size;
   // Pixel size of image frame on screen (pos is always 0,0)
@@ -50,7 +52,7 @@ struct Window {
 
   virtual void init();
   virtual bool update() = 0;
-  virtual bool draw() = 0;
+  virtual void draw() = 0;
   virtual void resize();
 
   BITMAPINFO get_bmi() const;
@@ -69,6 +71,7 @@ struct Window {
 void Window::init(){
   _win = this;
   start_maximized = true;
+  updated = true;
   color_buf = NULL;
   key_router.init(); }
 
@@ -203,9 +206,11 @@ LRESULT CALLBACK Window::msg_proc(
   // Update and draw
   case WM_TIMER:
     if(wParam != IDT_TIMER1) return 0;
-    if(_win->update()){
+    _win->update();
+    if(updated){
       _win->draw();
-      InvalidateRect(hWnd, NULL, FALSE); }
+      InvalidateRect(hWnd, NULL, FALSE);
+      updated = false; }
     return 0;
   case WM_PAINT:
     paint_proc();
