@@ -40,15 +40,10 @@ struct Window : Interface {
   ipoint win_pos, win_size;
   // Pixel size of image frame on screen (pos is always 0,0)
   ipoint frame_size;
-  // Pixel position of cursor on screen
-  ipoint cursor;
   // Title displayed in top bar of window
   str title;
   // Color buffer for drawing
   ui* color_buf;
-
-  // Input processor
-  KeyRouter key_router;
 
   virtual void init();
   virtual bool update() = 0;
@@ -70,10 +65,10 @@ struct Window : Interface {
 // Called by: Application.init()
 void Window::init(){
   _win = this;
+  Interface::init();
   start_maximized = true;
   updated = true;
-  color_buf = NULL;
-  key_router.init(); }
+  color_buf = NULL; }
 
 // Resize the window, recreating the frame buffer
 // Called by: msg_proc() OR Application::X.resize()
@@ -233,22 +228,19 @@ LRESULT CALLBACK Window::msg_proc(
     return 0;
   case WM_LBUTTONDOWN:
   case WM_LBUTTONUP:
-    _win->key_router.send(
-        KeyEvent("LCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
+    _win->send_key(KeyEvent("LCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
     return 0;
   case WM_RBUTTONDOWN:
   case WM_RBUTTONUP:
-    _win->key_router.send(
-        KeyEvent("RCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
+    _win->send_key(KeyEvent("RCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
     return 0;
   case WM_MBUTTONDOWN:
   case WM_MBUTTONUP:
-    _win->key_router.send(
-        KeyEvent("MCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
+    _win->send_key(KeyEvent("MCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
     return 0;
   case WM_MOUSEWHEEL:
     wheel = (int)GET_WHEEL_DELTA_WPARAM(wParam);
-    _win->key_router.send(KeyEvent("SCROLL", (wheel < 0), p, msg_time));
+    _win->send_key(KeyEvent("SCROLL", (wheel < 0), p, msg_time));
     return 0;
 
   // Keyboard input
@@ -256,7 +248,7 @@ LRESULT CALLBACK Window::msg_proc(
   case WM_KEYUP:
   case WM_SYSKEYDOWN:
   case WM_SYSKEYUP:
-    _win->key_router.send(KeyEvent(key_proc(wParam),
+    _win->send_key(KeyEvent(key_proc(wParam),
         uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN, p, msg_time));
     return 0;
 
@@ -267,7 +259,7 @@ LRESULT CALLBACK Window::msg_proc(
   case WM_ACTIVATE:
     // Send alt release on alt+tab
     if(wParam == FALSE)
-      _win->key_router.send(KeyEvent("ALT", false, p, msg_time));
+      _win->send_key(KeyEvent("ALT", false, p, msg_time));
     return 0;
 
   case WM_DESTROY:

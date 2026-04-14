@@ -38,7 +38,7 @@ void Application::init(){
 // Returns true if key events were routed
 // Called by: PROJECT update()
 void Application::update(){
-  key_router.update();
+  Interface::update();
   for(KeyEvent ke : key_router.keys){
     if(ke.key == "SHIFT")
       shift = ke.down;
