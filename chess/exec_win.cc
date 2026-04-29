@@ -1,9 +1,8 @@
 // Execute Chess Simulator
 
-#include "chess.hh"
-
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib, "user32.lib")
+#include "game.hh"
+#include "input.hh"
+#include "draw.hh"
 
 // Main function called on application execution
 // Called by: OPERATING SYSTEM

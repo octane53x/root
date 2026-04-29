@@ -21,7 +21,6 @@ struct Application : virtual Window {
 
   virtual void init();
   virtual void update();
-  virtual void draw() = 0;
   virtual void run();
 
   void parse_key(KeyEvent& ke); };
@@ -31,7 +30,6 @@ struct Application : virtual Window {
 void Application::init(){
   Window::init();
   shift = ctrl = alt = false;
-  max_fps = MAX_FPS;
   last_update = last_draw = 0; }
 
 // Send key events to derived application
@@ -39,7 +37,7 @@ void Application::init(){
 // Called by: PROJECT update()
 void Application::update(){
   Interface::update();
-  for(KeyEvent ke : key_router.keys){
+  for(KeyEvent& ke : keys){
     if(ke.key == "SHIFT")
       shift = ke.down;
     else if(ke.key == "CONTROL")
@@ -49,7 +47,7 @@ void Application::update(){
     ke.shift = shift, ke.ctrl = ctrl, ke.alt = alt;
     parse_key(ke);
     input(ke); }
-  key_router.keys.clear();
+  keys.clear();
   last_update = clock(); }
 
 // Display window and run main loop
@@ -102,6 +100,6 @@ void Application::parse_key(KeyEvent& ke){
   else if(ke.key == "QUOTE") co = ke.shift ? '"' : '\'';
   else if(ke.key == "SPACE") co = ' ';
   if(co != 0)
-    ke.key = str(1, co); }
+    ke.key = str(co); }
 
 #endif

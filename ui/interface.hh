@@ -6,6 +6,8 @@
 #include "../../core/util.hh"
 
 // Function pointer mapped to key
+// Return whether the key was used
+struct KeyEvent;
 typedef bool (*InputFn)(const KeyEvent&);
 
 // Key hold constants
@@ -32,6 +34,9 @@ struct KeyEvent {
 // Key mapping support
 struct Interface {
 
+  // True if the focused interface overrides its container
+  // False if the containing interface mapping is used
+  bool focus_prio;
   // Repeat held key
   bool key_repeat;
   // Time of last input sent to derived application
@@ -49,6 +54,7 @@ struct Interface {
 
   virtual void init();
   virtual void update();
+  // Called by: init()
   virtual void map_fns() = 0;
 
   void send_key(const KeyEvent& ke);
@@ -64,8 +70,10 @@ KeyEvent::KeyEvent(
 // Set default member state
 // Called by: Window.init()
 void Interface::init(){
+  focus_prio = true;
   key_repeat = false;
-  last_send = 0; }
+  last_send = 0;
+  map_fns(); }
 
 // Add the held key to keys queue if time has elapsed
 // Called by: Application.update()
@@ -101,13 +109,19 @@ void Interface::send_key(const KeyEvent& ke){
 
 // Route the key to the correct function
 // Return whether the key performed an action
-// Called by: _
+// Called by: Application.update()
 bool Interface::input(const KeyEvent& ke){
   bool action = false;
-  if(contains(keymap, ke.key))
-    action = keymap[ke.key](ke);
-  if(!action && focus)
-    action = focus->input(ke);
+  if(focus_prio){
+    if(focus)
+      action = focus->input(ke);
+    if(!action && contains(keymap, ke.key))
+      action = keymap[ke.key](ke);
+  }else{
+    if(contains(keymap, ke.key))
+      action = keymap[ke.key](ke);
+    if(!action && focus)
+      action = focus->input(ke); }
   return action; }
 
 #endif

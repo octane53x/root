@@ -6,8 +6,9 @@ Primarily C++, some Python
 PROJECTS
 
 /chef:   Codechef submissions
+/chess:  Chess game
 /core:   Universal resources
-/crab:   New language
+/crab:   Language
 /gl:     Graphics library
 /imp:    Impact game
 /misc:   Miscellaneous
@@ -16,6 +17,7 @@ PROJECTS
 /os:     Operating system utilities
 /satan:  Artificial intelligence
 /studio: Code editor & terminal
+/tdef:   Tower defense game
 /test:   Non-project tests
 /tool:   Code tools
 /web:    Website design

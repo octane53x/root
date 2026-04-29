@@ -1,16 +1,13 @@
-// Execute custom Windows application
+// EXECUTE APPLICATION
 
-//! #include "custom_application.hh"
-
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib, "user32.lib")
+#include "app.hh"
 
 // Main function called on application execution
 // Called by: OPERATING SYSTEM
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
   debug_init();
-  //! CustomApplication app;
+  App app;
   app.hInst = hInst;
   app.init();
   app.run();

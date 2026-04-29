@@ -4,8 +4,10 @@
 #ifndef WINDOW_HH
 #define WINDOW_HH
 
-#include "../../gl/ui/interface.hh"
-#include "keyrouter.hh"
+#include "../../ui/interface.hh"
+
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "user32.lib")
 
 // Windows timer identifier
 #define IDT_TIMER1 223
@@ -36,9 +38,10 @@ struct Window : Interface {
   bool start_maximized;
   // Whether the frame has been updated
   bool updated;
-  // Pixel position and size of window on screen
+  // Pixel position and size of window on screen, according to Windows
   ipoint win_pos, win_size;
   // Pixel size of image frame on screen (pos is always 0,0)
+  // Differs from win_size due to Windows offsets
   ipoint frame_size;
   // Title displayed in top bar of window
   str title;
@@ -46,7 +49,7 @@ struct Window : Interface {
   ui* color_buf;
 
   virtual void init();
-  virtual bool update() = 0;
+  virtual void update() = 0;
   virtual void draw() = 0;
   virtual void resize();
 
@@ -192,7 +195,7 @@ LRESULT CALLBACK Window::msg_proc(
   POINT pwin;
   GetCursorPos(&pwin);
   ipoint p(pwin.x, pwin.y);
-  _win->cursor = _win->key_router.cursor = p;
+  _win->cursor = p;
   clock_t msg_time = clock();
   int wheel;
   RECT r;
@@ -202,10 +205,10 @@ LRESULT CALLBACK Window::msg_proc(
   case WM_TIMER:
     if(wParam != IDT_TIMER1) return 0;
     _win->update();
-    if(updated){
+    if(_win->updated){
       _win->draw();
       InvalidateRect(hWnd, NULL, FALSE);
-      updated = false; }
+      _win->updated = false; }
     return 0;
   case WM_PAINT:
     paint_proc();

@@ -2,9 +2,6 @@
 
 #include "game.hh"
 
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib, "user32.lib")
-
 // Main function called on application execution
 // Called by: OPERATING SYSTEM
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,

@@ -8,6 +8,12 @@
 (setq path "~/.emacs.d/init.el")
 (setq winh 46)
 
+;; Terminal
+(setq explicit-shell-file-name "C:/cygwin64/bin/bash.exe")
+(setq shell-file-name "bash")
+(setq explicit-bash-args '("--login" "-i"))
+(add-to-list 'exec-path "C:/cygwin64/bin")
+
 ;; Frame
 (defun reset () (interactive)
   (set-frame-position (selected-frame) 0 0)
@@ -107,6 +113,7 @@
 (global-set-key [?\C-z] 'undo)
 
 ;; Whitespace
+(setq-default buffer-file-coding-system 'utf-8-unix)
 (setq-default indent-tabs-mode nil)
 (global-set-key [?\C-w] 'delete-horizontal-space)
 
