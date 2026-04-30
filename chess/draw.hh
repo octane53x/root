@@ -15,10 +15,10 @@ void Chess::draw_board(){
     color c = (i & 1) ? WHITE : BLACK;
     for(int j = 0; j < 8; ++j){
       polygon p;
-      p.add(ipoint(i * 100, j * 100));
-      p.add(ipoint((i + 1) * 100 - 1, j * 100));
-      p.add(ipoint((i + 1) * 100 - 1, (j + 1) * 100 - 1));
-      p.add(ipoint(i * 100, (j + 1) * 100 - 1));
+      p.add(ipoint(i * SQUARE, j * SQUARE));
+      p.add(ipoint((i + 1) * SQUARE - 1, j * SQUARE));
+      p.add(ipoint((i + 1) * SQUARE - 1, (j + 1) * SQUARE - 1));
+      p.add(ipoint(i * SQUARE, (j + 1) * SQUARE - 1));
       p.fill = c;
       p.draw(&frame, viewport()); } } }
 

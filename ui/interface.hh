@@ -71,6 +71,7 @@ KeyEvent::KeyEvent(
 // Called by: Window.init()
 void Interface::init(){
   focus_prio = true;
+  focus = NULL;
   key_repeat = false;
   last_send = 0;
   map_fns(); }

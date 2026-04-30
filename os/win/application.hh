@@ -52,6 +52,8 @@ void Application::update(){
 // Display window and run main loop
 // Called by: PROJECT
 void Application::run(){
+  win_size =
+      ipoint(frame.size.x - FRAME_X_OFFSET, frame.size.y - FRAME_Y_OFFSET);
   display();
   // Windows increases this timer resolution to its minimum (~16ms?)
   SetTimer(hWnd, IDT_TIMER1, 1 /*ms*/, NULL);

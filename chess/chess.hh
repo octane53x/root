@@ -5,6 +5,9 @@
 
 #include "../os/win/application.hh"
 
+// Pixel size of board square
+const int SQUARE = 80;
+
 // White or Black
 enum class Player : uchar { NONE, WHITE, BLACK };
 // Piece type
@@ -107,8 +110,8 @@ Board& Board::operator=(const Board& o){
 void Chess::init(){
   Application::init();
   start_maximized = false;
-  win_pos = ipoint(50, 50);
-  win_size = ipoint(800, 800);
+  win_pos = ipoint(0, 0);
+  frame.size = ipoint(SQUARE * 8, SQUARE * 8);
   init_game(); }
 
 // Update -> draw if updated -> repeat

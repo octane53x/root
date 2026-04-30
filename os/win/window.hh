@@ -73,8 +73,8 @@ void Window::init(){
 // Resize the window, recreating the frame buffer
 // Called by: msg_proc() OR Application::X.resize()
 void Window::resize(){
-  frame.set_size(
-      ipoint(win_size.x + FRAME_X_OFFSET, win_size.y + FRAME_Y_OFFSET));
+  frame.size =
+      ipoint(win_size.x + FRAME_X_OFFSET, win_size.y + FRAME_Y_OFFSET);
   SelectObject(hdcMem, bmpOld);
   DeleteObject(bmpDIB);
   BITMAPINFO bmi = get_bmi();
