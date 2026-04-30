@@ -22,7 +22,10 @@ struct Application : virtual Window {
   virtual void update();
   virtual void run();
 
-  void parse_key(KeyEvent& ke); };
+  void parse_key(KeyEvent& ke, bool _shift);
+  void display_text(
+      const str& text, const int size, const str& font, const ipoint pos,
+      const color c); };
 
 // Set default member state
 // Called by: PROJECT init()
@@ -43,8 +46,8 @@ void Application::update(){
       ctrl = ke.down;
     else if(ke.key == "ALT")
       alt = ke.down;
-    ke.shift = shift, ke.ctrl = ctrl, ke.alt = alt;
-    parse_key(ke);
+    ke.ctrl = ctrl, ke.alt = alt;
+    parse_key(ke, shift);
     input(ke); }
   keys.clear();
   last_update = clock(); }
@@ -62,14 +65,14 @@ void Application::run(){
     TranslateMessage(&msg);
     DispatchMessage(&msg); } }
 
-// Considering SHIFT, translate key sent by Window
+// Considering _SHIFT, translate key sent by Window
 // Called by: update()
-void Application::parse_key(KeyEvent& ke){
+void Application::parse_key(KeyEvent& ke, bool _shift){
   char co = 0;
   if(ke.key.size() == 1){
     char ci = ke.key[0];
     if(ci >= '0' && ci <= '9'){
-      if(ke.shift){
+      if(_shift){
         switch(ci){
         case '0': co = ')'; break;
         case '1': co = '!'; break;
@@ -86,21 +89,36 @@ void Application::parse_key(KeyEvent& ke){
         co = ci;
     }else{
       assert(ci >= 'A' && ci <= 'Z', "Application.parse_key", "bad character");
-      co = ke.shift ? ci : ci - 'A' + 'a'; }
+      co = _shift ? ci : ci - 'A' + 'a'; }
 
-  }else if(ke.key == "COLON") co = ke.shift ? ':' : ';';
-  else if(ke.key == "EQUALS") co = ke.shift ? '+' : '=';
-  else if(ke.key == "COMMA") co = ke.shift ? '<' : ',';
-  else if(ke.key == "MINUS") co = ke.shift ? '_' : '-';
-  else if(ke.key == "PERIOD") co = ke.shift ? '>' : '.';
-  else if(ke.key == "SLASH") co = ke.shift ? '?' : '/';
-  else if(ke.key == "TILDE") co = ke.shift ? '~' : '`';
-  else if(ke.key == "LBRACKET") co = ke.shift ? '{' : '[';
-  else if(ke.key == "BACKSLASH") co = ke.shift ? '|' : '\\';
-  else if(ke.key == "RBRACKET") co = ke.shift ? '}' : ']';
-  else if(ke.key == "QUOTE") co = ke.shift ? '"' : '\'';
+  }else if(ke.key == "COLON") co = _shift ? ':' : ';';
+  else if(ke.key == "EQUALS") co = _shift ? '+' : '=';
+  else if(ke.key == "COMMA") co = _shift ? '<' : ',';
+  else if(ke.key == "MINUS") co = _shift ? '_' : '-';
+  else if(ke.key == "PERIOD") co = _shift ? '>' : '.';
+  else if(ke.key == "SLASH") co = _shift ? '?' : '/';
+  else if(ke.key == "TILDE") co = _shift ? '~' : '`';
+  else if(ke.key == "LBRACKET") co = _shift ? '{' : '[';
+  else if(ke.key == "BACKSLASH") co = _shift ? '|' : '\\';
+  else if(ke.key == "RBRACKET") co = _shift ? '}' : ']';
+  else if(ke.key == "QUOTE") co = _shift ? '"' : '\'';
   else if(ke.key == "SPACE") co = ' ';
   if(co != 0)
     ke.key = str(co); }
+
+// Display text on screen
+// Called by: PROJECT
+void Application::display_text(
+    const str& text, const int size, const str& font, const ipoint pos,
+    const color c){
+  HFONT f = CreateFont(
+      size, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+      DEFAULT_CHARSET, OUT_TT_ONLY_PRECIS, CLIP_DEFAULT_PRECIS,
+      PROOF_QUALITY, FIXED_PITCH | FF_MODERN, font.c_str());
+  HFONT fOld = (HFONT)SelectObject(hdcMem, f);
+  SetTextColor(hdcMem, RGB(c.r, c.g, c.b));
+  SetBkMode(hdcMem, TRANSPARENT);
+  TextOut(hdcMem, pos.x, pos.y, text.c_str(), text.size());
+  SelectObject(hdcMem, fOld); }
 
 #endif

@@ -27,7 +27,7 @@ struct KeyEvent {
   // Time of event
   clock_t time;
   // Modifiers
-  bool shift, ctrl, alt;
+  bool ctrl, alt;
 
   KeyEvent(const str& k, const bool d, const ipoint& c, const clock_t t); };
 
@@ -65,7 +65,7 @@ struct Interface {
 KeyEvent::KeyEvent(
     const str& k, const bool d, const ipoint& c, const clock_t t):
     key(k), down(d), cursor(c), time(t),
-    shift(false), ctrl(false), alt(false) {}
+    ctrl(false), alt(false) {}
 
 // Set default member state
 // Called by: Window.init()
@@ -112,15 +112,16 @@ void Interface::send_key(const KeyEvent& ke){
 // Return whether the key performed an action
 // Called by: Application.update()
 bool Interface::input(const KeyEvent& ke){
+  str key = str(ke.ctrl ? "CTRL+" : "") + str(ke.alt ? "ALT+" : "") + ke.key;
   bool action = false;
   if(focus_prio){
     if(focus)
       action = focus->input(ke);
-    if(!action && contains(keymap, ke.key))
-      action = keymap[ke.key](ke);
+    if(!action && contains(keymap, key))
+      action = keymap[key](ke);
   }else{
-    if(contains(keymap, ke.key))
-      action = keymap[ke.key](ke);
+    if(contains(keymap, key))
+      action = keymap[key](ke);
     if(!action && focus)
       action = focus->input(ke); }
   return action; }

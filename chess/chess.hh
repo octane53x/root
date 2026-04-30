@@ -54,8 +54,11 @@ struct Board {
 // Chess game application
 struct Chess : Application {
 
+  // Is a user piece selected
+  bool selected;
   // Whose turn it is
   Player turn;
+  // Active board
   Board board;
 
   Chess();
@@ -71,6 +74,7 @@ struct Chess : Application {
   // Defined in input.hh
   virtual void map_fns();
   static bool click(const KeyEvent& ke);
+  static bool kill(const KeyEvent& ke);
 
   // Defined in game.hh
   void init_game(); };

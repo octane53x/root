@@ -99,7 +99,7 @@ void image::set_size(const ipoint& sz){
 // Set pixel at (x,y) to color
 inline void image::set_pixel(const ipoint& p, const color& c){
   if(buf != NULL){
-    ui ct = ((ui)c.b << 24) | ((ui)c.g << 16) | ((ui)c.r << 8);
+    ui ct = ((ui)c.r << 16) | ((ui)c.g << 8) | c.b;
     buf[p.y * size.x + p.x] = ct;
     return; }
   if(c == CLEAR) return;

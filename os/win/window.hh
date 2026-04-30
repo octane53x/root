@@ -16,7 +16,9 @@
 // Difference between reported window size and actual frame size
 const int
     FRAME_X_OFFSET = -16,
-    FRAME_Y_OFFSET = -39;
+    FRAME_Y_OFFSET = -39,
+    CURSOR_X_OFFSET = -8,
+    CURSOR_Y_OFFSET = -31;
 
 //-------- GLOBAL APPLICATION POINTER --------
 // For static functions to call application
@@ -186,7 +188,7 @@ LRESULT CALLBACK Window::msg_proc(
   _win->hWnd = hWnd;
   POINT pwin;
   GetCursorPos(&pwin);
-  ipoint p(pwin.x, pwin.y);
+  ipoint p(pwin.x + CURSOR_X_OFFSET, pwin.y + CURSOR_Y_OFFSET);
   _win->cursor = p;
   clock_t msg_time = clock();
   int wheel;
