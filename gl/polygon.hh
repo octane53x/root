@@ -29,8 +29,7 @@ struct polygon : virtual object {
   void set_box(const int& width, const int& height); };
 
 // Set default member state
-polygon::polygon(){
-  type = "polygon"; }
+polygon::polygon(){}
 
 // Assignment operator
 polygon& polygon::operator=(const polygon& o){

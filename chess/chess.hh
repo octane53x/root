@@ -3,7 +3,7 @@
 #ifndef CHESS_HH
 #define CHESS_HH
 
-#include "../core/util.hh"
+#include "../os/win/application.hh"
 
 // White or Black
 enum class Player : uchar { NONE, WHITE, BLACK };
@@ -18,7 +18,10 @@ struct Piece {
   // Type of piece
   Unit unit;
 
-  Piece(Player p, Type t); };
+  Piece();
+  Piece(Player p, Unit t);
+
+  Piece& operator=(const Piece& o); };
 
 // Chess move
 struct Move {
@@ -28,13 +31,31 @@ struct Move {
 
   Move(pair<int, int> s, pair<int, int> dest); };
 
+// Chess board
+struct Board {
+
+  // (0,0) bottom left
+  Piece board[8][8];
+
+  Board();
+
+  Board& operator=(const Board& o);
+
+  // Defined in game.hh
+  bool in_bounds(pair<int, int> loc) const;
+  bool check(Player p) const;
+  bool mate(Player p) const;
+  bool stale() const;
+  vec<Move> moves(Player p) const; };
+
 // Chess game application
 struct Chess : Application {
 
   // Whose turn it is
   Player turn;
-  // (0,0) bottom left
-  Piece board[8][8];
+  Board board;
+
+  Chess();
 
   virtual void init();
   virtual void update();
@@ -46,13 +67,14 @@ struct Chess : Application {
 
   // Defined in input.hh
   virtual void map_fns();
-  void click(const KeyEvent& ke);
+  static bool click(const KeyEvent& ke);
 
   // Defined in game.hh
-  bool in_bounds(pair<int, int> loc);
-  bool is_mate(Player p);
-  vec<Move> moves(Player p);
   void init_game(); };
+
+// Set default member state
+Piece::Piece():
+  owner(Player::NONE), unit(Unit::NONE) {}
 
 // Set default member state
 Piece::Piece(Player p, Unit u):
@@ -62,14 +84,36 @@ Piece::Piece(Player p, Unit u):
 Move::Move(pair<int, int> s, pair<int, int> d):
   src(s), dest(d) {}
 
+// Set default member state
+Board::Board(){}
+
+// Set default member state
+Chess::Chess(){}
+
+// Assignment operator
+Piece& Piece::operator=(const Piece& o){
+  owner = o.owner;
+  unit = o.unit;
+  return *this; }
+
+// Assignment operator
+Board& Board::operator=(const Board& o){
+  for(int i = 0; i < 8; ++i)
+    for(int j = 0; j < 8; ++j)
+      board[i][j] = o.board[i][j];
+  return *this; }
+
 // Initialize application
 void Chess::init(){
-
-  init_game();
-}
+  Application::init();
+  start_maximized = false;
+  win_pos = ipoint(50, 50);
+  win_size = ipoint(800, 800);
+  init_game(); }
 
 // Update -> draw if updated -> repeat
 void Chess::update(){
+  Application::update();
 
 }
 

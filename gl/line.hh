@@ -29,8 +29,7 @@ struct line : virtual object {
   point intersection(const line& o) const; };
 
 // Set default member state
-line::line(){
-  type = "line"; }
+line::line(){}
 
 // Construct with endpoints
 line::line(const point& _a, const point& _b): line() {
@@ -52,8 +51,8 @@ void line::draw(image* canvas, const viewport& view){
   point b2 = view.translate_out(b + pos);
   // If line outside the viewport, don't bother iterating pixels
   if((a2.y < 0 && b2.y < 0) || (a2.x < 0 && b2.x < 0)
-      || (a2.y > canvas->height && b2.y > canvas->height)
-      || (a2.x > canvas->width && b2.x > canvas->width))
+      || (a2.y > canvas->size.y && b2.y > canvas->size.y)
+      || (a2.x > canvas->size.x && b2.x > canvas->size.x))
     return;
   // Otherwise draw valid pixels
   int xi = (a2.x < b2.x) ? 1 : -1;
@@ -69,12 +68,12 @@ void line::draw(image* canvas, const viewport& view){
     int ii = i, jj = j, s;
     if(xlong) s = ii, ii = jj, jj = s;
     //! thickness
-    canvas->set_pixel(jj, ii, fill);
+    canvas->set_pixel(ipoint(jj, ii), fill);
     double dp = d;
     d += di;
     if((int)floor(d) != (int)floor(dp)) j += (xlong ? yi : xi);
     i += (xlong ? xi : yi); }
-  canvas->set_pixel((int)floor(b2.x), (int)floor(b2.y), fill); }
+  canvas->set_pixel(ipoint((int)floor(b2.x), (int)floor(b2.y)), fill); }
 
 // Length of segment
 double line::len() const {

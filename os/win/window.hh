@@ -4,6 +4,7 @@
 #ifndef WINDOW_HH
 #define WINDOW_HH
 
+#include "../../gl/image.hh"
 #include "../../ui/interface.hh"
 
 #pragma comment(lib, "gdi32.lib")
@@ -40,13 +41,11 @@ struct Window : Interface {
   bool updated;
   // Pixel position and size of window on screen, according to Windows
   ipoint win_pos, win_size;
-  // Pixel size of image frame on screen (pos is always 0,0)
-  // Differs from win_size due to Windows offsets
-  ipoint frame_size;
   // Title displayed in top bar of window
   str title;
-  // Color buffer for drawing
-  ui* color_buf;
+  // Image frame for drawing
+  // Size differs from win_size due to Windows offsets
+  image frame;
 
   virtual void init();
   virtual void update() = 0;
@@ -57,7 +56,6 @@ struct Window : Interface {
 
   void display();
   void set_title(const str& _title);
-  void draw_pixel(const ipoint pos, const ui color);
 
   static void paint_proc();
   static str key_proc(WPARAM wParam);
@@ -70,20 +68,19 @@ void Window::init(){
   _win = this;
   Interface::init();
   start_maximized = true;
-  updated = true;
-  color_buf = NULL; }
+  updated = true; }
 
 // Resize the window, recreating the frame buffer
 // Called by: msg_proc() OR Application::X.resize()
 void Window::resize(){
-  frame_size = ipoint(win_size.x + FRAME_X_OFFSET, win_size.y + FRAME_Y_OFFSET);
+  frame.set_size(
+      ipoint(win_size.x + FRAME_X_OFFSET, win_size.y + FRAME_Y_OFFSET));
   SelectObject(hdcMem, bmpOld);
   DeleteObject(bmpDIB);
-  color_buf = NULL;
   BITMAPINFO bmi = get_bmi();
   HDC hdc = GetDC(hWnd);
   bmpDIB = CreateDIBSection(
-      hdc, &bmi, DIB_RGB_COLORS, &(void*)color_buf, NULL, 0);
+      hdc, &bmi, DIB_RGB_COLORS, &(void*)frame.buf, NULL, 0);
   ReleaseDC(hWnd, hdc);
   bmpOld = (HBITMAP)SelectObject(hdcMem, bmpDIB); }
 
@@ -92,8 +89,8 @@ void Window::resize(){
 BITMAPINFO Window::get_bmi() const {
   BITMAPINFO bmi = {0};
   bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bmi.bmiHeader.biWidth = frame_size.x;
-  bmi.bmiHeader.biHeight = -frame_size.y;
+  bmi.bmiHeader.biWidth = frame.size.x;
+  bmi.bmiHeader.biHeight = -frame.size.y;
   bmi.bmiHeader.biPlanes = 1;
   bmi.bmiHeader.biBitCount = 32;
   bmi.bmiHeader.biCompression = BI_RGB;
@@ -126,7 +123,7 @@ void Window::display(){
   HDC hdc = GetDC(hWnd);
   hdcMem = CreateCompatibleDC(hdc);
   bmpDIB = CreateDIBSection(
-      hdc, &bmi, DIB_RGB_COLORS, &(void*)color_buf, NULL, 0);
+      hdc, &bmi, DIB_RGB_COLORS, &(void*)frame.buf, NULL, 0);
   ReleaseDC(hWnd, hdc);
   bmpOld = (HBITMAP)SelectObject(hdcMem, bmpDIB);
 
@@ -139,17 +136,12 @@ void Window::set_title(const str& _title){
   title = _title;
   SetWindowText(hWnd, title.c_str()); }
 
-// Set a pixel in the frame memory
-// Called by: PROJECT
-void Window::draw_pixel(const ipoint pos, const ui color){
-  color_buf[pos.y * frame_size.x + pos.x] = color; }
-
 // Draw the frame to the window with BitBlt
 // Called by: msg_proc()
 void Window::paint_proc(){
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(_win->hWnd, &ps);
-  BitBlt(hdc, 0, 0, _win->frame_size.x, _win->frame_size.y,
+  BitBlt(hdc, 0, 0, _win->frame.size.x, _win->frame.size.y,
       _win->hdcMem, 0, 0, SRCCOPY);
   EndPaint(_win->hWnd, &ps); }
 

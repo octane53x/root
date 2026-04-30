@@ -8,7 +8,6 @@
 #ifndef WIN_APP_HH
 #define WIN_APP_HH
 
-#include "util.hh"
 #include "window.hh"
 
 // Window I/O handler

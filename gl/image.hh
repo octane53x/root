@@ -11,7 +11,10 @@ struct image : virtual object {
 
   // Image size
   ipoint size;
-  // Pixel data, size.y by width, (0,0) Top-left
+  // Pointer to color buffer
+  ui* buf;
+  // Pixel data, height by width, (0,0) Top-left
+  // Used if buf is NULL
   vec<vec<color> > data;
 
   image();
@@ -37,21 +40,24 @@ struct image : virtual object {
 
 // Set default member state
 image::image(){
-  size = ipoint(0, 0); }
+  size = ipoint(0, 0);
+  buf = NULL; }
 
 // Construct at a certain size
 image::image(const ipoint& sz){
-  set_size(sz); }
+  set_size(sz);
+  buf = NULL; }
 
 // Assignment operator
 image& image::operator=(const image& o){
-  pos = o.pos, size = o.size, data = o.data;
+  pos = o.pos, size = o.size, data = o.data, buf = o.buf;
   validate("image.operator=");
   return *this; }
 
 // Ensure valid state
 void image::validate(const str& func){
   object::validate(func);
+  assert(!(buf != NULL && !data.empty()), func, "data and buf both used");
   assert(!(data.empty() && (size.x > 0 || size.y > 0)), func,
       "image empty but positive size");
   assert(!(!data.empty() && (size.x <= 0 || size.y <= 0)), func,
@@ -92,6 +98,10 @@ void image::set_size(const ipoint& sz){
 
 // Set pixel at (x,y) to color
 inline void image::set_pixel(const ipoint& p, const color& c){
+  if(buf != NULL){
+    ui ct = ((ui)c.b << 24) | ((ui)c.g << 16) | ((ui)c.r << 8);
+    buf[p.y * size.x + p.x] = ct;
+    return; }
   if(c == CLEAR) return;
   if(c != CLEAR_PEN){
     if(p.x >= 0 && p.x < size.x && p.y >= 0 && p.y < size.y)
