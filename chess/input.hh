@@ -20,20 +20,19 @@ bool Chess::click(const KeyEvent& ke){
   int i = 7 - ke.cursor.y / SQUARE;
   int j = ke.cursor.x / SQUARE;
   // Select piece
-  if(_app->board.board[i][j].player == Player::WHITE){
+  if(_app->board.board[i][j].player == _app->board.turn
+      && _app->select != ipoint(i, j)){
     _app->select = ipoint(i, j);
     return true;
 
   }else if(_app->select.x != -1){
-    vec<Move> m = _app->board.moves(Player::WHITE);
+    vec<Move> m = _app->board.moves(true);
     for(const Move& t : m){
       if(t.src != _app->select || t.dest != ipoint(i, j))
         continue;
 
       // Move piece
-      _app->board.board[t.dest.x][t.dest.y] =
-          _app->board.board[t.src.x][t.src.y];
-      _app->board.board[t.src.x][t.src.y] = Piece(Player::NONE, Unit::NONE);
+      _app->board.move(t);
       _app->select = ipoint(-1, -1);
       return true; }
 

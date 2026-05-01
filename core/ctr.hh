@@ -1,7 +1,7 @@
-// OBJECT UTILITY
+// CONTAINER UTILITY
 
-#ifndef OBJ_HH
-#define OBJ_HH
+#ifndef CTR_HH
+#define CTR_HH
 
 #include "def.hh"
 

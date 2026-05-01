@@ -5,7 +5,7 @@
 
 #include "double.hh"
 #include "math.hh"
-#include "obj.hh"
+#include "ctr.hh"
 
 // Do nothing, used to follow if/else when the condition just needs to be seen
 void pass(){}

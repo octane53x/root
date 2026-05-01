@@ -35,7 +35,7 @@ void Chess::draw_moves(){
   p.add(ipoint(j * SQUARE, (8 - i) * SQUARE - 1));
   p.fill = YELLOW;
   p.object::draw(&frame);
-  vec<Move> m = board.moves(Player::WHITE);
+  vec<Move> m = board.moves(true);
   for(const Move& t : m){
     if(t.src != select)
       continue;

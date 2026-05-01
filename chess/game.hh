@@ -12,7 +12,7 @@ bool Board::in_bounds(ipoint loc) const {
 // Does player have a check on other player
 bool Board::check(Player p) const {
   Player ENEMY = (p == Player::WHITE) ? Player::BLACK : Player::WHITE;
-  vec<Move> m = moves(p);
+  vec<Move> m = moves(true);
   for(const Move& t : m)
     if(board[t.dest.x][t.dest.y].player == ENEMY
         && board[t.dest.x][t.dest.y].unit == Unit::KING)
@@ -23,9 +23,10 @@ bool Board::check(Player p) const {
 bool Board::mate(Player p) const {
   // If other king has moves, return false
   Player ENEMY = (p == Player::WHITE) ? Player::BLACK : Player::WHITE;
-  vec<Move> m = moves(ENEMY);
+  vec<Move> m = moves(true);
   for(int i = 0; i < m.size(); ++i)
-    if(board[m[i].src.x][m[i].src.y].unit == Unit::KING)
+    if(board[m[i].src.x][m[i].src.y].unit == Unit::KING
+        && board[m[i].src.x][m[i].src.y].player == ENEMY)
       return false;
   // Return whether other player is in check
   return check(p); }
@@ -36,7 +37,11 @@ bool Board::stale() const {
   if(mate(Player::WHITE) || mate(Player::BLACK))
     return false;
   // No moves
-  if(moves(Player::WHITE).empty() || moves(Player::BLACK).empty())
+  vec<Move> m = moves(true);
+  int w = 0, b = 0;
+  for(const Move& t : m)
+    ++((board[t.src.x][t.src.y].player == Player::WHITE) ? w : b);
+  if(w == 0 || b == 0)
     return true;
   // Insufficient material
   //!
@@ -44,31 +49,36 @@ bool Board::stale() const {
   return false; }
 
 // Available moves for player
-vec<Move> Board::moves(Player p) const {
-  int DIR = (p == Player::WHITE) ? 1 : -1;
-  Player ENEMY = (p == Player::WHITE) ? Player::BLACK : Player::WHITE;
+vec<Move> Board::moves(bool filter) const {
   vec<Move> m;
   for(int i = 0; i < 8; ++i)
     for(int j = 0; j < 8; ++j){
-      if(board[i][j].unit == Unit::NONE || board[i][j].player != p)
+      if(board[i][j].unit == Unit::NONE)
         continue;
+      Player p = board[i][j].player;
+      Player ENEMY = (p == Player::WHITE) ? Player::BLACK : Player::WHITE;
+      int DIR = (p == Player::WHITE) ? 1 : -1;
 
       // Pawn
       //! En passant
       if(board[i][j].unit == Unit::PAWN){
+        // One step forward
         if(in_bounds({i + DIR, j}) && board[i + DIR][j].unit == Unit::NONE)
           m.pb(Move({i, j}, {i + DIR, j}));
+        // Two steps forward
         if(((p == Player::WHITE && i == 1) || (p == Player::BLACK && i == 6))
             && board[i + DIR][j].unit == Unit::NONE
             && board[i + DIR * 2][j].unit == Unit::NONE)
           m.pb(Move({i, j}, {i + DIR * 2, j}));
+        // Diagonal capture left
         if(in_bounds({i + DIR, j - 1}) && board[i + DIR][j - 1].player == ENEMY)
           m.pb(Move({i, j}, {i + DIR, j - 1}));
+        // Diagonal capture right
         if(in_bounds({i + DIR, j + 1}) && board[i + DIR][j + 1].player == ENEMY)
           m.pb(Move({i, j}, {i + DIR, j + 1})); }
 
       // Bishop or Queen
-      if(board[i][j].unit == Unit::BISHOP){
+      if(contains(vec<Unit>({Unit::BISHOP, Unit::QUEEN}), board[i][j].unit)){
         for(int di = -1; di <= 1; di += 2)
           for(int dj = -1; dj <= 1; dj += 2)
             for(int k = 1; 1; ++k){
@@ -93,7 +103,7 @@ vec<Move> Board::moves(Player p) const {
               m.pb(Move({i, j}, {ii, jj})); } }
 
       // Rook or Queen
-      if(board[i][j].unit == Unit::ROOK){
+      if(contains(vec<Unit>({Unit::ROOK, Unit::QUEEN}), board[i][j].unit)){
         for(int di = -1; di <= 1; di += 2)
           for(int k = 1; 1; ++k){
             int ii = i + k * di;
@@ -120,16 +130,56 @@ vec<Move> Board::moves(Player p) const {
           int jj = j + tt.y;
           if(!in_bounds({ii, jj}) || board[ii][jj].player == p)
             continue;
-          Board b = *this;
-          b.board[ii][jj] = b.board[i][j];
-          b.board[i][j] = Piece(Player::NONE, Unit::NONE);
-          if(!b.check(ENEMY))
-            m.pb(Move({i, j}, {ii, jj})); } } }
-  return m; }
+          m.pb(Move({i, j}, {ii, jj})); } } }
+
+  if(!filter)
+    return m;
+  // Can't move into check
+  vec<Move> mf;
+  for(const Move& t : m){
+    if(board[t.src.x][t.src.y].player != turn)
+      continue;
+    Player ENEMY = (turn == Player::WHITE) ? Player::BLACK : Player::WHITE;
+    bool chk = false;
+
+    // Moving king
+    for(const Move& u : m){
+      if(board[u.src.x][u.src.y].player != ENEMY)
+        continue;
+      if(board[t.src.x][t.src.y].unit == Unit::KING && u.dest == t.dest){
+        chk = true;
+        break; } }
+    if(chk)
+      continue;
+
+    // Moving another piece
+    Board b = *this;
+    b.move(t);
+    vec<Move> m2 = b.moves(false);
+    for(const Move& u : m2){
+      if(b.board[u.src.x][u.src.y].player != ENEMY)
+        continue;
+      if(b.board[u.dest.x][u.dest.y].unit == Unit::KING){
+        chk = true;
+        break; } }
+    if(!chk)
+      mf.pb(t); }
+  return mf; }
+
+// Move a piece
+void Board::move(const Move& m){
+  board[m.dest.x][m.dest.y] = board[m.src.x][m.src.y];
+  board[m.src.x][m.src.y] = Piece(Player::NONE, Unit::NONE);
+  // Turn pawn to queen
+  if(board[m.dest.x][m.dest.y].unit == Unit::PAWN
+      && ((turn == Player::WHITE && m.dest.x == 7)
+      || (turn == Player::BLACK && m.dest.x == 0)))
+    board[m.dest.x][m.dest.y].unit = Unit::QUEEN;
+  turn = (turn == Player::WHITE) ? Player::BLACK : Player::WHITE; }
 
 // Initialize game
 void Chess::init_game(){
-  turn = Player::WHITE;
+  board.turn = Player::WHITE;
   board.board[0][0] = board.board[0][7] = Piece(Player::WHITE, Unit::ROOK);
   board.board[0][1] = board.board[0][6] = Piece(Player::WHITE, Unit::KNIGHT);
   board.board[0][2] = board.board[0][5] = Piece(Player::WHITE, Unit::BISHOP);

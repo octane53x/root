@@ -37,6 +37,8 @@ struct Move {
 // Chess board
 struct Board {
 
+  // Whose turn it is
+  Player turn;
   // (0,0) bottom left
   Piece board[8][8];
 
@@ -49,15 +51,16 @@ struct Board {
   bool check(Player p) const;
   bool mate(Player p) const;
   bool stale() const;
-  vec<Move> moves(Player p) const; };
+  vec<Move> moves(bool filter) const;
+
+  // Defined in game.hh
+  void move(const Move& m); };
 
 // Chess game application
 struct Chess : Application {
 
   // Selected piece by location, (-1,-1) if none
   ipoint select;
-  // Whose turn it is
-  Player turn;
   // Active board
   Board board;
 
