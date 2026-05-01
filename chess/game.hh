@@ -6,16 +6,16 @@
 #include "chess.hh"
 
 // Is the location on the board
-bool Board::in_bounds(pair<int, int> loc) const {
-  return loc.first >= 0 && loc.first < 8 && loc.second >= 0 && loc.second < 8; }
+bool Board::in_bounds(ipoint loc) const {
+  return loc.x >= 0 && loc.x < 8 && loc.y >= 0 && loc.y < 8; }
 
 // Does player have a check on other player
 bool Board::check(Player p) const {
   Player ENEMY = (p == Player::WHITE) ? Player::BLACK : Player::WHITE;
   vec<Move> m = moves(p);
   for(const Move& t : m)
-    if(board[t.dest.first][t.dest.second].player == ENEMY
-        && board[t.dest.first][t.dest.second].unit == Unit::KING)
+    if(board[t.dest.x][t.dest.y].player == ENEMY
+        && board[t.dest.x][t.dest.y].unit == Unit::KING)
       return true;
   return false; }
 
@@ -25,7 +25,7 @@ bool Board::mate(Player p) const {
   Player ENEMY = (p == Player::WHITE) ? Player::BLACK : Player::WHITE;
   vec<Move> m = moves(ENEMY);
   for(int i = 0; i < m.size(); ++i)
-    if(board[m[i].src.first][m[i].src.second].unit == Unit::KING)
+    if(board[m[i].src.x][m[i].src.y].unit == Unit::KING)
       return false;
   // Return whether other player is in check
   return check(p); }
@@ -113,11 +113,11 @@ vec<Move> Board::moves(Player p) const {
 
       // King
       if(board[i][j].unit == Unit::KING){
-        vec<pair<int, int> > t = {{-1, -1}, {-1, 0}, {-1, 1},
+        vec<ipoint> t = {{-1, -1}, {-1, 0}, {-1, 1},
             {1, -1}, {1, 0}, {1, 1}, {0, -1}, {0, 1}};
-        for(pair<int, int> tt : t){
-          int ii = i + tt.first;
-          int jj = j + tt.second;
+        for(ipoint tt : t){
+          int ii = i + tt.x;
+          int jj = j + tt.y;
           if(!in_bounds({ii, jj}) || board[ii][jj].player == p)
             continue;
           Board b = *this;

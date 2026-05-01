@@ -15,8 +15,6 @@ struct Application : virtual Window {
 
   // Whether key modifiers are held down
   bool shift, ctrl, alt;
-  // Time of prior update/draw completion
-  clock_t last_update, last_draw;
 
   virtual void init();
   virtual void update();
@@ -48,9 +46,9 @@ void Application::update(){
       alt = ke.down;
     ke.ctrl = ctrl, ke.alt = alt;
     parse_key(ke, shift);
-    input(ke); }
-  keys.clear();
-  last_update = clock(); }
+    if(input(ke))
+      updated = true; }
+  keys.clear(); }
 
 // Display window and run main loop
 // Called by: PROJECT

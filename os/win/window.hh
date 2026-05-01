@@ -41,6 +41,8 @@ struct Window : Interface {
   bool start_maximized;
   // Whether the frame has been updated
   bool updated;
+  // Time of prior update/draw completion
+  clock_t last_update, last_draw;
   // Pixel position and size of window on screen, according to Windows
   ipoint win_pos, win_size;
   // Title displayed in top bar of window
@@ -200,12 +202,14 @@ LRESULT CALLBACK Window::msg_proc(
     if(wParam != IDT_TIMER1) return 0;
     _win->update();
     if(_win->updated){
+      _win->last_update = clock();
       _win->draw();
       InvalidateRect(hWnd, NULL, FALSE);
       _win->updated = false; }
     return 0;
   case WM_PAINT:
     paint_proc();
+    _win->last_draw = clock();
     return 0;
 
   // Adjust window
@@ -225,11 +229,11 @@ LRESULT CALLBACK Window::msg_proc(
     return 0;
   case WM_LBUTTONDOWN:
   case WM_LBUTTONUP:
-    _win->send_key(KeyEvent("LCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
+    _win->send_key(KeyEvent("LCLICK", uMsg == WM_LBUTTONDOWN, p, msg_time));
     return 0;
   case WM_RBUTTONDOWN:
   case WM_RBUTTONUP:
-    _win->send_key(KeyEvent("RCLICK", uMsg == WM_MBUTTONDOWN, p, msg_time));
+    _win->send_key(KeyEvent("RCLICK", uMsg == WM_RBUTTONDOWN, p, msg_time));
     return 0;
   case WM_MBUTTONDOWN:
   case WM_MBUTTONUP:

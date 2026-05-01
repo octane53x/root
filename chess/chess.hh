@@ -30,9 +30,9 @@ struct Piece {
 struct Move {
 
   // Source and destination squares
-  pair<int, int> src, dest;
+  ipoint src, dest;
 
-  Move(pair<int, int> s, pair<int, int> dest); };
+  Move(ipoint s, ipoint d); };
 
 // Chess board
 struct Board {
@@ -45,7 +45,7 @@ struct Board {
   Board& operator=(const Board& o);
 
   // Defined in game.hh
-  bool in_bounds(pair<int, int> loc) const;
+  bool in_bounds(ipoint loc) const;
   bool check(Player p) const;
   bool mate(Player p) const;
   bool stale() const;
@@ -55,7 +55,7 @@ struct Board {
 struct Chess : Application {
 
   // Selected piece by location, (-1,-1) if none
-  pair<int, int> select;
+  ipoint select;
   // Whose turn it is
   Player turn;
   // Active board
@@ -64,7 +64,6 @@ struct Chess : Application {
   Chess();
 
   virtual void init();
-  virtual void update();
 
   // Defined in draw.hh
   virtual void draw();
@@ -89,7 +88,7 @@ Piece::Piece(Player p, Unit u):
   player(p), unit(u) {}
 
 // Set default member state
-Move::Move(pair<int, int> s, pair<int, int> d):
+Move::Move(ipoint s, ipoint d):
   src(s), dest(d) {}
 
 // Set default member state
@@ -117,13 +116,7 @@ void Chess::init(){
   start_maximized = false;
   win_pos = ipoint(0, 0);
   frame.size = ipoint(SQUARE * 8, SQUARE * 8);
-  select = {-1, -1};
+  select = ipoint(-1, -1);
   init_game(); }
-
-// Update -> draw if updated -> repeat
-void Chess::update(){
-  Application::update();
-
-}
 
 #endif

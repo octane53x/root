@@ -25,9 +25,9 @@ void Chess::draw_board(){
       c = (c == WHITE) ? BLACK : WHITE; } } }
 
 void Chess::draw_moves(){
-  if(select.first == -1)
+  if(select.x == -1)
     return;
-  int i = select.first, j = select.second;
+  int i = select.x, j = select.y;
   polygon p;
   p.add(ipoint(j * SQUARE, (7 - i) * SQUARE));
   p.add(ipoint((j + 1) * SQUARE - 1, (7 - i) * SQUARE));
@@ -40,8 +40,8 @@ void Chess::draw_moves(){
     if(t.src != select)
       continue;
     p.clear();
-    int x = t.dest.second * SQUARE;
-    int y = (7 - t.dest.first) * SQUARE;
+    int x = t.dest.y * SQUARE;
+    int y = (7 - t.dest.x) * SQUARE;
     p.add(ipoint(x + SQUARE / 2, y + 10));
     p.add(ipoint(x + SQUARE - 10, y + SQUARE / 2));
     p.add(ipoint(x + SQUARE / 2, y + SQUARE - 10));
