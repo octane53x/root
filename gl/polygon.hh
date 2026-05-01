@@ -25,6 +25,7 @@ struct polygon : virtual object {
   double area() const;
 
   void add(const point& p);
+  void clear();
   void scale(const double s);
   void set_box(const int& width, const int& height); };
 
@@ -63,7 +64,7 @@ void polygon::draw(image* canvas, const viewport& view){
         inter.pb(p); }
     sort(inter.begin(), inter.end(),
         [](const point& a, const point& b){ return a.x < b.x; });
-    for(int i = 0; i < inter.size()-1; i += 2){
+    for(int i = 0; i < (int)inter.size()-1; i += 2){
       if(deq(inter[i].x, inter[i+1].x)){
         ++i;
         continue; }
@@ -128,6 +129,11 @@ double polygon::area() const {
 // Add a point to the polygon
 void polygon::add(const point& p){
   points.pb(p); }
+
+// Reset polygon
+void polygon::clear(){
+  points.clear();
+  fill = DEFAULT_COLOR; }
 
 // Scale the polygon by the given factor
 void polygon::scale(const double s){

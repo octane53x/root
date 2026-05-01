@@ -10,16 +10,20 @@ void Chess::map_fns(){
   keymap["LCLICK"] = click;
   keymap["CTRL+q"] = kill; }
 
+// Cast the application pointer for static input functions
+Chess* _app;
+
 // Click the mouse
 bool Chess::click(const KeyEvent& ke){
   int i = 7 - ke.cursor.y / SQUARE;
   int j = ke.cursor.x / SQUARE;
-  if(selected){
-    //!
+  if(_app->select.first == -1){
+    if(_app->board.board[i][j].player != Player::WHITE)
+      return false;
+    _app->select = pair<int, int>(i, j);
+    _app->updated = true;
 
   }else{
-    if(board.board[i][j].unit == Unit::NONE)
-      return false;
     //!
 
   }

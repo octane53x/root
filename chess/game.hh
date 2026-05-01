@@ -14,7 +14,7 @@ bool Board::check(Player p) const {
   Player ENEMY = (p == Player::WHITE) ? Player::BLACK : Player::WHITE;
   vec<Move> m = moves(p);
   for(const Move& t : m)
-    if(board[t.dest.first][t.dest.second].owner == ENEMY
+    if(board[t.dest.first][t.dest.second].player == ENEMY
         && board[t.dest.first][t.dest.second].unit == Unit::KING)
       return true;
   return false; }
@@ -50,7 +50,7 @@ vec<Move> Board::moves(Player p) const {
   vec<Move> m;
   for(int i = 0; i < 8; ++i)
     for(int j = 0; j < 8; ++j){
-      if(board[i][j].unit == Unit::NONE || board[i][j].owner != p)
+      if(board[i][j].unit == Unit::NONE || board[i][j].player != p)
         continue;
 
       // Pawn
@@ -62,9 +62,9 @@ vec<Move> Board::moves(Player p) const {
             && board[i + DIR][j].unit == Unit::NONE
             && board[i + DIR * 2][j].unit == Unit::NONE)
           m.pb(Move({i, j}, {i + DIR * 2, j}));
-        if(in_bounds({i + DIR, j - 1}) && board[i + DIR][j - 1].owner == ENEMY)
+        if(in_bounds({i + DIR, j - 1}) && board[i + DIR][j - 1].player == ENEMY)
           m.pb(Move({i, j}, {i + DIR, j - 1}));
-        if(in_bounds({i + DIR, j + 1}) && board[i + DIR][j + 1].owner == ENEMY)
+        if(in_bounds({i + DIR, j + 1}) && board[i + DIR][j + 1].player == ENEMY)
           m.pb(Move({i, j}, {i + DIR, j + 1})); }
 
       // Bishop or Queen
@@ -74,10 +74,10 @@ vec<Move> Board::moves(Player p) const {
             for(int k = 1; 1; ++k){
               int ii = i + k * di;
               int jj = j + k * dj;
-              if(!in_bounds({ii, jj}) || board[ii][jj].owner == p)
+              if(!in_bounds({ii, jj}) || board[ii][jj].player == p)
                 break;
               m.pb(Move({i, j}, {ii, jj}));
-              if(board[ii][jj].owner == ENEMY)
+              if(board[ii][jj].player == ENEMY)
                 break; } }
 
       // Knight
@@ -88,7 +88,7 @@ vec<Move> Board::moves(Player p) const {
               int kj = (ki == 1) ? 2 : 1;
               int ii = i + ki * di;
               int jj = j + kj * dj;
-              if(!in_bounds({ii, jj}) || board[ii][jj].owner == p)
+              if(!in_bounds({ii, jj}) || board[ii][jj].player == p)
                 break;
               m.pb(Move({i, j}, {ii, jj})); } }
 
@@ -97,18 +97,18 @@ vec<Move> Board::moves(Player p) const {
         for(int di = -1; di <= 1; di += 2)
           for(int k = 1; 1; ++k){
             int ii = i + k * di;
-            if(!in_bounds({ii, j}) || board[ii][j].owner == p)
+            if(!in_bounds({ii, j}) || board[ii][j].player == p)
               break;
             m.pb(Move({i, j}, {ii, j}));
-            if(board[ii][j].owner == ENEMY)
+            if(board[ii][j].player == ENEMY)
               break; }
         for(int dj = -1; dj <= 1; dj += 2)
           for(int k = 1; 1; ++k){
             int jj = j + k * dj;
-            if(!in_bounds({i, jj}) || board[i][jj].owner == p)
+            if(!in_bounds({i, jj}) || board[i][jj].player == p)
               break;
             m.pb(Move({i, j}, {i, jj}));
-            if(board[i][jj].owner == ENEMY)
+            if(board[i][jj].player == ENEMY)
               break; } }
 
       // King
@@ -118,7 +118,7 @@ vec<Move> Board::moves(Player p) const {
         for(pair<int, int> tt : t){
           int ii = i + tt.first;
           int jj = j + tt.second;
-          if(!in_bounds({ii, jj}) || board[ii][jj].owner == p)
+          if(!in_bounds({ii, jj}) || board[ii][jj].player == p)
             continue;
           Board b = *this;
           b.board[ii][jj] = b.board[i][j];

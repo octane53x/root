@@ -16,8 +16,8 @@ enum class Unit : uchar { NONE, PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING };
 // Chess piece
 struct Piece {
 
-  // Owner of piece
-  Player owner;
+  // Player of piece
+  Player player;
   // Type of piece
   Unit unit;
 
@@ -54,8 +54,8 @@ struct Board {
 // Chess game application
 struct Chess : Application {
 
-  // Is a user piece selected
-  bool selected;
+  // Selected piece by location, (-1,-1) if none
+  pair<int, int> select;
   // Whose turn it is
   Player turn;
   // Active board
@@ -69,6 +69,7 @@ struct Chess : Application {
   // Defined in draw.hh
   virtual void draw();
   void draw_board();
+  void draw_moves();
   void draw_pieces();
 
   // Defined in input.hh
@@ -81,11 +82,11 @@ struct Chess : Application {
 
 // Set default member state
 Piece::Piece():
-  owner(Player::NONE), unit(Unit::NONE) {}
+  player(Player::NONE), unit(Unit::NONE) {}
 
 // Set default member state
 Piece::Piece(Player p, Unit u):
-  owner(p), unit(u) {}
+  player(p), unit(u) {}
 
 // Set default member state
 Move::Move(pair<int, int> s, pair<int, int> d):
@@ -99,7 +100,7 @@ Chess::Chess(){}
 
 // Assignment operator
 Piece& Piece::operator=(const Piece& o){
-  owner = o.owner;
+  player = o.player;
   unit = o.unit;
   return *this; }
 
@@ -116,6 +117,7 @@ void Chess::init(){
   start_maximized = false;
   win_pos = ipoint(0, 0);
   frame.size = ipoint(SQUARE * 8, SQUARE * 8);
+  select = {-1, -1};
   init_game(); }
 
 // Update -> draw if updated -> repeat

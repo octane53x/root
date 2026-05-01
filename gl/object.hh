@@ -58,6 +58,7 @@ struct object {
 
   virtual void validate(const str& func);
   virtual void draw(image* canvas, const viewport& view) = 0;
+  void draw(image* canvas);
 
   point move(const double ms); };
 
@@ -73,6 +74,10 @@ void object::validate(const str& func){
   if(mov != NULL &&
       (mov->pat == movement::ROOT || mov->pat == movement::ORBIT))
     assert(mov->root != NULL, func, "movement.root not set"); }
+
+// Draw with default viewport (no change)
+void object::draw(image* canvas){
+  draw(canvas, viewport()); }
 
 // Move the object along its movement pattern
 // Called by: scene.move_rec

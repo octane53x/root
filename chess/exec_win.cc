@@ -10,6 +10,7 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
     PWSTR pCmdLine, int nCmdShow) {
   debug_init();
   Chess app;
+  _app = &app;
   app.hInst = hInst;
   app.init();
   app.run();

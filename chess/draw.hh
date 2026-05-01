@@ -8,6 +8,7 @@
 
 void Chess::draw(){
   draw_board();
+  draw_moves();
   draw_pieces(); }
 
 void Chess::draw_board(){
@@ -20,15 +21,40 @@ void Chess::draw_board(){
       p.add(ipoint((i + 1) * SQUARE - 1, (j + 1) * SQUARE - 1));
       p.add(ipoint(i * SQUARE, (j + 1) * SQUARE - 1));
       p.fill = c;
-      p.draw(&frame, viewport());
+      p.object::draw(&frame);
       c = (c == WHITE) ? BLACK : WHITE; } } }
+
+void Chess::draw_moves(){
+  if(select.first == -1)
+    return;
+  int i = select.first, j = select.second;
+  polygon p;
+  p.add(ipoint(j * SQUARE, (7 - i) * SQUARE));
+  p.add(ipoint((j + 1) * SQUARE - 1, (7 - i) * SQUARE));
+  p.add(ipoint((j + 1) * SQUARE - 1, (8 - i) * SQUARE - 1));
+  p.add(ipoint(j * SQUARE, (8 - i) * SQUARE - 1));
+  p.fill = YELLOW;
+  p.object::draw(&frame);
+  vec<Move> m = board.moves(Player::WHITE);
+  for(const Move& t : m){
+    if(t.src != select)
+      continue;
+    p.clear();
+    int x = t.dest.second * SQUARE;
+    int y = (7 - t.dest.first) * SQUARE;
+    p.add(ipoint(x + SQUARE / 2, y + 10));
+    p.add(ipoint(x + SQUARE - 10, y + SQUARE / 2));
+    p.add(ipoint(x + SQUARE / 2, y + SQUARE - 10));
+    p.add(ipoint(x + 10, y + SQUARE / 2));
+    p.fill = ORANGE;
+    p.object::draw(&frame); } }
 
 void Chess::draw_pieces(){
   for(int i = 0; i < 8; ++i)
     for(int j = 0; j < 8; ++j){
       if(board.board[i][j].unit == Unit::NONE)
         continue;
-      color c = (board.board[i][j].owner == Player::WHITE) ? RED : BLUE;
+      color c = (board.board[i][j].player == Player::WHITE) ? RED : BLUE;
       char ch;
       switch(board.board[i][j].unit){
         case Unit::PAWN: ch = 'P'; break;
