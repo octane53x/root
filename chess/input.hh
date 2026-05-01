@@ -19,26 +19,28 @@ bool Chess::click(const KeyEvent& ke){
     return false;
   int i = 7 - ke.cursor.y / SQUARE;
   int j = ke.cursor.x / SQUARE;
-  if(_app->select.x == -1){
-    if(_app->board.board[i][j].player != Player::WHITE)
-      return false;
-    // Select piece
+  // Select piece
+  if(_app->board.board[i][j].player == Player::WHITE){
     _app->select = ipoint(i, j);
+    return true;
 
-  }else{
+  }else if(_app->select.x != -1){
     vec<Move> m = _app->board.moves(Player::WHITE);
     for(const Move& t : m){
       if(t.src != _app->select || t.dest != ipoint(i, j))
         continue;
 
       // Move piece
-
+      _app->board.board[t.dest.x][t.dest.y] =
+          _app->board.board[t.src.x][t.src.y];
+      _app->board.board[t.src.x][t.src.y] = Piece(Player::NONE, Unit::NONE);
+      _app->select = ipoint(-1, -1);
       return true; }
 
     // Unselect piece
     _app->select = ipoint(-1, -1);
-  }
-  return true; }
+    return true; }
+  return false; }
 
 // Terminate application
 bool Chess::kill(const KeyEvent& ke){

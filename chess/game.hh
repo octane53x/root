@@ -89,7 +89,7 @@ vec<Move> Board::moves(Player p) const {
               int ii = i + ki * di;
               int jj = j + kj * dj;
               if(!in_bounds({ii, jj}) || board[ii][jj].player == p)
-                break;
+                continue;
               m.pb(Move({i, j}, {ii, jj})); } }
 
       // Rook or Queen
