@@ -1,8 +1,9 @@
 // Execute Chess Simulator
 
-#include "game.hh"
 #include "input.hh"
 #include "draw.hh"
+#include "game.hh"
+#include "bot.hh"
 
 // Main function called on application execution
 // Called by: OPERATING SYSTEM

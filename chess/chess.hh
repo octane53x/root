@@ -32,6 +32,7 @@ struct Move {
   // Source and destination squares
   ipoint src, dest;
 
+  Move();
   Move(ipoint s, ipoint d); };
 
 // Chess board
@@ -52,8 +53,6 @@ struct Board {
   bool mate(Player p) const;
   bool stale() const;
   vec<Move> moves(bool filter) const;
-
-  // Defined in game.hh
   void move(const Move& m); };
 
 // Chess game application
@@ -67,6 +66,7 @@ struct Chess : Application {
   Chess();
 
   virtual void init();
+  virtual void update();
 
   // Defined in draw.hh
   virtual void draw();
@@ -80,17 +80,25 @@ struct Chess : Application {
   static bool kill(const KeyEvent& ke);
 
   // Defined in game.hh
-  void init_game(); };
+  void init_game();
+
+  // Defined in bot.hh
+  int score(const Board& b) const;
+  double delve(const Board& b, int depth, bool mx) const;
+  void bot_move(); };
 
 // Set default member state
 Piece::Piece():
   player(Player::NONE), unit(Unit::NONE) {}
 
-// Set default member state
+// Supply members
 Piece::Piece(Player p, Unit u):
   player(p), unit(u) {}
 
 // Set default member state
+Move::Move(){}
+
+// Supply members
 Move::Move(ipoint s, ipoint d):
   src(s), dest(d) {}
 
@@ -121,5 +129,11 @@ void Chess::init(){
   frame.size = ipoint(SQUARE * 8, SQUARE * 8);
   select = ipoint(-1, -1);
   init_game(); }
+
+// Update -> Draw -> Repeat
+void Chess::update(){
+  Application::update();
+  if(board.turn == Player::BLACK)
+    bot_move(); }
 
 #endif

@@ -122,6 +122,7 @@ vec<Move> Board::moves(bool filter) const {
               break; } }
 
       // King
+      //! Castle
       if(board[i][j].unit == Unit::KING){
         vec<ipoint> t = {{-1, -1}, {-1, 0}, {-1, 1},
             {1, -1}, {1, 0}, {1, 1}, {0, -1}, {0, 1}};
