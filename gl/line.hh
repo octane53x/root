@@ -18,8 +18,8 @@ struct line : virtual object {
 
   line& operator=(const line& o);
 
-  virtual void validate(const str& func);
-  virtual void draw(image* canvas, const viewport& view);
+  virtual void _validate(const str& func);
+  virtual void _draw(image* canvas, const viewport& view);
 
   double len() const;
   double slope() const;
@@ -41,12 +41,12 @@ line& line::operator=(const line& o){
   return *this; }
 
 // Ensure valid state
-void line::validate(const str& func){
+void line::_validate(const str& func){
   object::validate(func);
   assert(thick > 0, func, "line thickness not positive"); }
 
 // Draw line onto image
-void line::draw(image* canvas, const viewport& view){
+void line::_draw(image* canvas, const viewport& view){
   point a2 = view.translate_out(a + pos);
   point b2 = view.translate_out(b + pos);
   // If line outside the viewport, don't bother iterating pixels
@@ -66,14 +66,16 @@ void line::draw(image* canvas, const viewport& view){
   for(int i = (int)floor(xlong ? a2.x : a2.y);
       i != (int)floor(xlong ? b2.x : b2.y);){
     int ii = i, jj = j, s;
-    if(xlong) s = ii, ii = jj, jj = s;
+    if(xlong)
+      s = ii, ii = jj, jj = s;
     //! thickness
-    canvas->set_pixel(ipoint(jj, ii), fill);
+    canvas->set_pixel(point(jj, ii), fill);
     double dp = d;
     d += di;
-    if((int)floor(d) != (int)floor(dp)) j += (xlong ? yi : xi);
+    if((int)floor(d) != (int)floor(dp))
+      j += (xlong ? yi : xi);
     i += (xlong ? xi : yi); }
-  canvas->set_pixel(ipoint((int)floor(b2.x), (int)floor(b2.y)), fill); }
+  canvas->set_pixel(b2, fill); }
 
 // Length of segment
 double line::len() const {

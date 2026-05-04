@@ -16,8 +16,8 @@ struct polygon : virtual object {
 
   polygon& operator=(const polygon& o);
 
-  virtual void validate(const str& func);
-  virtual void draw(image* canvas, const viewport& view);
+  virtual void _validate(const str& func);
+  virtual void _draw(image* canvas, const viewport& view);
 
   point size() const;
   bool inside(const point& p) const;
@@ -40,12 +40,12 @@ polygon& polygon::operator=(const polygon& o){
   return *this; }
 
 // Ensure valid state
-void polygon::validate(const str& func){
+void polygon::_validate(const str& func){
   object::validate(func);
   assert(points.size() > 2, func, "polygon does not have more than 2 points"); }
 
 // Draw polygon to image
-void polygon::draw(image* canvas, const viewport& view){
+void polygon::_draw(image* canvas, const viewport& view){
   double xmin = INFD, xmax = -INFD, ymin = INFD, ymax = -INFD;
   for(int i = 0; i < points.size(); ++i)
     xmin = min(xmin, points[i].x+pos.x), xmax = max(xmax, points[i].x+pos.x),
@@ -70,7 +70,7 @@ void polygon::draw(image* canvas, const viewport& view){
         continue; }
       line s(inter[i], inter[i+1]);
       s.fill = fill;
-      s.draw(canvas, view); } }
+      s._draw(canvas, view); } }
   validate("polygon.draw"); }
 
 // Return width and height of box around the polygon

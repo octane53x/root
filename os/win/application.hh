@@ -22,7 +22,7 @@ struct Application : virtual Window {
 
   void parse_key(KeyEvent& ke, bool _shift);
   void display_text(
-      const str& text, const int size, const str& font, const ipoint pos,
+      const str& text, const int size, const str& font, const point pos,
       const color c); };
 
 // Set default member state
@@ -54,7 +54,7 @@ void Application::update(){
 // Called by: PROJECT
 void Application::run(){
   win_size =
-      ipoint(frame.size.x - FRAME_X_OFFSET, frame.size.y - FRAME_Y_OFFSET);
+      point(frame.size.x - FRAME_X_OFFSET, frame.size.y - FRAME_Y_OFFSET);
   display();
   // Windows increases this timer resolution to its minimum (~16ms?)
   SetTimer(hWnd, IDT_TIMER1, 1 /*ms*/, NULL);
@@ -107,7 +107,7 @@ void Application::parse_key(KeyEvent& ke, bool _shift){
 // Display text on screen
 // Called by: PROJECT
 void Application::display_text(
-    const str& text, const int size, const str& font, const ipoint pos,
+    const str& text, const int size, const str& font, const point pos,
     const color c){
   HFONT f = CreateFont(
       size, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,

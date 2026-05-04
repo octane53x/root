@@ -3,7 +3,7 @@
 #ifndef EDITOR_HH
 #define EDITOR_HH
 
-#include "panel.hh"
+#include "../ui/panel/panel.hh"
 
 struct Editor : TextPanel {
 

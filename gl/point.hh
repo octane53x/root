@@ -4,10 +4,9 @@
 #define POINT_HH
 
 #include "uvec.hh"
-#include "ipoint.hh"
 
-// A 2D or 3D coordinate point
-struct point {
+// A 3D coordinate point
+struct point : virtual thing {
 
   // (x,y,z) coordinates
   double x, y, z;
@@ -15,7 +14,6 @@ struct point {
   point();
   point(const double _x, const double _y);
   point(const double _x, const double _y, const double _z);
-  point(const ipoint& ipt);
 
   bool operator==(const point& p) const;
   bool operator!=(const point& p) const;
@@ -28,10 +26,12 @@ struct point {
   point& operator*=(const double n);
   point& operator/=(const double n);
 
-  virtual void validate(const str& func);
+  virtual void _validate(const str& fn);
   virtual str to_str() const;
 
-  ipoint to_ipt() const;
+  int xi() const;
+  int yi() const;
+  int zi() const;
   double dist(const point& p) const;
 
   void rotate(const point& p, const uvec& uv, const double deg); };
@@ -49,10 +49,6 @@ point::point(const double _x, const double _y):
 // Construct as a 3D point with (x,y,z)
 point::point(const double _x, const double _y, const double _z):
     x(_x), y(_y), z(_z) {}
-
-// Construct from an integer point
-point::point(const ipoint& ipt):
-    x(ipt.x), y(ipt.y), z(0.0) {}
 
 // Equals comparator
 bool point::operator==(const point& p) const {
@@ -107,16 +103,24 @@ point& point::operator/=(const double n){
   return *this; }
 
 // Implemented to remove abstraction
-void point::validate(const str& func){}
+void point::_validate(const str& fn){}
 
 // Convert to string
 str point::to_str() const {
   return str("(") + to_string(x) + str(", ") + to_string(y) + str(", ")
       + to_string(z) + str(")"); }
 
-// Get integer point
-ipoint point::to_ipt() const {
-  return ipoint((int)round(x), (int)round(y)); }
+// Return x coordinate as a rounded integer
+int point::xi() const {
+  return (int)round(x); }
+
+// Return y coordinate as a rounded integer
+int point::yi() const {
+  return (int)round(y); }
+
+// Return x coordinate as a rounded integer
+int point::zi() const {
+  return (int)round(z); }
 
 // Distance from this point to another
 double point::dist(const point& p) const {

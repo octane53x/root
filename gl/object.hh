@@ -1,19 +1,20 @@
 // ABSTRACT OBJECT
 
-// update does not call move as one could expect, because the container (scene)
-// needs to move objects in rooted order, information the object does not have
+// update() does not call move as one could expect, because the container
+// (scene) needs to move objects in rooted order
 
 #ifndef OBJECT_HH
 #define OBJECT_HH
 
-#include "point.hh"
+#include "../core/system.hh"
+#include "color.hh"
 #include "viewport.hh"
 
 struct image;
 
 // Object with position, inherited by something with an image to draw
 // Held by a 2D or 3D scene, which updates and draws the objects
-struct object {
+struct object : virtual system {
 
   // Holds movement data, used to automatically move an object
   struct movement {
@@ -43,44 +44,53 @@ struct object {
     // Object to which this object's position is rooted
     object* root;
 
+    // Construct with movement pattern
     movement(mov_pattern p); };
 
+  // Object ID
+  llu id;
+  // Next object ID
+  inline static llu next_id = 1;
   // Coordinate position in the environment
   point pos;
-  // The change in position last time the object moved
-  point last_move;
+  // Bounding box dimensions
+  point size;
   // Fill color
   color fill;
   // Movement data, optional to not take up memory unless needed
   movement* mov;
 
+  // Set default member state
   object();
 
-  virtual void validate(const str& func);
-  virtual void draw(image* canvas, const viewport& view) = 0;
+  // Convert to string
+  virtual str to_str() const;
+  // Ensure valid state
+  virtual void _validate(const str& fn);
+  // Draw to 2D image
+  virtual void _draw(image* canvas, const viewport& view) = 0;
   void draw(image* canvas);
 
+  // Move the object along its movement pattern
+  // Called by: scene.move_rec
   point move(const double ms); };
 
-// Set default member state
-object::object(): fill(DEFAULT_COLOR), mov(NULL) {}
+object::object():
+  fill(DEFAULT_COLOR), mov(NULL) {}
 
-// Construct with movement pattern
 object::movement::movement(mov_pattern p):
-    pat(p), vel(0.0), path_pos(0), path_prog(0.0), root(NULL) {}
+  pat(p), vel(0.0), path_pos(0), path_prog(0.0), root(NULL) {}
 
-// Ensure valid state
-void object::validate(const str& func){
-  if(mov != NULL &&
-      (mov->pat == movement::ROOT || mov->pat == movement::ORBIT))
-    assert(mov->root != NULL, func, "movement.root not set"); }
+str object::to_str() const {
+  return str("obj ") + str(id) + str(" at pos ") + pos.to_str(); }
 
-// Draw with default viewport (no change)
+void object::_validate(const str& fn){
+  if(mov != NULL && (mov->pat == movement::ROOT || mov->pat == movement::ORBIT))
+    assert(mov->root != NULL, fn, "movement.root not set"); }
+
 void object::draw(image* canvas){
-  draw(canvas, viewport()); }
+  _draw(canvas, viewport()); }
 
-// Move the object along its movement pattern
-// Called by: scene.move_rec
 point object::move(const double ms){
   point move = point(0, 0);
   if(mov == NULL || mov->pat == movement::ROOT) return move;

@@ -44,7 +44,7 @@ struct Window : Interface {
   // Time of prior update/draw completion
   clock_t last_update, last_draw;
   // Pixel position and size of window on screen, according to Windows
-  ipoint win_pos, win_size;
+  point win_pos, win_size;
   // Title displayed in top bar of window
   str title;
   // Image frame for drawing
@@ -77,8 +77,7 @@ void Window::init(){
 // Resize the window, recreating the frame buffer
 // Called by: msg_proc() OR Application::X.resize()
 void Window::resize(){
-  frame.size =
-      ipoint(win_size.x + FRAME_X_OFFSET, win_size.y + FRAME_Y_OFFSET);
+  frame.size = point(win_size.x + FRAME_X_OFFSET, win_size.y + FRAME_Y_OFFSET);
   SelectObject(hdcMem, bmpOld);
   DeleteObject(bmpDIB);
   BITMAPINFO bmi = get_bmi();
@@ -190,7 +189,7 @@ LRESULT CALLBACK Window::msg_proc(
   _win->hWnd = hWnd;
   POINT pwin;
   GetCursorPos(&pwin);
-  ipoint p(pwin.x + CURSOR_X_OFFSET, pwin.y + CURSOR_Y_OFFSET);
+  point p(pwin.x + CURSOR_X_OFFSET, pwin.y + CURSOR_Y_OFFSET);
   _win->cursor = p;
   clock_t msg_time = clock();
   int wheel;
@@ -215,11 +214,11 @@ LRESULT CALLBACK Window::msg_proc(
   // Adjust window
   case WM_MOVE:
     GetWindowRect(hWnd, &r);
-    _win->win_pos = ipoint(r.left, r.top);
+    _win->win_pos = point(r.left, r.top);
     return 0;
   case WM_SIZE:
     GetWindowRect(hWnd, &r);
-    _win->win_size = ipoint(r.right - r.left, r.bottom - r.top);
+    _win->win_size = point(r.right - r.left, r.bottom - r.top);
     _win->resize();
     return 0;
 

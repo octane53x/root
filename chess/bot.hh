@@ -1,5 +1,7 @@
 // CHESS BOT
 
+//! Doesn't work too well
+
 #ifndef BOT_HH
 #define BOT_HH
 
@@ -21,7 +23,10 @@ int Chess::score(const Board& b) const {
         case Unit::QUEEN: val = 10; break;
         case Unit::KING: val = 1000; break;
         default: val = 0; }
-      s += val * ((b.board[i][j].player == b.turn) ? 1 : -1); }
+      // ???
+      int z = (b.board[i][j].player == b.turn)
+          ? ((DEPTH & 1) ? -1 : 1) : ((DEPTH & 1) ? 1 : -1);
+      s += val * z; }
   return s; }
 
 // Recurse moves to DEPTH depth
@@ -31,7 +36,7 @@ double Chess::delve(const Board& b, int depth, bool mx) const {
   vec<Move> m = b.moves(true);
   double n = mx ? -INFD : INFD;
   for(const Move& t : m){
-    if(b.board[t.src.x][t.src.y].player != b.turn)
+    if(b.board[t.src.xi()][t.src.yi()].player != b.turn)
       continue;
     Board b2 = b;
     b2.move(t);
@@ -45,7 +50,7 @@ void Chess::bot_move(){
   double md = -INFD;
   Move mf;
   for(const Move& t : m){
-    if(board.board[t.src.x][t.src.y].player != board.turn)
+    if(board.board[t.src.xi()][t.src.yi()].player != board.turn)
       continue;
     Board b = board;
     b.move(t);

@@ -3,10 +3,11 @@
 #ifndef PANEL_HH
 #define PANEL_HH
 
+#include "../../gl/object.hh"
 #include "cursor.hh"
 
 // Abstract panel
-struct Panel {
+struct Panel : virtual object {
 
   // Whether the panel is in focus
   bool focus;
@@ -20,8 +21,18 @@ struct Panel {
   virtual bool draw() = 0;
   virtual bool input(const KeyEvent& ke) = 0; };
 
+// Panel that displays a 2D image
+struct ImagePanel : virtual Panel {
+
+  // Image displayed on the panel
+  image img;
+  // How the image is displayed
+  enum class Fit : uchar { TOPLEFT, CENTER, STRETCH } fit;
+
+  };
+
 // Panel that displays text in lines
-struct TextPanel : Panel {
+struct TextPanel : virtual Panel {
 
   // Line index in text at top of panel
   int top_line;
@@ -47,7 +58,7 @@ struct TextPanel : Panel {
   void clean(); };
 
 // Panel that allows text input
-struct InputPanel : TextPanel {
+struct InputPanel : virtual TextPanel {
 
   // Text operation stored for undo/redo
   struct TextOp {

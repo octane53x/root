@@ -3,6 +3,16 @@ REPO README
 Primarily C++, some Python
 
 
+STYLE
+
+- Functions preceded by an underscore are implementation only, to be called by
+  the function of the same name but without the underscore. This pattern (NVI)
+  allows base class control of derived class functions.
+
+- Variables preceded by an underscore are global pointers used by static
+  class functions.
+
+
 PROJECTS
 
 /chef:   Codechef submissions

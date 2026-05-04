@@ -23,13 +23,13 @@ struct KeyEvent {
   // Key down if true, up if false
   bool down;
   // Cursor pos at event time
-  ipoint cursor;
+  point cursor;
   // Time of event
   clock_t time;
   // Modifiers
   bool ctrl, alt;
 
-  KeyEvent(const str& k, const bool d, const ipoint& c, const clock_t t); };
+  KeyEvent(const str& k, const bool d, const point& c, const clock_t t); };
 
 // Key mapping support
 struct Interface {
@@ -44,7 +44,7 @@ struct Interface {
   // Route inputs here
   Interface* focus;
   // Pixel position of cursor
-  ipoint cursor;
+  point cursor;
   // Key held down
   str key_down;
   // Key event queue, processed on application update
@@ -63,7 +63,7 @@ struct Interface {
 // Set default member state
 // Called by: Window.msg_proc(), update()
 KeyEvent::KeyEvent(
-    const str& k, const bool d, const ipoint& c, const clock_t t):
+    const str& k, const bool d, const point& c, const clock_t t):
     key(k), down(d), cursor(c), time(t),
     ctrl(false), alt(false) {}
 

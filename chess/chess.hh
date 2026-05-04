@@ -8,6 +8,10 @@
 // Pixel size of board square
 const int SQUARE = 80;
 
+// Project pointer for static input functions, set in constructor
+struct Chess;
+Chess* _app;
+
 // White or Black
 enum class Player : uchar { NONE, WHITE, BLACK };
 // Piece type
@@ -30,10 +34,10 @@ struct Piece {
 struct Move {
 
   // Source and destination squares
-  ipoint src, dest;
+  point src, dest;
 
   Move();
-  Move(ipoint s, ipoint d); };
+  Move(point s, point d); };
 
 // Chess board
 struct Board {
@@ -48,7 +52,7 @@ struct Board {
   Board& operator=(const Board& o);
 
   // Defined in game.hh
-  bool in_bounds(ipoint loc) const;
+  bool in_bounds(point loc) const;
   bool check(Player p) const;
   bool mate(Player p) const;
   bool stale() const;
@@ -59,7 +63,7 @@ struct Board {
 struct Chess : Application {
 
   // Selected piece by location, (-1,-1) if none
-  ipoint select;
+  point select;
   // Active board
   Board board;
 
@@ -99,14 +103,15 @@ Piece::Piece(Player p, Unit u):
 Move::Move(){}
 
 // Supply members
-Move::Move(ipoint s, ipoint d):
+Move::Move(point s, point d):
   src(s), dest(d) {}
 
 // Set default member state
 Board::Board(){}
 
 // Set default member state
-Chess::Chess(){}
+Chess::Chess(){
+  _app = this; }
 
 // Assignment operator
 Piece& Piece::operator=(const Piece& o){
@@ -125,9 +130,9 @@ Board& Board::operator=(const Board& o){
 void Chess::init(){
   Application::init();
   start_maximized = false;
-  win_pos = ipoint(0, 0);
-  frame.size = ipoint(SQUARE * 8, SQUARE * 8);
-  select = ipoint(-1, -1);
+  win_pos = point(0, 0);
+  frame.size = point(SQUARE * 8, SQUARE * 8);
+  select = point(-1, -1);
   init_game(); }
 
 // Update -> Draw -> Repeat

@@ -19,9 +19,7 @@ const int
     PANEL_CHARS = 80;
 
 const double
-    SCALE_FACTOR = 1.1,
-    // Seconds
-    CURSOR_BLINK = 0.5;
+    SCALE_FACTOR = 1.1;
 
 const color
     BKGD_COLOR = BLACK,
