@@ -4,40 +4,39 @@
 #define STR_HH
 
 #include "char.hh"
+#include "list.hh"
+#include "num.hh"
 
 // Wrapper for std::string
-struct str {
+struct str : virtual thing {
 
-  // Internal std::string
-  string data;
+  //! Internal std::string, repl list<char>
+  std::string data;
 
   // Constructors
   str(){}
-  str(char c);
+  str(const char c);
   str(const char* s);
-  str(const string& s);
+  str(const std::string& s);
   str(const str& s);
-  str(int n);
-  str(llu n);
-  str(double d);
+  str(const num& n);
 
   // Const operators
   bool operator==(const str& s) const;
   bool operator!=(const str& s) const;
-  char operator[](size_t index) const;
   str operator+(const str& s) const;
 
   // Modifying operators
-  char& operator[](size_t index);
+  char& operator[](const num& i);
   str& operator+=(const str& s);
 
   // Wrappers
   const char* c_str() const;
-  char at(size_t index) const;
-  size_t size() const;
-  size_t find(const str& s) const;
-  str substr(size_t index) const;
-  str substr(size_t index, size_t len) const;
+  char at(const num& i) const;
+  num size() const;
+  num find(const str& s) const;
+  str substr(const num& i) const;
+  str substr(const num& i, const num& len) const;
 
   // Evaluators
   bool is_integer() const;
@@ -48,7 +47,7 @@ struct str {
   // Converters
   str to_upper() const;
   str to_lower() const;
-  vec<str> split(const str& delim) const; };
+  list<str> split(const str& delim) const; };
 
 // Construct from character
 str::str(char c){
@@ -59,7 +58,7 @@ str::str(const char* s){
   data = string(s); }
 
 // Construct from std::string
-str::str(const string& s){
+str::str(const std::string& s){
   data = s; }
 
 // Construct from other string
@@ -185,9 +184,9 @@ str str::to_lower() const {
   return r; }
 
 // Split string by delimiter
-vec<str> str::split(const str& delim) const {
-  vec<str> r;
-  vec<int> loc;
+list<str> str::split(const str& delim) const {
+  list<str> r;
+  list<int> loc;
   for(int i = 0; i < size(); ++i){
     bool found = true;
     for(int j = i, k = 0; j < size() && k < delim.size(); ++j, ++k)
@@ -195,19 +194,27 @@ vec<str> str::split(const str& delim) const {
         found = false;
         break; }
     if(found)
-      loc.pb(i); }
-  loc.pb(size());
+      loc.add(i); }
+  loc.add(size());
   if(loc[0] > 0)
-    r.pb(substr(0, loc[0]));
+    r.add(substr(0, loc[0]));
   for(int i = 1; i < loc.size(); ++i)
-    r.pb(substr(loc[i - 1] + delim.size(), loc[i] - loc[i - 1] - delim.size()));
+    r.add(substr(loc[i - 1] + delim.size(),
+        loc[i] - loc[i - 1] - delim.size()));
   return r; }
+
+template <typename T>
+str list<T>::to_str() const {
+  str r = "{";
+  for(int i = 0; i < size() - 1; ++i)
+    r += data[i].to_str() + ", ";
+  return r + data[size() - 1].to_str() + "}"; }
 
 // Allow str to be hashed as a map key
 namespace std {
   template <>
   struct hash<str> {
     size_t operator()(const str& s) const {
-      return hash<string>()(s.data); } }; }
+      return hash<std::string>()(s.data); } }; }
 
 #endif

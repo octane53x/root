@@ -1,0 +1,129 @@
+// APPLICATION INTERFACE
+
+#ifndef INTERFACE_HH
+#define INTERFACE_HH
+
+#include "incl.hh"
+
+// Function pointer mapped to key
+// Return whether the key was used
+struct KeyEvent;
+typedef bool (*InputFn)(const KeyEvent&);
+
+// Key hold constants
+const double
+    KEY_INITIAL_DELAY = 0.3,
+    KEY_REPEAT_DELAY = 0.02;
+
+// Pushed to a queue when any key is pressed or released
+struct KeyEvent {
+
+  // Key identifier
+  str key;
+  // Key down if true, up if false
+  bool down;
+  // Cursor pos at event time
+  point cursor;
+  // Time of event
+  clock_t time;
+  // Modifiers
+  bool ctrl, alt;
+
+  KeyEvent(const str& k, const bool d, const point& c, const clock_t t); };
+
+// Key mapping support
+struct Interface {
+
+  // True if the focused interface overrides its container
+  // False if the containing interface mapping is used
+  bool focus_prio;
+  // Repeat held key
+  bool key_repeat;
+  // Time of last input sent to derived application
+  clock_t last_send;
+  // Route inputs here
+  Interface* focus;
+  // Pixel position of cursor
+  point cursor;
+  // Key held down
+  str key_down;
+  // Key event queue, processed on application update
+  vec<KeyEvent> keys;
+  // Map of key to function
+  umap<str, InputFn> keymap;
+
+  virtual void init();
+  virtual void update();
+  // Called by: init()
+  virtual void map_fns() = 0;
+
+  void send_key(const KeyEvent& ke);
+  bool input(const KeyEvent& ke); };
+
+// Set default member state
+// Called by: Window.msg_proc(), update()
+KeyEvent::KeyEvent(
+    const str& k, const bool d, const point& c, const clock_t t):
+    key(k), down(d), cursor(c), time(t),
+    ctrl(false), alt(false) {}
+
+// Set default member state
+// Called by: Window.init()
+void Interface::init(){
+  focus_prio = true;
+  focus = NULL;
+  key_repeat = false;
+  last_send = 0;
+  map_fns(); }
+
+// Add the held key to keys queue if time has elapsed
+// Called by: Application.update()
+void Interface::update(){
+  // Set held key
+  for(const KeyEvent& ke : keys){
+    if(ke.down)
+      key_down = ke.key;
+    else if(ke.key == key_down){
+      key_down = "";
+      key_repeat = false; } }
+  if(key_down != ""){
+    clock_t now = clock();
+    if((double)(now - last_send) / CPS > KEY_INITIAL_DELAY)
+      key_repeat = true;
+    if(key_repeat){
+      double reps = (double)(now - last_send) / CPS / KEY_REPEAT_DELAY;
+      clock_t time_send = last_send;
+      for(int i = 0; i < (int)floor(reps); ++i){
+        time_send += KEY_REPEAT_DELAY * CPS;
+        keys.pb(KeyEvent(key_down, true, cursor, time_send));
+        last_send = time_send; } } } }
+
+// Send a new key event
+// Called by: Window.msg_proc()
+void Interface::send_key(const KeyEvent& ke){
+  // Ignore repeated signals from the OS
+  if(ke.down && ke.key == key_down)
+    return;
+  // Add the key event to the processing queue
+  keys.pb(ke);
+  last_send = ke.time; }
+
+// Route the key to the correct function
+// Return whether the key performed an action
+// Called by: Application.update()
+bool Interface::input(const KeyEvent& ke){
+  str key = str(ke.ctrl ? "CTRL+" : "") + str(ke.alt ? "ALT+" : "") + ke.key;
+  bool action = false;
+  if(focus_prio){
+    if(focus)
+      action = focus->input(ke);
+    if(!action && contains(keymap, key))
+      action = keymap[key](ke);
+  }else{
+    if(contains(keymap, key))
+      action = keymap[key](ke);
+    if(!action && focus)
+      action = focus->input(ke); }
+  return action; }
+
+#endif

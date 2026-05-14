@@ -3,31 +3,17 @@
 #ifndef UTIL_HH
 #define UTIL_HH
 
-#include "double.hh"
-#include "math.hh"
-#include "ctr.hh"
+#include "def.hh"
+
+struct num;
+struct str;
 
 // Do nothing, used to follow if/else when the condition just needs to be seen
 void pass(){}
 
 // Print to either console or debug log file
-void print(const str& s){
-#ifdef _WIN32
-  ofstream fs(DEBUG_FILE.c_str(), ios::app);
-  fs << s.data;
-  fs.close();
-#else
-  printf("%s", s.c_str());
-#endif
-}
-
-// Print int
-void print(const int n){
-  print(to_string(n)); }
-
-// Print double
-void print(const double d){
-  print(to_string(d)); }
+// Defined in core.hh
+void print(const str& s);
 
 // Print with a newline
 void printl(const str& s){
@@ -89,8 +75,7 @@ void err(const str& func, const str& msg){
   exit(-1); }
 
 // Check a condition and throw an error if it fails
-void assert(const bool b, const str& func, const str& msg){
-  if(!b) err(func, msg); }
+void assert(const bool b, const str& func, const str& msg);
 
 // Terminate the program
 void quit(){

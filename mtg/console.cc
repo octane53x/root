@@ -2,6 +2,7 @@
 
 #include "parse.hh"
 #include "sim.hh"
+#include "bot.hh"
 
 int main(){
   // Parse cards from JSON

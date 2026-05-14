@@ -1,6 +1,6 @@
 // NUM
 
-//! Division is wrong
+//! Division broken
 
 #ifndef NUM_HH
 #define NUM_HH
@@ -11,7 +11,7 @@ const int
     SHIFT_MAX = (1 << 30),
     BITS_PER_BLOCK = 64;
 
-struct nat : thing {
+struct nat : virtual thing {
   vec<llu> data;
 
   nat(){ data.pb(0); }

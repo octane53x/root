@@ -18,7 +18,6 @@ void sim(const umap<str, Card>& cards){
   g.decks.pb(d2);
 
   while(1){
-    g.init();
     g.play();
     printf("\nDeck 1: %lf\nDeck 2: %lf\n",
         g.decks[0].score(), g.decks[1].score());

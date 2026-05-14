@@ -5,19 +5,11 @@
 
 #include "../core/util.hh"
 
-const uset<str> MODS {
-  "flying", "defender", "trample", "deathtouch", "haste", "lifelink", "reach",
-  "first strike", "double strike", "flash", "hexproof", "indestructible",
-  "menace", "vigilance" };
-
 struct Card {
 
   struct Cost {
 
-    enum CostType {
-      NONE, COLOR, GENERIC, HYBRID_2COL, HYBRID_2GEN, PHYREXIAN, SNOW, VARIABLE
-    } type;
-
+    CostType type;
     char color, color2;
     int count;
 
@@ -33,7 +25,8 @@ struct Card {
   uset<str> mods;
 
   // Game data
-  int p1p1cntr;
+  bool tapped, attacking;
+  umap<Counter, int> counters;
 
   Card();
 

@@ -3,12 +3,12 @@
 #ifndef THING_HH
 #define THING_HH
 
-#include "util.hh"
+#include "type.hh"
 
 struct str;
 
 // Base class for everything
-struct thing {
+struct thing : virtual type<thing> {
 
   // Whether validations are executed, turned on for debug
   inline static bool validate_on = false;
@@ -20,7 +20,8 @@ struct thing {
   void validate(const str& fn); };
 
 void thing::validate(const str& fn){
-  if(validate_on)
-    _validate(fn); }
+  if(validate_on){
+    assert(type_id != 0, fn, "type not set");
+    _validate(fn); } }
 
 #endif

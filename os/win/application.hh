@@ -102,7 +102,7 @@ void Application::parse_key(KeyEvent& ke, bool _shift){
   else if(ke.key == "QUOTE") co = _shift ? '"' : '\'';
   else if(ke.key == "SPACE") co = ' ';
   if(co != 0)
-    ke.key = str(co); }
+    ke.key = str(1, co); }
 
 // Display text on screen
 // Called by: PROJECT

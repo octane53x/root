@@ -5,21 +5,18 @@
 
 #include "incl.hh"
 
-// Types
 #define uchar unsigned char
 #define ui unsigned int
 #define ll long long
-#define llu unsigned long long
-#define vec vector
-#define uset unordered_set
-#define umap unordered_map
-#define mmap multimap
+#define ull unsigned long long
+#define vec std::vector
+#define set std::set
+#define uset std::unordered_set
+#define map std::map
+#define mmap std::multimap
+#define umap std::unordered_map
+#define ummap std::unordered_multimap
 
-// Functions
-#define pb push_back
-#define popb pop_back
-
-using namespace std;
-using namespace filesystem;
+typedef ull ID;
 
 #endif

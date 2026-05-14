@@ -1,0 +1,48 @@
+// NOTES
+
+Thing                   Type* type
+
+Artifact   : Thing
+Concept    : Thing
+
+Instance   : Artifact
+Component  : Artifact
+
+Dynamic    : Concept
+Process    : Concept    Operation[] logic
+
+Entity     : Instance   Location loc
+Variable   : Instance
+
+Aspect     : Component
+Module     : Component
+
+Axiom      : Dynamic
+Mechanic   : Dynamic
+
+Operation  : Process    Variable[] params
+
+Unit       : Entity
+
+Function   : Operation
+
+Object     : Unit
+
+Property   : Aspect
+
+Attribute  : Property
+
+Relation   : Attribute
+Value      : Attribute
+
+Pattern    : Relation
+
+Template   : Pattern
+
+Structure  : Template
+
+System     : Structure
+
+Generator  : System
+
+Engine     : Generator

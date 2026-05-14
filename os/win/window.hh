@@ -4,8 +4,8 @@
 #ifndef WINDOW_HH
 #define WINDOW_HH
 
-#include "../../gl/image.hh"
-#include "../../ui/interface.hh"
+#include "../../temp_incl/image.hh"
+#include "../../temp_incl/interface.hh"
 
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")

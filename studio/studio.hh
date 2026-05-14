@@ -5,7 +5,7 @@
 
 #include "../os/win/application.hh"
 #include "../edit/editor.hh"
-#include "../term/terminal.hh"
+//#include "../term/terminal.hh"
 
 // Windowed application with code editor and terminal panels
 struct Studio : Application {
