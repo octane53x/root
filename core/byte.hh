@@ -1,25 +1,25 @@
-// 64-BIT MEMORY UNIT
+// 8-BIT MEMORY UNIT
 
-#ifndef BLOCK_HH
-#define BLOCK_HH
+#ifndef BYTE_HH
+#define BYTE_HH
 
 #include "thing.hh"
 
 struct Str;
 enum class PrintMode;
 
-// 64 bits of data
-struct Block : virtual Thing {
+// 8 bits of data
+struct Byte : virtual Thing {
 
   // Number of bits
-  static const int BITS = 64;
+  static const int BITS = 8;
 
   // Primitive C++ storage
-  ull data;
+  uchar data;
 
   // Constructors
-  Block();
-  Block(const ull b);
+  Byte();
+  Byte(const uchar b);
 
   // Convert to string
   // Defined in conv.hh
@@ -28,13 +28,13 @@ struct Block : virtual Thing {
   // Sets to zero
   void reset(); };
 
-Block::Block(){
+Byte::Byte(){
   reset(); }
 
-Block::Block(const ull b){
+Byte::Byte(const uchar b){
   data = b; }
 
-void Block::reset(){
+void Byte::reset(){
   data = 0; }
 
 #endif

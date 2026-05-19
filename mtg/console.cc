@@ -3,6 +3,7 @@
 #include "parse.hh"
 #include "sim.hh"
 #include "bot.hh"
+#include "mech.hh"
 
 int main(){
   // Parse cards from JSON
@@ -16,9 +17,9 @@ int main(){
   printf("Processing card text ... \n");
   t0 = clock();
   umap<str, Card> cards;
-  for(pair<str, Card> e : all_cards)
-    if(e.second.process_text())
-      cards[e.second.name] = e.second;
+  for(auto& [key, card] : all_cards)
+    if(card.process_text())
+      cards[key] = card;
   tf = clock();
   printf("Added %d cards to playlist in %lf seconds\n\n",
       cards.size(), (double)(tf - t0) / CPS);

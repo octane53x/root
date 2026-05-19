@@ -1,5 +1,7 @@
 // TYPE
 
+//! DISCONNECTED
+
 #ifndef TYPE_HH
 #define TYPE_HH
 
@@ -25,6 +27,7 @@ struct TypeMgr {
   // Defined in core.hh
   void add(const str& name, const list<str>& parents); };
 
+// Exists to hold TypeMgr, so there is not one per type
 struct _type {
 
   // Type manager

@@ -5,49 +5,31 @@
 #ifndef NUM_HH
 #define NUM_HH
 
-#include "util.hh"
+#include "list.hh"
 
-const int
-    SHIFT_MAX = (1 << 30),
-    BITS_PER_BLOCK = 64;
+struct Str;
 
-struct nat : virtual thing {
-  vec<llu> data;
+// Natural number: integer >= 0
+struct Nat : virtual List<Block> {
 
-  nat(){ data.pb(0); }
-  nat(llu n){ data.pb(n); }
-  nat(const nat& n){ *this = n; }
+  // Constructors
+  Nat();
+  Nat(ull n);
+  Nat(const Nat& n);
 
-  virtual void validate(){
-    while(data[data.size()-1] == 0)
-      data.popb();
-    if(data.empty()) data.pb(0); }
+  // Operators
 
-  int to_int() const {
-    assert(*this <= INT_MAX, func, "Number too large to convert");
-    return data[0]; }
-
-  void print_bits() const {
-    llu b = 1;
-    b <<= BITS_PER_BLOCK - 1;
-    while(b){
-      if(data.back() & b) break;
-      b >>= 1; }
-    while(b){
-      printf("%d", (data.back() & b) ? 1 : 0);
-      b >>= 1; }
-    for(int i = data.size()-2; i >= 0; --i){
-      printf(",");
-      b = 1, b <<= BITS_PER_BLOCK - 1;
-      while(b){
-        printf("%d", (data[i] & b) ? 1 : 0);
-        b >>= 1; } } }
+  // Ensure valid state
+  virtual void _validate();
+  // Convert to string
+  // Defined in conv.hh
+  virtual Str to_str(const PrintMode mode) const;
 
   void print() const {
-    nat t = *this;
+    Nat t = *this;
     vec<int> digits;
     while(t != 0){
-      nat dn = t % 10;
+      Nat dn = t % 10;
       // printf("\n");
       // dn.print_bits();
       // printf("\n");
@@ -57,34 +39,34 @@ struct nat : virtual thing {
     for(int i = digits.size()-1; i >= 0; --i)
       printf("%d", digits[i]); }
 
-  nat& operator=(const nat& n){
+  Nat& operator=(const Nat& n){
     data.clear();
     data = n.data;
     validate();
     return *this; }
 
-  bool operator==(const nat& n) const {
+  bool operator==(const Nat& n) const {
     for(int i = 0; i < data.size(); ++i)
       if(data[i] != n.data[i]) return false;
     return true; }
-  bool operator!=(const nat& n) const {
+  bool operator!=(const Nat& n) const {
     return !(*this == n); }
 
-  bool operator<(const nat& n) const {
+  bool operator<(const Nat& n) const {
     if(data.size() < n.data.size()) return true;
     if(data.size() > n.data.size()) return false;
     for(int i = data.size()-1; i >= 0; --i){
       if(data[i] < n.data[i]) return true;
       if(data[i] > n.data[i]) return false; }
     return false; }
-  bool operator<=(const nat& n) const {
+  bool operator<=(const Nat& n) const {
     return (*this == n || *this < n); }
-  bool operator>(const nat& n) const {
+  bool operator>(const Nat& n) const {
     return !(*this <= n); }
-  bool operator>=(const nat& n) const {
+  bool operator>=(const Nat& n) const {
     return !(*this < n); }
 
-  nat& operator&=(const nat& n){
+  Nat& operator&=(const Nat& n){
     if(n.data.size() < data.size())
       for(int i = 0; i < data.size()-n.data.size(); ++i)
         data.popb();
@@ -93,7 +75,7 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat& operator|=(const nat& n){
+  Nat& operator|=(const Nat& n){
     if(n.data.size() < data.size())
       for(int i = 0; i < data.size()-n.data.size(); ++i)
         data.popb();
@@ -102,7 +84,7 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat& operator^=(const nat& n){
+  Nat& operator^=(const Nat& n){
     if(n.data.size() < data.size())
       for(int i = 0; i < data.size()-n.data.size(); ++i)
         data.popb();
@@ -111,7 +93,7 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat& operator>>=(const nat& n){
+  Nat& operator>>=(const Nat& n){
     if(n > SHIFT_MAX){
       *this = 0;
       return *this; }
@@ -128,7 +110,7 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat& operator<<=(const nat& n){
+  Nat& operator<<=(const Nat& n){
     assert(n < SHIFT_MAX, func, "Shift too large");
     int sh = n.to_int();
     int S = sh / BITS_PER_BLOCK, s = sh % BITS_PER_BLOCK;
@@ -142,28 +124,28 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat operator&(const nat& n) const {
-    nat r = *this;
+  Nat operator&(const Nat& n) const {
+    Nat r = *this;
     r &= n;
     return r; }
-  nat operator|(const nat& n) const {
-    nat r = *this;
+  Nat operator|(const Nat& n) const {
+    Nat r = *this;
     r |= n;
     return r; }
-  nat operator^(const nat& n) const {
-    nat r = *this;
+  Nat operator^(const Nat& n) const {
+    Nat r = *this;
     r ^= n;
     return r; }
-  nat operator>>(const nat& n) const {
-    nat r = *this;
+  Nat operator>>(const Nat& n) const {
+    Nat r = *this;
     r >>= n;
     return r; }
-  nat operator<<(const nat& n) const {
-    nat r = *this;
+  Nat operator<<(const Nat& n) const {
+    Nat r = *this;
     r <<= n;
     return r; }
 
-  nat& operator+=(const nat& n){
+  Nat& operator+=(const Nat& n){
     while(data.size() < n.data.size())
       data.pb(0);
     bool carry = false;
@@ -190,9 +172,9 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat& operator-=(const nat& n){
+  Nat& operator-=(const Nat& n){
     assert(*this >= n, func, "Subtraction results in negative");
-    nat n2 = n;
+    Nat n2 = n;
     while(n2.data.size() < data.size())
       n2.data.pb(0);
     bool pull = false;
@@ -217,10 +199,10 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  // nat kar(const nat& x, const nat& y){
+  // Nat kar(const Nat& x, const Nat& y){
   //   if(x.data.size() > 1 && y.data.size() > 1){
   //     int N = min(x.data.size(), y.data.size()) >> 1;
-  //     nat xl,xr,yl,yr;
+  //     Nat xl,xr,yl,yr;
   //     xr.data.clear(), xl.data.clear(), yl.data.clear(), yr.data.clear();
   //     for(int i = 0; i < N; ++i)
   //       xr.pb(x[i]);
@@ -234,14 +216,14 @@ struct nat : virtual thing {
   //          + ((kar(xl + xr, yl + yr) - kar(xl, yl) - kar(xr, yr)) << (N << 6))
   //          + kar(xr, yr); } }
 
-  // nat& operator*=(const nat& n){
-  //   nat r = kar(*this, n);
+  // Nat& operator*=(const Nat& n){
+  //   Nat r = kar(*this, n);
   //   *this = r;
   //   validate();
   //   return *this; }
 
-  nat& operator*=(const nat& n){
-    nat r;
+  Nat& operator*=(const Nat& n){
+    Nat r;
     int k = 0;
     for(int i = 0; i < data.size(); ++i){
       llu b = 1;
@@ -251,7 +233,7 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat& operator/=(const nat& n){
+  Nat& operator/=(const Nat& n){
     assert(n != 0, func, "Divide by zero");
     if(n > *this){
       *this = 0;
@@ -259,7 +241,7 @@ struct nat : virtual thing {
     if(n > (*this >> 1)){
       *this = 1;
       return *this; }
-    nat t, lo, hi, dist, guess, pguess, check, check1;
+    Nat t, lo, hi, dist, guess, pguess, check, check1;
     t = n;
     lo = *this;
     while(t != 0){
@@ -282,9 +264,9 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat& operator%=(const nat& n){
+  Nat& operator%=(const Nat& n){
     if(*this < n) return *this;
-    nat t = *this / n;
+    Nat t = *this / n;
     printf("\nthis = ");
     this->print_bits();
     printf("\n   t = ");
@@ -301,47 +283,77 @@ struct nat : virtual thing {
     validate();
     return *this; }
 
-  nat operator+(const nat& n) const {
-    nat r = *this;
+  Nat operator+(const Nat& n) const {
+    Nat r = *this;
     r += n;
     return r; }
-  nat operator-(const nat& n) const {
-    nat r = *this;
+  Nat operator-(const Nat& n) const {
+    Nat r = *this;
     r -= n;
     return r; }
-  nat operator*(const nat& n) const {
-    nat r = *this;
+  Nat operator*(const Nat& n) const {
+    Nat r = *this;
     r *= n;
     return r; }
-  nat operator/(const nat& n) const {
-    nat r = *this;
+  Nat operator/(const Nat& n) const {
+    Nat r = *this;
     r /= n;
     return r; }
-  nat operator%(const nat& n) const {
-    nat r = *this;
+  Nat operator%(const Nat& n) const {
+    Nat r = *this;
     r %= n;
     return r; }
 };
 
-// struct num : thing {
-//   bool neg;
-//   nat top, bot;
+Nat::Nat(){
+  push(0); }
 
-//   num(): top(0), bot(1) {}
-//   num(ll n): neg(n < 0), top(abs(n)), bot(1) {}
+Nat::Nat(const ull n){
+  push(n); }
+
+Nat::Nat(const Nat& n){
+  *this = n; }
+
+Nat::_validate(){
+  while(data[data.size()-1] == 0)
+    data.pop();
+  if(data.empty()) data.push(0); }
+
+Str Nat::to_bitstr() const {
+  llu b = 1;
+  b <<= BITS_PER_BLOCK - 1;
+  while(b){
+    if(data.back() & b) break;
+    b >>= 1; }
+  while(b){
+    printf("%d", (data.back() & b) ? 1 : 0);
+    b >>= 1; }
+  for(int i = data.size()-2; i >= 0; --i){
+    printf(",");
+    b = 1, b <<= BITS_PER_BLOCK - 1;
+    while(b){
+      printf("%d", (data[i] & b) ? 1 : 0);
+      b >>= 1; } } }
+
+// struct Num : thing {
+//   bool neg;
+//   Nat top, bot;
+
+//   Num(): top(0), bot(1) {}
+//   Num(ll n): neg(n < 0), top(abs(n)), bot(1) {}
 
 //   virtual void validate(){
 //     top.validate(), bot.validate();
 //     if(bot == 0) bot = 1;
-//     nat g = top.gcd(bot);
+//     Nat g = top.gcd(bot);
 //     if(g > 1) top /= g, bot /= g; }
 
-//   num& operator=(const num& n){
+//   Num& operator=(const Num& n){
 //     top = n.top, bot = n.bot, neg = n.neg;
 //     validate();
 //     return *this; }
 
-//   bool operator==(const num& n) const {
+//   bool operator==(const Num& n) const {
 //     return top == n.top && bot = n.bot && neg = n.neg; }
 
 // };

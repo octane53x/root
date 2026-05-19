@@ -3,7 +3,7 @@
 #ifndef CARD_HH
 #define CARD_HH
 
-#include "../core/util.hh"
+#include "const.hh"
 
 struct Card {
 
@@ -25,7 +25,8 @@ struct Card {
   uset<str> mods;
 
   // Game data
-  bool tapped, attacking;
+  bool tapped;
+  Card* attacking, *blocking;
   umap<Counter, int> counters;
 
   Card();
@@ -38,7 +39,7 @@ struct Card {
   void condense_cost();
   bool process_text(); };
 
-Card::Cost::Cost(): type(NONE), color('-'), color2('-'), count(0) {}
+Card::Cost::Cost(): type(CostType::NONE), color('-'), color2('-'), count(0) {}
 
 Card::Card(): pow(0), tuf(0) {}
 
@@ -57,11 +58,11 @@ str Card::next_tok(const int i) const {
 void Card::print() const {
   printf("%s\n", name.c_str());
   for(const Cost& c : cost){
-    if(c.type == Cost::GENERIC)
+    if(c.type == CostType::GENERIC)
       printf("%d ", c.count);
-    else if(c.type == Cost::COLOR)
+    else if(c.type == CostType::COLOR)
       printf("%d%c ", c.count, c.color);
-    else if(c.type == Cost::VARIABLE)
+    else if(c.type == CostType::VARIABLE)
       printf("%dX ", c.count);
     else
       printf("%d# ", c.count); }
@@ -75,13 +76,13 @@ void Card::print() const {
 
 bool Card::add_field(const str& key, const str& val){
   if(key == "power"){
-    if(val.is_integer())
-      pow = stoi(val.data);
+    if(is_integer(val))
+      pow = std::stoi(val.c_str());
     else
       pow = -1;
   }else if(key == "toughness"){
-    if(val.is_integer())
-      tuf = stoi(val.data);
+    if(is_integer(val))
+      tuf = std::stoi(val.c_str());
     else
       tuf = -1;
   }else if(key == "name"){
@@ -89,7 +90,7 @@ bool Card::add_field(const str& key, const str& val){
   }else if(key == "text"){
     text = val;
   }else if(key == "types" || key == "subtypes"){
-    vec<str> sv = val.substr(1, val.size() - 2).split(", ");
+    vec<str> sv = split(val.substr(1, val.size() - 2), ", ");
     for(const str& s : sv)
       types.insert(s.substr(1, s.size() - 2));
 
@@ -104,31 +105,31 @@ bool Card::add_field(const str& key, const str& val){
           s[j] = 'K';
 
       Cost c;
-      if(s.is_integer()){
-        c.type = Cost::GENERIC;
-        c.count = stoi(s.data);
+      if(is_integer(s)){
+        c.type = CostType::GENERIC;
+        c.count = std::stoi(s.c_str());
 
       }else if(s.size() == 1){
         if(s == "X")
-          c.type = Cost::VARIABLE;
+          c.type = CostType::VARIABLE;
         else if(is_color(s[0])){
-          c.type = Cost::COLOR;
+          c.type = CostType::COLOR;
           c.color = s[0];
         }else if(s == "S")
-          c.type = Cost::SNOW;
+          c.type = CostType::SNOW;
         else
           return false;
         c.count = 1;
 
       }else if(s.size() == 3 && s[1] == '/'){
         if(s[0] == '2' && is_color(s[2])){
-          c.type = Cost::HYBRID_2GEN;
+          c.type = CostType::HYBRID_2GEN;
           c.color = s[2];
         }else if(s[2] == 'P' && is_color(s[0])){
-          c.type = Cost::PHYREXIAN;
+          c.type = CostType::PHYREXIAN;
           c.color = s[0];
         }else if(is_color(s[0]) && is_color(s[2])){
-          c.type = Cost::HYBRID_2COL;
+          c.type = CostType::HYBRID_2COL;
           c.color = s[0];
           c.color2 = s[2];
         }else
@@ -137,7 +138,7 @@ bool Card::add_field(const str& key, const str& val){
 
       }else if(s.size() == 5 && s[1] == '/' && s[3] == '/'){
         if(s[4] == 'P' && is_color(s[0]) && is_color(s[2])){
-          c.type = Cost::PHYREXIAN;
+          c.type = CostType::PHYREXIAN;
           c.color = s[0];
           c.color2 = s[2];
           c.count = 1;
@@ -146,7 +147,6 @@ bool Card::add_field(const str& key, const str& val){
 
       }else
         return false;
-
       cost.pb(c); }
     condense_cost(); }
   return true; }
@@ -170,8 +170,8 @@ bool Card::process_text(){
   int i = 0;
   while(i < text.size()){
     str tok = next_tok(i);
-    if(contains(MODS, tok.to_lower())){
-      mods.insert(tok.to_lower());
+    if(contains(MODS, to_lower(tok))){
+      mods.insert(to_lower(tok));
       i += tok.size();
     }else if(tok == "," || tok == " ")
       ++i;

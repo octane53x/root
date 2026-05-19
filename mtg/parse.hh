@@ -18,9 +18,9 @@ int find(const str& text, const str& tok, int pos){
 
 umap<str, Card> parse(){
   // Read file
-  ifstream fs(CARDS_JSON);
+  std::ifstream fs(CARDS_JSON);
   str text;
-  getline(fs, text.data);
+  std::getline(fs, text);
 
   // Parse cards
   umap<str, Card> cards;
@@ -109,7 +109,7 @@ umap<str, Card> parse(){
           err("parse", "bad char 5"); } }
 
       if(contains(cards, card.name)){
-        if(card.name.find("//") != string::npos){
+        if(card.name.find("//") != std::string::npos){
           card.name += "(2)";
           cards[card.name] = card; }
       }else if(keep)

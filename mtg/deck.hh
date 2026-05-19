@@ -6,7 +6,7 @@
 #include "card.hh"
 
 const int
-    MIN_CARDS = 60,
+    NUM_CARDS = 60,
     MAX_SAME_CARD = 4;
 
 struct Deck {
@@ -21,9 +21,12 @@ struct Deck {
     double score() const; };
 
   umap<str, CardData> cards;
+  vec<Card> pile;
 
   double score() const;
 
+  void shuffle();
+  Card draw();
   void fill(const vec<Card>& card_list);
   void replace(const vec<Card>& card_list, int n); };
 
@@ -37,17 +40,33 @@ double Deck::CardData::score() const {
 // Get deck score from games played
 double Deck::score() const {
   double r = 0.0;
-  for(const pair<str, CardData>& e : cards)
-    for(int i = 0; i < e.second.count; ++i)
-      r += e.second.score();
+  for(const auto& [key, cd] : cards)
+    for(int i = 0; i < cd.count; ++i)
+      r += cd.score();
   return r; }
+
+// Shuffle the deck
+void Deck::shuffle(){
+  for(int i = pile.size() - 1; i > 0; --i){
+    int j = lrand() % i;
+    if(i == j)
+      continue;
+    Card c = pile[j];
+    pile[j] = pile[i];
+    pile[i] = c; } }
+
+// Draw a card
+Card Deck::draw(){
+  Card c = pile.back();
+  pile.pop_back();
+  return c; }
 
 // Fill the deck with random cards
 void Deck::fill(const vec<Card>& card_list){
   int n = 0;
-  for(pair<str, CardData> e : cards)
-    n += e.second.count;
-  for(int i = 0; i < MIN_CARDS - n; ++i){
+  for(const auto& [key, cd] : cards)
+    n += cd.count;
+  for(int i = 0; i < NUM_CARDS - n; ++i){
     Card c = card_list[lrand() % card_list.size()];
     if(contains(cards, c.name)){
       if(cards[c.name].count == MAX_SAME_CARD){
@@ -59,7 +78,11 @@ void Deck::fill(const vec<Card>& card_list){
       CardData cd;
       cd.card = c;
       cd.count = 1;
-      cards[c.name] = cd; } } }
+      cards[c.name] = cd; } }
+  pile.clear();
+  for(const auto& [key, cd] : cards)
+    for(int i = 0; i < cd.count; ++i)
+      pile.pb(cd.card); }
 
 // Remove the n least effective sets of cards and refill deck
 void Deck::replace(const vec<Card>& card_list, const int n){
@@ -67,10 +90,10 @@ void Deck::replace(const vec<Card>& card_list, const int n){
     if(cards.empty()) break;
     double m = INFD;
     str pick;
-    for(pair<str, CardData> e : cards)
-      if(e.second.score() < m){
-        m = e.second.score();
-        pick = e.first; }
+    for(const auto& [key, cd] : cards)
+      if(cd.score() < m){
+        m = cd.score();
+        pick = key; }
     cards.erase(pick); }
   fill(card_list); }
 

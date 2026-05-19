@@ -4,32 +4,33 @@
 #define LIST_HH
 
 #include <vector> //! repl
-#include "thing.hh"
+#include "block.hh"
 
-struct str;
+struct Str;
 
+// Container of sequential elements
 template <typename T>
-struct list : virtual thing {
+struct List : virtual Thing {
 
   // Internal data
-  vector<T> data;
+  std::vector<T> data;
 
   // Constructors
-  list();
+  List();
 
   // Operators
-  list<T>& operator=(const list<T>& o);
+  List<T>& operator=(const List<T>& o);
   T& operator[](const int i);
 
   // Convert to string
-  // Defined in str.hh
-  virtual str to_str() const;
+  // Defined in conv.hh
+  virtual Str to_str() const;
   // Ensure valid state
-  virtual void _validate(const str& fn);
+  virtual void _validate(const Str& fn);
 
   // True if no contents
   bool empty() const;
-  // Number of elements in list
+  // Number of elements in List
   int size() const;
   // Return reference to element at index
   T& at(const int i) const;
@@ -37,56 +38,62 @@ struct list : virtual thing {
   // Delete all contents
   void clear();
   // Add element to end
-  void add(const T& e);
+  void push(const T& e);
+  // Remove element at end
+  void pop();
   // Insert element at index
   void insert(const T& e, const int i);
   // Remove element at index
   void remove(const int i); };
 
 template <typename T>
-list<T>::list(){}
+List<T>::List(){}
 
 template <typename T>
-list<T>& list<T>::operator=(const list<T>& o){
+List<T>& List<T>::operator=(const List<T>& o){
   data = o.data; }
 
 template <typename T>
-T& list<T>::operator[](const int i){
+T& List<T>::operator[](const int i){
   return data[i]; }
 
 template <typename T>
-void list<T>::_validate(const str& fn){
-  thing::validate(fn); }
+void List<T>::_validate(const Str& fn){
+  Thing::validate(fn); }
 
 template <typename T>
-bool list<T>::empty() const {
+bool List<T>::empty() const {
   return data.empty(); }
 
 template <typename T>
-int list<T>::size() const {
+int List<T>::size() const {
   return data.size(); }
 
 template <typename T>
-T& list<T>::at(const int i) const {
-  assert(i >= 0 && i < size(), "list.at", "OOB");
+T& List<T>::at(const int i) const {
+  assert(i >= 0 && i < size(), "List.at()", "OOB");
   return data[i]; }
 
 template <typename T>
-void list<T>::clear(){
+void List<T>::clear(){
   data.clear(); }
 
 template <typename T>
-void list<T>::add(const T& e){
+void List<T>::push(const T& e){
   data.push_back(e); }
 
 template <typename T>
-void list<T>::insert(const T& e, const int i){ //! O(N)
-  assert(i >= 0 && i <= size(), "list.insert", "OOB");
+void List<T>::pop(){
+  data.pop_back(); }
+
+template <typename T>
+void List<T>::insert(const T& e, const int i){ //! O(N)
+  assert(i >= 0 && i <= size(), "List.insert()", "OOB");
   data.insert(e, i); }
 
 template <typename T>
-void list<T>::remove(const int i){ //! O(N)
-  assert(i >= 0 && i < size(), "list.remove", "OOB");
+void List<T>::remove(const int i){ //! O(N)
+  assert(i >= 0 && i < size(), "List.remove()", "OOB");
   data.erase(data.begin() + i); }
 
 #endif

@@ -1,48 +1,52 @@
 // NOTES
 
-Thing                   Type* type
+Thing       Artifact, Concept
+Artifact    Relation, Variable
+Relation    Pattern, Attribute
+Pattern     Template, _
+Template    Structure, _
+Structure   System, _
 
-Artifact   : Thing
-Concept    : Thing
+Variable
+
+Concept     Dynamic, Process
 
 Instance   : Artifact
 Component  : Artifact
-
 Dynamic    : Concept
 Process    : Concept    Operation[] logic
-
 Entity     : Instance   Location loc
 Variable   : Instance
-
 Aspect     : Component
 Module     : Component
-
 Axiom      : Dynamic
 Mechanic   : Dynamic
-
 Operation  : Process    Variable[] params
-
 Unit       : Entity
-
 Function   : Operation
-
 Object     : Unit
-
 Property   : Aspect
-
 Attribute  : Property
-
 Relation   : Attribute
 Value      : Attribute
-
 Pattern    : Relation
-
 Template   : Pattern
-
 Structure  : Template
-
 System     : Structure
-
 Generator  : System
-
 Engine     : Generator
+
+-------------------------------------------
+
+Thing       .
+Pattern     .
+Structure   Attribute[]
+System      Function[]  update()
+Template    .           create()
+Instance    MemAddr     destroy(), copy()
+Unit        ID
+Entity      Location    move()
+Object      Position
+
+A Pattern is a Thing
+A Structure is a Pattern as

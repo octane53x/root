@@ -3,25 +3,29 @@
 #ifndef THING_HH
 #define THING_HH
 
-#include "type.hh"
+#include "def.hh" //!
+//#include "type.hh"
 
-struct str;
+struct Str;
+enum class PrintMode;
 
 // Base class for everything
-struct thing : virtual type<thing> {
+struct Thing /*: virtual type<thing>*/ {
 
   // Whether validations are executed, turned on for debug
   inline static bool validate_on = false;
 
   // Convert to string
-  virtual str to_str() const = 0;
-  // Ensure valid state, making assertions and changes
-  virtual void _validate(const str& fn) = 0;
-  void validate(const str& fn); };
+  virtual Str to_str(const PrintMode mode) const = 0;
 
-void thing::validate(const str& fn){
-  if(validate_on){
-    assert(type_id != 0, fn, "type not set");
-    _validate(fn); } }
+  // Ensure valid state
+  virtual void _validate(const Str& fn) = 0;
+  void validate(const Str& fn); };
+
+void Thing::validate(const Str& fn){
+  if(!validate_on)
+    return;
+  //assert(type_id != 0, fn, "type not set");
+  _validate(fn); }
 
 #endif

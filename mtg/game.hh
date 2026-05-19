@@ -5,66 +5,112 @@
 
 #include "deck.hh"
 
+struct Game;
+
 struct Player {
 
   int life;
   Deck deck;
   vec<Card> hand, field;
 
-  void act();
-  void attack();
-  void block(); };
+  // Defined int bot.hh
+  void act(Game& g);
+  void attack(Game& g);
+  void block(Game& g); };
 
 struct Game {
 
+  bool in_main;
   int turn;
   vec<Player> players;
   vec<Card> stack;
 
   bool over() const;
 
+  void init();
   void play();
-  void upkeep(const int player);
-  void main(const int player);
-  void combat(const int player);
-  void end(const int player); };
+  void upkeep();
+  void main();
+  void combat();
+  void end();
+  bool prompt();
 
-bool Game::over(){
-  for(int i = 0; i < life.size(); ++i)
-    if(life[i] <= 0)
+  // Defined in mech.hh
+  void resolve(); };
+
+bool Game::over() const {
+  for(int i = 0; i < players.size(); ++i)
+    if(players[i].life <= 0)
       return true;
   return false; }
 
-void Game::play(){
-  life.clear();
-  for(int i = 0; i < decks.size(); ++i){
-    life.pb(20);
-    decks[i].shuffle(); }
+void Game::init(){
+  for(int i = 0; i < players.size(); ++i){
+    players[i].life = 20;
+    players[i].deck.shuffle();
+    for(int j = 0; j < players[i].deck.pile.size(); ++j){
+      players[i].deck.pile[j].tapped = false;
+      players[i].deck.pile[j].attacking = NULL;
+      players[i].deck.pile[j].blocking = NULL;
+      players[i].deck.pile[j].counters.clear(); } }
   turn = 0;
+  in_main = false; }
+
+void Game::play(){
+  // Draw 7
+  //! Mulligan
+  for(int i = 0; i < players.size(); ++i)
+    for(int j = 0; j < 7; ++j)
+      players[i].hand.pb(players[i].deck.draw());
+  // Game loop
   while(1){
-    upkeep(turn);
-    main(turn);
+    upkeep();
+    main();
     if(over()) break;
-    combat(turn);
+    combat();
     if(over()) break;
-    main(turn);
+    main();
     if(over()) break;
-    end(turn); } }
+    end(); } }
 
-void Game::upkeep(const int player){
-  for(int i = 0; i < field[player].size(); ++i)
-    field[player][i].tapped = false;
-  hand[player].pb(decks[player].draw()); }
+void Game::upkeep(){
+  for(int i = 0; i < players[turn].field.size(); ++i)
+    players[turn].field[i].tapped = false;
+  players[turn].hand.pb(players[turn].deck.draw()); }
 
-void Game::main(const int player){
+void Game::main(){
+  in_main = true;
+  while(prompt());
+  in_main = false; }
 
-}
+void Game::combat(){
+  players[turn].attack(*this);
+  for(int i = 0; i < players.size(); ++i)
+    if(i != turn)
+      players[i].block(*this); }
 
-void Game::combat(const int player){
+void Game::end(){
+  turn = (turn == players.size()) ? 0 : turn + 1; }
 
-}
-
-void Game::end(const int player){
-  turn = (turn == decks.size()) ? 0 : turn + 1; }
+bool Game::prompt(){
+  bool action = false;
+  int prio = turn;
+  int pass = 0;
+  while(!stack.empty() || pass < players.size()){
+    int ss = stack.size();
+    players[prio].act(*this); //*
+    printf("Stack: %d\n", stack.size()); //!
+    if(stack.size() > ss){
+      action = true;
+      pass = 0;
+      continue; }
+    prio = (prio == players.size() - 1) ? 0 : prio + 1;
+    ++pass;
+    printf("PASS %d\n", pass); //!
+    if(!stack.empty() && pass == players.size()){
+      resolve();
+      prio = turn;
+      pass = 0; } }
+  return action; }
 
 #endif

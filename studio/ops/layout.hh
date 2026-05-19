@@ -149,6 +149,7 @@ void Studio::close_panel(){
   int j;
   for(j = 0; j < panels.size(); ++j)
     if(xpd == &panels[j]) break;
+  delete panels[i];
   panels.erase(panels.begin() + i);
   if(i < j)
     --focus;
